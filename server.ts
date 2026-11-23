@@ -1,0 +1,673 @@
+import { IS_PRODUCTION } from './server/initEnv.js';
+import express from 'express';
+import compression from 'compression';
+import fs from 'fs';
+import { createServer } from 'http';
+import { randomUUID } from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { initWebSocketServer } from './server/websocket.js';
+import { runBackgroundJobs } from './server/jobs/backgroundJobs.js';
+import { setupSSR, invalidateSsrHtmlCache } from './server/ssr.js';
+import { PRIVATE_ROUTES, RESERVED_ROUTES } from './src/shared/routes.js';
+import { slugify } from './src/utils/slugify.js';
+import { postgresStore, assertProductionPostgresConfigured } from './server/db/postgresStore.js';
+import { apiRouter } from './server/routes/index.js';
+import { categories } from './server/routes/adminRoutes.js';
+import { rootRouter } from './server/routes/rootRoutes.js';
+import { siteSettings, DEFAULT_SITE_SETTINGS } from './src/server/siteSettings.js';
+import { isGigPublic, sanitizePublicGig } from './server/publicData.js';
+import { safeUser, assertProductionJwtSecret } from './server/middleware/auth.js';
+import { shouldExposeMockCodes } from './server/services/mockCodeHelper.js';
+import { assertProductionGatewayEncryptionKey } from './server/domains/finance/paymentGateways.js';
+import {
+  saveOrdersToDisk,
+  hydrateStoreFromPostgres,
+  users,
+  gigs,
+  orders,
+  projects,
+  proposals,
+  reviews,
+  messages,
+  disputes,
+  refunds,
+  payouts,
+  customInvoices,
+  workstreamOffers,
+  auditLogs
+} from './server/store.js';
+import {
+  clearingEarnings,
+  getUnclearedEarnings,
+  releaseOrderFunds,
+  refundOrderFunds,
+  processAutoAcceptOrders,
+  isAutoAcceptEnabled,
+  getReviewWindowDays,
+  registerOrder,
+  orderIndex
+} from './server/services/orderService.js';
+
+// Backward compatibility exports for existing unit and regression tests
+export {
+  orders,
+  users,
+  gigs,
+  projects,
+  proposals,
+  reviews,
+  messages,
+  disputes,
+  refunds,
+  payouts,
+  customInvoices,
+  workstreamOffers,
+  auditLogs,
+  categories,
+  siteSettings,
+  DEFAULT_SITE_SETTINGS,
+  isGigPublic,
+  sanitizePublicGig,
+  safeUser,
+  saveOrdersToDisk,
+  clearingEarnings,
+  getUnclearedEarnings,
+  releaseOrderFunds,
+  refundOrderFunds,
+  processAutoAcceptOrders,
+  isAutoAcceptEnabled,
+  getReviewWindowDays,
+  registerOrder,
+  orderIndex
+};
+
+dotenv.config();
+
+function safeDecodeURIComponent(str: string): string {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+export const app = express();
+app.set('trust proxy', 1);
+app.use(compression({ threshold: 1024 }));
+
+// Production detection (authoritative from ./server/initEnv.js)
+export { IS_PRODUCTION };
+const IS_PROD = IS_PRODUCTION;
+
+if (IS_PROD) {
+  (process.env as any).NODE_ENV = 'production';
+  assertProductionJwtSecret();
+  assertProductionGatewayEncryptionKey();
+  assertProductionPostgresConfigured();
+
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    console.error('[FATAL] Production startup error: RESEND_API_KEY and EMAIL_FROM must be configured in production.');
+    if (process.env.NODE_ENV !== 'test') process.exit(1);
+  }
+  if (process.env.ALLOW_MOCK_CODES === 'true') {
+    console.error('[FATAL] Production startup error: ALLOW_MOCK_CODES=true is not permitted in production mode.');
+    if (process.env.NODE_ENV !== 'test') process.exit(1);
+  }
+} else {
+  if (shouldExposeMockCodes()) {
+    console.log('[AUTH] MOCK CODES ENABLED (test mode)');
+  } else if (!process.env.RESEND_API_KEY) {
+    console.warn('[AUTH WARNING] Email provider (RESEND_API_KEY) is not configured and ALLOW_MOCK_CODES is off. Verification codes will not be sent or exposed. Set ALLOW_MOCK_CODES=true in .env for local testing.');
+  }
+}
+
+let isShuttingDown = false;
+let isStoreHydrated = process.env.NODE_ENV === 'test';
+let hydrationPromise: Promise<void> | null = null;
+
+interface SsrPublicCacheEntry {
+  gigs: any[];
+  users: any[];
+  projects: any[];
+  expiresAt: number;
+}
+const SSR_PUBLIC_CACHE_TTL_MS = 15_000;
+let ssrPublicCache: SsrPublicCacheEntry | null = null;
+let inFlightSsrCachePromise: Promise<SsrPublicCacheEntry> | null = null;
+
+export function invalidateSsrPublicCache() {
+  ssrPublicCache = null;
+  invalidateSsrHtmlCache();
+}
+
+const FALLBACK_SSR_GIGS: any[] = [];
+const FALLBACK_SSR_USERS: any[] = [];
+
+// Instant liveness probe before hydration guard so proxy health checks never stall or 503
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ ok: true, hydrated: isStoreHydrated });
+});
+
+// Hydration guard middleware: wait on in-flight startup hydration for API routes,
+// while letting static subresources and public HTML SSR requests respond rapidly.
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') && req.method !== 'GET' && req.method !== 'HEAD') {
+    ssrPublicCache = null;
+    invalidateSsrHtmlCache();
+  }
+  if (!isStoreHydrated && process.env.NODE_ENV !== 'test') {
+    const p = req.path || '';
+    const isStaticSubresource =
+      p.startsWith('/@vite') ||
+      p.startsWith('/@id') ||
+      p.startsWith('/@fs') ||
+      p.startsWith('/node_modules') ||
+      p.startsWith('/src/') ||
+      p.startsWith('/assets/') ||
+      /\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2?|ttf)$/i.test(p);
+
+    if (isStaticSubresource) {
+      return next();
+    }
+
+    const isPublicHtmlGet = !p.startsWith('/api') && (req.method === 'GET' || req.method === 'HEAD');
+    if (isPublicHtmlGet) {
+      // Never stall public HTML SSR on cold-start DB hydration; serve immediately and refresh cache once hydrated
+      return next();
+    }
+
+    if (hydrationPromise) {
+      try {
+        await hydrationPromise;
+      } catch {
+        return res.status(503).json({ error: 'Server starting up and hydrating database. Please retry shortly.' });
+      }
+    } else {
+      return res.status(503).json({ error: 'Server starting up and hydrating database. Please retry shortly.' });
+    }
+  }
+  next();
+});
+
+// Global Security Middleware
+app.use((req, res, next) => {
+  if (isShuttingDown) {
+    res.setHeader('Connection', 'close');
+    return res.status(503).json({ error: 'Server is shutting down. Please retry shortly.' });
+  }
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (IS_PRODUCTION) {
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  } else {
+    res.removeHeader('X-Frame-Options');
+  }
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; media-src 'self' data: blob: https:; connect-src 'self' ws: wss: https: http:; frame-ancestors *; object-src 'none'; base-uri 'self'; form-action 'self';"
+  );
+  if (IS_PRODUCTION) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+  (req as any).requestId = randomUUID();
+  res.setHeader('X-Request-ID', (req as any).requestId);
+
+  // Production error sanitizer: intercept 500 responses to sanitize error messages
+  const originalJson = res.json.bind(res);
+  res.json = function (body: any) {
+    if (process.env.NODE_ENV === 'production' && res.statusCode >= 500) {
+      if (body && typeof body === 'object') {
+        return originalJson({ ...body, error: 'Internal server error' });
+      }
+      return originalJson({ error: 'Internal server error' });
+    }
+    return originalJson(body);
+  };
+
+  next();
+});
+
+// JSON Body Parser with raw body exemption for webhook and WorkStream upload endpoints
+app.use((req, res, next) => {
+  if (
+    (req.path === '/api/payments/webhook' ||
+      req.path === '/api/webhooks/payment' ||
+      req.path === '/api/workstream/upload' ||
+      req.path === '/api/workstream/uploads') &&
+    req.method === 'POST'
+  ) {
+    return next();
+  }
+  return express.json({ limit: '10mb' })(req, res, next);
+});
+
+let resolveStartupReady!: () => void;
+const startupReadyPromise = new Promise<void>((resolve) => {
+  resolveStartupReady = resolve;
+});
+
+// Mount Central API Router
+app.use('/api', apiRouter);
+
+// Register root routes (robots.txt, sitemap.xml)
+app.use('/', rootRouter);
+
+// SSR Middleware (Real Data) & Error Handlers registration order
+try {
+  await setupSSR(app, IS_PROD, __dirname, async (pathname?: string) => {
+    try {
+      let cleanPath = safeDecodeURIComponent((pathname || '/').split('?')[0]);
+      if (cleanPath.endsWith('/index.html')) {
+        cleanPath = cleanPath.slice(0, -11) || '/';
+      } else if (cleanPath.endsWith('.html')) {
+        cleanPath = cleanPath.slice(0, -5) || '/';
+      }
+      cleanPath = cleanPath.replace(/\/+$/, '') || '/';
+      const lowerPath = cleanPath.toLowerCase();
+      const pathParts = cleanPath.split('/').filter(Boolean);
+      const firstSeg = pathParts[0]?.toLowerCase() || '';
+
+      // Legal and private/auth/app routes do not render public marketplace SSR data
+      const isLegalRoute = ['/terms', '/privacy', '/refund-policy'].includes(lowerPath);
+      const isPrivateRoute =
+        pathParts.length > 0 &&
+        (PRIVATE_ROUTES.some(pr => pr.toLowerCase() === firstSeg) || firstSeg === 'post-gig');
+
+      if (isLegalRoute || isPrivateRoute) {
+        return { gigs: [], users: [], projects: [], categories: [] };
+      }
+
+      const isHomeOrGigsRoute =
+        cleanPath === '/' || lowerPath === '/gigs' || (pathParts.length >= 1 && firstSeg === 'categories');
+      const isProjectsListRoute = ['/projects', '/search-projects', '/project-search', '/freelance-jobs'].includes(lowerPath);
+      const isProjectDetailRoute = pathParts.length === 2 && (firstSeg === 'projects' || firstSeg === 'project');
+      const isFreelancersListRoute = ['/freelancers', '/search-freelancers', '/freelancer-search'].includes(lowerPath);
+      const isGigDetailRoute =
+        (pathParts.length >= 2 && (firstSeg === 'gig' || firstSeg === 'gigs')) ||
+        (pathParts.length === 2 && !RESERVED_ROUTES.includes(firstSeg));
+      const isProfileRoute = pathParts.length === 1 && !RESERVED_ROUTES.includes(firstSeg);
+
+      if (
+        !isHomeOrGigsRoute &&
+        !isProjectsListRoute &&
+        !isProjectDetailRoute &&
+        !isFreelancersListRoute &&
+        !isGigDetailRoute &&
+        !isProfileRoute
+      ) {
+        return { gigs: [], users: [], projects: [], categories: [] };
+      }
+
+      const needGigs = isHomeOrGigsRoute || isFreelancersListRoute || isGigDetailRoute || isProfileRoute;
+      const needUsers = isHomeOrGigsRoute || isFreelancersListRoute || isProfileRoute;
+      const needProjects = isHomeOrGigsRoute || isProjectsListRoute || isProjectDetailRoute;
+      const projectsLimit = isHomeOrGigsRoute ? 8 : 50;
+
+      if (!isStoreHydrated && process.env.NODE_ENV !== 'test') {
+        return {
+          gigs: needGigs ? FALLBACK_SSR_GIGS : [],
+          users: needUsers ? FALLBACK_SSR_USERS : [],
+          projects: [],
+          categories: [],
+          hydrated: false
+        };
+      }
+
+      const pool = postgresStore.getPool();
+      const candidateTokens = (isGigDetailRoute || isProjectDetailRoute || isProfileRoute)
+        ? Array.from(
+            new Set(
+              pathParts.filter(
+                p => p.length > 0 && p.length <= 120 && !['gig', 'gigs', 'project', 'projects', 'categories'].includes(p.toLowerCase())
+              )
+            )
+          )
+        : [];
+      const lowerCandidateTokens = candidateTokens.map(t => t.toLowerCase());
+
+      const emptyRows = { rows: [] as any[] };
+      const mapGigRow = (r: any) => ({
+        id: r.id,
+        freelancerId: r.freelancer_id,
+        freelancerName: r.freelancer_name,
+        freelancerUsername: r.freelancer_username || r.freelancer_name?.toLowerCase().replace(/\s+/g, '_'),
+        freelancerAvatar: r.freelancer_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        freelancerLevel: r.freelancer_level || 'Level 1 ★',
+        title: r.title,
+        slug: r.slug || r.title?.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''),
+        category: r.category,
+        subcategory: r.subcategory || 'General',
+        description: r.description,
+        price: Number(r.price),
+        deliveryDays: Number(r.delivery_days || 7),
+        rating: Number(r.rating || 5.0),
+        reviewsCount: Number(r.reviews_count || 0),
+        image: r.image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=500&fit=crop',
+        coverImage: r.cover_image || '',
+        gallery: r.gallery || [],
+        tags: r.tags || [],
+        status: r.status === 'published' ? 'active' : (r.status || 'active'),
+        moderationStatus: r.moderation_status || 'approved',
+        createdAt: r.created_at,
+        extras: r.extras || []
+      });
+
+      const mapUserRow = (r: any) => ({
+        id: r.id,
+        name: r.name,
+        username: r.username,
+        role: r.role,
+        avatar: r.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        title: r.title || '',
+        rating: Number(r.rating || 5.0),
+        reviewsCount: Number(r.reviews_count || 0),
+        hourlyRate: Number(r.hourly_rate || 0),
+        earned: Number(r.earned || 0),
+        completedJobs: Number(r.completed_jobs || 0),
+        bio: r.bio || '',
+        skills: r.skills || [],
+        status: r.status,
+        verified: Boolean(r.verified),
+        emailVerified: Boolean(r.email_verified),
+        mobileVerified: Boolean(r.mobile_verified),
+        createdAt: r.created_at,
+        isFlagged: Boolean(r.is_flagged),
+        isAvailableNow: Boolean(r.is_available_now)
+      });
+
+      const mapProjectRow = (r: any) => ({
+        id: r.id,
+        buyerId: r.buyer_id,
+        buyerName: r.buyer_name,
+        buyerAvatar: r.buyer_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        title: r.title,
+        slug: r.slug || r.title?.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, ''),
+        description: r.description,
+        category: r.category,
+        budgetType: r.budget_type,
+        budget: Number(r.budget),
+        budgetMin: Number(r.budget_min),
+        budgetMax: Number(r.budget_max),
+        deadlineDays: Number(r.deadline_days),
+        duration: r.duration,
+        status: r.status,
+        proposalsCount: Number(r.proposals_count || 0),
+        skills: r.skills || [],
+        createdAt: r.created_at,
+        acceptedProposalId: r.accepted_proposal_id || undefined
+      });
+
+      // Fast path: serve from in-memory cache for standard public catalog/home routes in non-test mode
+      const canUsePublicCache = candidateTokens.length === 0 && process.env.NODE_ENV !== 'test';
+      if (canUsePublicCache) {
+        const now = Date.now();
+        if (ssrPublicCache && ssrPublicCache.expiresAt > now) {
+          return {
+            gigs: needGigs ? ssrPublicCache.gigs : [],
+            users: needUsers ? ssrPublicCache.users : [],
+            projects: needProjects ? ssrPublicCache.projects.slice(0, projectsLimit) : [],
+            categories: [],
+            hydrated: true
+          };
+        }
+        if (!inFlightSsrCachePromise) {
+          inFlightSsrCachePromise = (async () => {
+            const [gRes, uRes, pRes] = await Promise.all([
+              pool.query("SELECT * FROM gigs WHERE status IN ('active', 'published') ORDER BY created_at DESC NULLS LAST LIMIT 50"),
+              pool.query(
+                `SELECT id, name, username, role, avatar, title, rating, reviews_count, hourly_rate, earned, completed_jobs, bio, skills, status, verified, email_verified, mobile_verified, created_at, is_flagged, is_available_now
+                 FROM users WHERE status = 'active' ORDER BY created_at DESC NULLS LAST LIMIT 50`
+              ),
+              pool.query("SELECT * FROM projects WHERE status = 'open' ORDER BY created_at DESC NULLS LAST LIMIT 50")
+            ]);
+            const entry: SsrPublicCacheEntry = {
+              gigs: gRes.rows.map(mapGigRow),
+              users: uRes.rows.map(mapUserRow),
+              projects: pRes.rows.map(mapProjectRow),
+              expiresAt: Date.now() + SSR_PUBLIC_CACHE_TTL_MS
+            };
+            ssrPublicCache = entry;
+            return entry;
+          })().finally(() => {
+            inFlightSsrCachePromise = null;
+          });
+        }
+        const cached = await inFlightSsrCachePromise;
+        return {
+          gigs: needGigs ? cached.gigs : [],
+          users: needUsers ? cached.users : [],
+          projects: needProjects ? cached.projects.slice(0, projectsLimit) : [],
+          categories: [],
+          hydrated: true
+        };
+      }
+
+      const [gigsRes, usersRes, projectsRes] = await Promise.all([
+        !needGigs
+          ? Promise.resolve(emptyRows)
+          : candidateTokens.length > 0
+            ? pool.query(
+                `SELECT * FROM gigs
+                 WHERE status IN ('active', 'published')
+                   AND (id = ANY($1::text[]) OR LOWER(COALESCE(slug, '')) = ANY($2::text[]))
+                 UNION
+                 (SELECT * FROM gigs WHERE status IN ('active', 'published') ORDER BY created_at DESC NULLS LAST LIMIT 50)`,
+                [candidateTokens, lowerCandidateTokens]
+              )
+            : pool.query("SELECT * FROM gigs WHERE status IN ('active', 'published') ORDER BY created_at DESC NULLS LAST LIMIT 50"),
+        !needUsers
+          ? Promise.resolve(emptyRows)
+          : candidateTokens.length > 0
+            ? pool.query(
+                `SELECT id, name, username, role, avatar, title, rating, reviews_count, hourly_rate, earned, completed_jobs, bio, skills, status, verified, email_verified, mobile_verified, created_at, is_flagged, is_available_now
+                 FROM users
+                 WHERE status = 'active'
+                   AND (id = ANY($1::text[]) OR LOWER(COALESCE(username, '')) = ANY($2::text[]))
+                 UNION
+                 (SELECT id, name, username, role, avatar, title, rating, reviews_count, hourly_rate, earned, completed_jobs, bio, skills, status, verified, email_verified, mobile_verified, created_at, is_flagged, is_available_now
+                  FROM users WHERE status = 'active' ORDER BY created_at DESC NULLS LAST LIMIT 50)`,
+                [candidateTokens, lowerCandidateTokens]
+              )
+            : pool.query(
+                `SELECT id, name, username, role, avatar, title, rating, reviews_count, hourly_rate, earned, completed_jobs, bio, skills, status, verified, email_verified, mobile_verified, created_at, is_flagged, is_available_now
+                 FROM users WHERE status = 'active' ORDER BY created_at DESC NULLS LAST LIMIT 50`
+              ),
+        !needProjects
+          ? Promise.resolve(emptyRows)
+          : candidateTokens.length > 0
+            ? pool.query(
+                `SELECT * FROM projects
+                 WHERE status = 'open'
+                   AND (id = ANY($1::text[]) OR LOWER(COALESCE(slug, '')) = ANY($2::text[]))
+                 UNION
+                 (SELECT * FROM projects WHERE status = 'open' ORDER BY created_at DESC NULLS LAST LIMIT ${projectsLimit})`,
+                [candidateTokens, lowerCandidateTokens]
+              )
+            : pool.query(`SELECT * FROM projects WHERE status = 'open' ORDER BY created_at DESC NULLS LAST LIMIT ${projectsLimit}`)
+      ]);
+
+      const gigs = gigsRes.rows.map(mapGigRow);
+      const users = usersRes.rows.map(mapUserRow);
+      const projects = projectsRes.rows.map(mapProjectRow);
+
+      return { gigs, users, projects, categories: [] };
+    } catch (err) {
+      console.error('[SSR] Error fetching data for SSR:', err);
+      return { gigs: [], users: [], projects: [], categories: [] };
+    }
+  });
+} catch (ssrSetupErr) {
+  console.error('[SSR Setup Error]', ssrSetupErr);
+}
+
+// Catch-all for unknown /api/* paths - registered AFTER setupSSR
+app.use('/api/*', (_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Global Error Handler - registered AFTER setupSSR
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status = Number(err?.status || err?.statusCode || 500);
+  const isApi = req.path?.startsWith('/api') || req.originalUrl?.startsWith('/api');
+
+  console.error(`[Error] ${req.method} ${req.path}:`, err);
+
+  if (isApi) {
+    if ((process.env.NODE_ENV === 'production' || IS_PROD) && status >= 500) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    const safeMsg = (status < 500 && err?.message) ? err.message : ((process.env.NODE_ENV === 'production' || IS_PROD) ? 'Internal server error' : (err?.message || 'Internal server error'));
+    return res.status(status).json({ error: safeMsg });
+  }
+
+  const isUriError = err instanceof URIError || err?.name === 'URIError' || (err?.message && String(err.message).includes('URI'));
+  if (isUriError) {
+    const clientDistHtml = path.resolve(__dirname, 'dist/client/index.html');
+    const devHtml = path.resolve(__dirname, 'index.html');
+    const htmlPath = fs.existsSync(clientDistHtml) ? clientDistHtml : devHtml;
+    if (fs.existsSync(htmlPath)) {
+      return res.status(200).setHeader('Content-Type', 'text/html').sendFile(htmlPath);
+    }
+  }
+
+  const escapedMsg = (err?.message || 'An unexpected error occurred.')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  return res.status(status).setHeader('Content-Type', 'text/html').send(`
+    <!DOCTYPE html>
+    <html>
+      <head><title>Error</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>Server Error</h1>
+        <p>${(process.env.NODE_ENV === 'production' || IS_PROD) ? 'An unexpected error occurred.' : escapedMsg}</p>
+      </body>
+    </html>
+  `);
+});
+
+resolveStartupReady();
+
+export const server = createServer(app);
+
+// Initialize WebSocket Engine
+initWebSocketServer(server);
+
+const portArgIndex = process.argv.findIndex(arg => arg === '--port' || arg === '-p');
+const cliPort = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? Number(process.argv[portArgIndex + 1]) : null;
+const envPort = process.env.PORT && process.env.PORT !== process.env.NGINX_PORT ? Number(process.env.PORT) : null;
+const PORT = cliPort || envPort || Number(process.env.DEFAULT_APP_PORT) || 3000;
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[UnhandledRejection]', reason);
+});
+
+if (process.env.NODE_ENV !== 'test' && !server.listening) {
+  // Bind target server port reliably; retry briefly on transient EADDRINUSE during fast restarts
+  // instead of binding an unreachable random port (0) that the preview proxy cannot reach.
+  let bindRetries = 0;
+  const MAX_BIND_RETRIES = 6;
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE' && bindRetries < MAX_BIND_RETRIES) {
+      bindRetries += 1;
+      console.warn(`Port ${PORT} in use, retrying bind (${bindRetries}/${MAX_BIND_RETRIES})...`);
+      setTimeout(() => {
+        if (!server.listening && !isShuttingDown) {
+          server.listen(Number(PORT), '0.0.0.0');
+        }
+      }, 500);
+    } else {
+      console.error(`[Server] Failed to bind port ${PORT}:`, err);
+      process.exit(1);
+    }
+  });
+  server.listen(Number(PORT), '0.0.0.0', () => {
+    const actualPort = (server.address() as any)?.port || PORT;
+    console.log(`WorkPerHour server running on http://0.0.0.0:${actualPort}`);
+  });
+
+  hydrationPromise = (async () => {
+    try {
+      console.log('[Server] Hydrating store from PostgreSQL...');
+      await hydrateStoreFromPostgres();
+      isStoreHydrated = true;
+      ssrPublicCache = null;
+      invalidateSsrHtmlCache();
+      console.log('[Server] PostgreSQL hydration completed successfully.');
+      runBackgroundJobs();
+    } catch (err) {
+      if (IS_PROD) {
+        console.error('[FATAL] Postgres hydration failed; refusing to start:', err);
+        process.exit(1);
+      } else {
+        console.warn('[DEV] Postgres hydration notice (continuing in dev mode):', err);
+        isStoreHydrated = true;
+        invalidateSsrHtmlCache();
+      }
+    }
+  })();
+} else {
+  isStoreHydrated = true;
+}
+
+// Graceful shutdown
+import { stopOutboxProcessor } from './server/services/outboxService.js';
+import { clients } from './server/websocket.js';
+
+let shutdownInitiated = false;
+async function gracefulShutdown(signal: string) {
+  if (shutdownInitiated) return;
+  shutdownInitiated = true;
+  isShuttingDown = true;
+  console.log(`Received ${signal}. Initiating graceful shutdown...`);
+  
+  stopOutboxProcessor();
+
+  for (const client of clients) {
+    try { client.close(1001, 'Server shutting down'); } catch {}
+  }
+
+  // 1. Stop accepting new HTTP requests
+  server.close(async () => {
+    console.log('HTTP server closed.');
+    
+    // 2. Flush pending writes
+    try {
+      await postgresStore.flushAll();
+      console.log('Pending writes flushed.');
+    } catch (err) {
+      console.error('Error flushing pending writes:', err);
+    }
+
+    // 3. Close DB connections
+    try {
+      await postgresStore.getPool().end();
+      console.log('Postgres pool closed.');
+    } catch (err) {
+      console.error('Error closing Postgres pool:', err);
+    }
+    
+    process.exit(0);
+  });
+  
+  // Force exit after 10s if not shut down
+  setTimeout(() => {
+    console.error('Shutdown timeout, forcing exit.');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
