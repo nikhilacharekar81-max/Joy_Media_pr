@@ -381,11 +381,9 @@ export function Header({
                 {orders.length === 0 ? (
                   <div className="p-6 text-center text-slate-400 space-y-2.5">
                     <Mail className="w-8 h-8 mx-auto text-slate-300" />
-                    <p className="text-xs font-bold text-slate-700">{AGENCY_MODE ? 'No active orders yet' : 'No workstreams yet'}</p>
+                    <p className="text-xs font-bold text-slate-700">No active orders yet</p>
                     <p className="text-[11px] text-slate-500">
-                      {AGENCY_MODE
-                        ? 'Browse our services or request a custom quote to get started.'
-                        : 'Explore gigs, post a project, or switch demo user to open an escrow workstream.'}
+                      Browse our services or request a custom quote to get started.
                     </p>
                     <div className="flex items-center justify-center gap-2 pt-1">
                       <button
@@ -396,22 +394,8 @@ export function Header({
                         }}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
                       >
-                        {AGENCY_MODE ? 'Explore Services' : 'Explore Gigs'}
+                        Explore Services
                       </button>
-                      {!AGENCY_MODE && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            setIsWorkstreamsDropdownOpen(false);
-                            if (onOpenSwitchUser) onOpenSwitchUser();
-                            else navigate('/switch-user', e);
-                          }}
-                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
-                        >
-                          <Users className="w-3 h-3" />
-                          <span>Switch User</span>
-                        </button>
-                      )}
                     </div>
                   </div>
                 ) : (
@@ -420,7 +404,7 @@ export function Header({
                       const activeUid = currentUser?.id;
                       const isBuyer = activeUid === ord.buyerId;
                       const partner = isBuyer ? (ord as any).seller : (ord as any).buyer;
-                      const partnerName = partner?.name || (isBuyer ? ord.sellerUsername || 'Seller' : ord.buyerUsername || 'Buyer');
+                      const partnerName = partner?.name || (isBuyer ? ord.sellerUsername || SITE_CONFIG.brandName : ord.buyerUsername || 'Client');
                       const partnerAvatar = partner?.avatar;
                       const previewText = (ord as any).lastMessage || ord.title;
                       const rawDate = (ord as any).lastMessageTime || ord.createdAt;
@@ -680,7 +664,7 @@ export function Header({
                         className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                       >
                         <PlusCircle className="w-4 h-4 text-emerald-600" />
-                        <span>{AGENCY_MODE ? 'Add Service' : 'Post Gig'}</span>
+                        <span>Add Service</span>
                       </button>
                     )}
 
@@ -727,7 +711,7 @@ export function Header({
                       className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                     >
                       <Briefcase className="w-4 h-4 text-indigo-600" />
-                      <span>{AGENCY_MODE ? 'My Requests' : 'Buyer Activity'}</span>
+                      <span>My Requests</span>
                     </button>
 
                     {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
@@ -737,7 +721,7 @@ export function Header({
                         className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                       >
                         <Briefcase className="w-4 h-4 text-emerald-600" />
-                        <span>{AGENCY_MODE ? 'Agency Activity' : 'Freelancer Activity'}</span>
+                        <span>Team Activity</span>
                       </button>
                     )}
 
@@ -862,7 +846,7 @@ export function Header({
                   { label: 'Shopify Services', path: '/categories/ecommerce' },
                   { label: 'Digital Products', path: '/categories/software-development' },
                   { label: 'Contact Support', path: '/support' },
-                  { label: 'Buyer Requests', path: '/projects' }
+                  { label: 'Client Requests', path: '/projects' }
                 ].map((navItem) => (
                   <button
                     key={navItem.label}
@@ -944,7 +928,7 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      {AGENCY_MODE ? 'My Requests' : 'Buyer Activity'}
+                      My Requests
                     </button>
                     {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
                       <button
@@ -954,7 +938,7 @@ export function Header({
                         }}
                         className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                       >
-                        {AGENCY_MODE ? 'Agency Activity' : 'Freelancer Activity'}
+                        Team Activity
                       </button>
                     )}
                     <button
@@ -964,7 +948,7 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      {AGENCY_MODE ? 'My Orders' : 'Dashboard'}
+                      My Orders
                     </button>
                     <button
                       onClick={(e) => {
@@ -973,7 +957,7 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      {AGENCY_MODE ? `Order Updates (${orders.length})` : `Workstreams (${orders.length})`}
+                      {`Order Updates (${orders.length})`}
                     </button>
                   </div>
                   <button

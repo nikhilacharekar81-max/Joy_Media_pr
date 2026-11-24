@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Award, Users, Briefcase, CheckCircle2, AlertCircle, RefreshCw, Sliders, ShieldCheck } from 'lucide-react';
 import { getAuthToken } from '../../utils/authToken';
+import { SITE_CONFIG } from '../../siteConfig';
 
 export const AdminMembershipsQuotasModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ export const AdminMembershipsQuotasModule: React.FC = () => {
           membershipsEnabled,
           freelancerPlans: [
             { id: 'plan_free', name: 'Standard Freelancer', priceMonthly: 0, bidsPerMonth: Number(standardBids), commissionDiscountPercent: 0, featuredBadge: false, enabled: true },
-            { id: 'plan_pro', name: 'WorkPerHour Pro Talent', priceMonthly: Number(proPrice), bidsPerMonth: Number(proBids), commissionDiscountPercent: 2, featuredBadge: true, enabled: true }
+            { id: 'plan_pro', name: `${SITE_CONFIG.brandName} Pro Talent`, priceMonthly: Number(proPrice), bidsPerMonth: Number(proBids), commissionDiscountPercent: 2, featuredBadge: true, enabled: true }
           ],
           buyerPlans: [
             { id: 'buyer_free', name: 'Standard Client', priceMonthly: 0, jobPostsPerMonth: Number(standardJobPosts), zeroBuyerFee: false, enabled: true },
@@ -204,7 +205,7 @@ export const AdminMembershipsQuotasModule: React.FC = () => {
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">Pro Talent Tier</span>
-                <h4 className="font-bold text-slate-800">WorkPerHour Pro Talent</h4>
+                <h4 className="font-bold text-slate-800">{SITE_CONFIG.brandName} Pro Talent</h4>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>

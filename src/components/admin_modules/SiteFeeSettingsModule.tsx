@@ -17,6 +17,7 @@ interface SiteFeeSettingsModuleProps {
 }
 
 import { DEFAULT_FEE_CONFIG } from '../../shared/fees';
+import { SITE_CONFIG } from '../../siteConfig';
 import { getAuthToken } from '../../utils/authToken';
 import { getDeviceId } from '../../utils/deviceId';
 
@@ -56,8 +57,8 @@ export const SiteFeeSettingsModule: React.FC<SiteFeeSettingsModuleProps> = ({
   const [instantPayoutSurcharge, setInstantPayoutSurcharge] = useState<number>(1.5);
 
   // Operations & Brand Settings
-  const [brandName, setBrandName] = useState('WorkPerHour');
-  const [supportEmail, setSupportEmail] = useState('support@workperhour.com');
+  const [brandName, setBrandName] = useState<string>(SITE_CONFIG.brandName);
+  const [supportEmail, setSupportEmail] = useState<string>(SITE_CONFIG.emails.support);
   const [currency, setCurrency] = useState('USD ($) - United States Dollar');
   const [maintenanceMode, setMaintenanceMode] = useState<boolean>(false);
   const [allowNewRegistrations, setAllowNewRegistrations] = useState<boolean>(true);
@@ -231,8 +232,8 @@ export const SiteFeeSettingsModule: React.FC<SiteFeeSettingsModuleProps> = ({
     setUrgentProjectFee(25);
     setProjectModerationRequired(false);
     setInstantPayoutSurcharge(1.5);
-    setBrandName('WorkPerHour');
-    setSupportEmail('support@workperhour.com');
+    setBrandName(SITE_CONFIG.brandName);
+    setSupportEmail(SITE_CONFIG.emails.support);
     setMaintenanceMode(false);
     setAllowNewRegistrations(true);
   };

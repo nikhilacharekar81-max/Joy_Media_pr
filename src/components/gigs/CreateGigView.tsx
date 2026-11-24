@@ -89,16 +89,16 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-agency-dark">Create a New Service Gig</h1>
-        <p className="text-sm text-agency-muted">Publish your freelance service and leverage automated tools to optimize conversion.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-agency-dark">Create a New Service</h1>
+        <p className="text-sm text-agency-muted">Publish a fixed-price service offering for clients to order directly.</p>
       </div>
 
       <form onSubmit={handlePublishGig} className="space-y-6">
         <div>
-          <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Gig Title</label>
+          <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Service Title</label>
           <input 
             type="text" 
-            placeholder="I will build a high-performance web app..."
+            placeholder="Professional Guest Post Placement..."
             value={newGigTitle}
             onChange={(e) => setNewGigTitle(e.target.value)}
             required
@@ -124,10 +124,10 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
           </select>
         </div>
 
-        {/* Gig Cover Image Upload & Gallery */}
+        {/* Service Cover Image Upload & Gallery */}
         <div className="pt-2 border-t border-slate-100">
           <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">
-            Gig Cover Image
+            Service Cover Image
           </label>
           <p className="text-xs text-agency-muted mb-4">
             Upload your own custom image, paste a picture URL, or select from curated cover presets.
@@ -138,7 +138,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
             <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-900 group aspect-video max-h-64 mb-4">
               <img 
                 src={newGigImage} 
-                alt="Gig Cover Preview" 
+                alt="Service Cover Preview" 
                 className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
               />
               <div className="absolute top-3 right-3 flex items-center gap-2">
@@ -173,7 +173,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
                 <Upload className="w-6 h-6" />
               </div>
               <p className="text-xs font-bold text-slate-800 mb-1">
-                Click to upload a custom Gig image
+                Click to upload a custom service image
               </p>
               <p className="text-[11px] text-slate-500">
                 Supports PNG, JPG, WEBP or SVG up to 8MB
@@ -267,13 +267,13 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
           </div>
         </div>
 
-        {/* Optional Gig Extras Section */}
+        {/* Optional Service Extras Section */}
         <div className="pt-4 border-t border-slate-100 space-y-4">
           <div>
             <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-1">
-              Configure Optional Gig Extras (Add-ons)
+              Configure Optional Service Extras (Add-ons)
             </label>
-            <p className="text-xs text-agency-muted">Allow buyers to add extra fast delivery, source files, or commercial licenses to their order.</p>
+            <p className="text-xs text-agency-muted">Allow clients to add extra fast delivery, source files, or commercial licenses to their order.</p>
           </div>
 
           {/* Existing configured extras */}
@@ -327,7 +327,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
         </div>
 
         <button type="submit" className="w-full py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors text-sm shadow-md cursor-pointer">
-          Publish Gig to Marketplace
+          Publish Service
         </button>
       </form>
     </div>

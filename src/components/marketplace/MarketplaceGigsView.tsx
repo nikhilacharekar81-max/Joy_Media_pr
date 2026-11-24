@@ -62,15 +62,9 @@ type SortOption = 'recommended' | 'bestselling' | 'rating' | 'price_asc' | 'pric
 
 function formatServiceTitle(title: string): string {
   const trimmed = title.trim();
-  if (AGENCY_MODE) {
-    const stripped = trimmed.replace(/^i\s+will\s+/i, '').trim();
-    if (!stripped) return trimmed;
-    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
-  }
-  if (trimmed.toLowerCase().startsWith('i will')) {
-    return 'I will ' + trimmed.slice(6).trim();
-  }
-  return `I will ${trimmed.charAt(0).toLowerCase()}${trimmed.slice(1)}`;
+  const stripped = trimmed.replace(/^i\s+will\s+/i, '').trim();
+  if (!stripped) return trimmed;
+  return stripped.charAt(0).toUpperCase() + stripped.slice(1);
 }
 
 function formatReviewCount(count: number): string {
@@ -246,12 +240,10 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {currentCategory === 'All' ? (AGENCY_MODE ? 'Explore Agency Services' : 'Explore Freelance Services') : `${currentCategory} Services`}
+                {currentCategory === 'All' ? 'Explore Agency Services' : `${currentCategory} Services`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                {AGENCY_MODE
-                  ? `Explore fixed-price guest posting, press releases, UGC AI videos, web development, Shopify, and digital services from ${SITE_CONFIG.brandName} with secure online checkout.`
-                  : `Find top-rated talent, review verified portfolios, and hire securely with ${SITE_CONFIG.brandName}.`}
+                {`Explore fixed-price guest posting, press releases, UGC AI videos, web development, Shopify, and digital services from ${SITE_CONFIG.brandName} with secure online checkout.`}
               </p>
             </div>
 
@@ -260,7 +252,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
-                placeholder={AGENCY_MODE ? 'Search services...' : 'Search gigs...'} 
+                placeholder="Search services..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-400 shadow-xs"
@@ -331,45 +323,6 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                 </div>
               )}
             </div>
-
-            {/* Seller Details Filter (hidden in single-seller agency mode) */}
-            {!AGENCY_MODE && (
-            <div className="relative">
-              <button 
-                onClick={() => setActiveDropdown(activeDropdown === 'seller' ? null : 'seller')}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                  sellerLevelFilter !== 'All'
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <span>Seller details {sellerLevelFilter !== 'All' ? `(${sellerLevelFilter})` : ''}</span>
-                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${activeDropdown === 'seller' ? '-rotate-90' : 'rotate-90'}`} />
-              </button>
-              {activeDropdown === 'seller' && (
-                <div className="absolute left-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-30 p-2 space-y-1">
-                  {[
-                    { label: 'All Sellers', value: 'All' },
-                    { label: 'Top Rated Seller', value: 'Top Rated' },
-                    { label: 'Level 2 Seller', value: 'Level 2' },
-                    { label: 'Level 1 Seller', value: 'Level 1' },
-                    { label: 'New Seller', value: 'New Seller' }
-                  ].map(lvl => (
-                    <button
-                      key={lvl.value}
-                      onClick={() => { setSellerLevelFilter(lvl.value); setActiveDropdown(null); }}
-                      className={`w-full text-left px-3 py-2 text-xs rounded-lg font-medium transition-colors flex items-center justify-between cursor-pointer ${
-                        sellerLevelFilter === lvl.value ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span>{lvl.label}</span>
-                      {sellerLevelFilter === lvl.value && <Check className="w-3.5 h-3.5 text-emerald-600" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            )}
 
             {/* Budget Filter with Custom Range */}
             <div className="relative">
@@ -592,9 +545,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
           </div>
           <h3 className="text-lg font-bold text-slate-900">No Services Found</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-            {AGENCY_MODE
-              ? 'Try adjusting your search query, budget parameters, or delivery time to discover more services.'
-              : 'Try adjusting your search query, budget parameters, or seller details to discover more freelance gigs.'}
+            Try adjusting your search query, budget parameters, or delivery time to discover more services.
           </p>
           <div className="pt-2">
             <button
@@ -692,44 +643,15 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                 {/* Card Content */}
                 <div className="p-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    {/* Agency / Seller Header Row */}
-                    {AGENCY_MODE ? (
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                          {SITE_CONFIG.brandName}
-                        </span>
-                        <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate">
-                          {gig.category}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="relative">
-                          <Avatar 
-                            src={gig.freelancerAvatar} 
-                            name={gig.freelancerName} 
-                            size="xs"
-                          />
-                          {/* Green Online Dot */}
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900 absolute -bottom-0.5 -right-0.5 inline-block" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <a 
-                            href={sellerUrl}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(sellerUrl, e);
-                            }}
-                            className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:underline block truncate"
-                          >
-                            {gig.freelancerName}
-                          </a>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block truncate">
-                            {gig.freelancerLevel || 'Level 2 Seller'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                    {/* Agency Header Row */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                        {SITE_CONFIG.brandName}
+                      </span>
+                      <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate">
+                        {gig.category}
+                      </span>
+                    </div>
 
                     {/* Gig Title: Exactly "I will ..." */}
                     <h3 className="text-sm sm:text-base leading-snug font-normal text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 min-h-[44px] mb-2.5">
@@ -815,34 +737,11 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                   </div>
 
                   <div className="space-y-1.5 flex-1 min-w-0 w-full">
-                    {/* Agency / Seller row */}
-                    {AGENCY_MODE ? (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-slate-800 truncate">{SITE_CONFIG.brandName}</span>
-                        <span className="text-[11px] text-slate-400">• {gig.category}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Avatar 
-                          src={gig.freelancerAvatar} 
-                          name={gig.freelancerName} 
-                          size="xs"
-                        />
-                        <a 
-                          href={sellerUrl}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(sellerUrl, e);
-                          }}
-                          className="text-xs font-bold text-slate-800 hover:underline truncate"
-                        >
-                          {gig.freelancerName}
-                        </a>
-                        <span className="text-[11px] text-slate-400">
-                          • {gig.freelancerLevel || 'Top Rated'}
-                        </span>
-                      </div>
-                    )}
+                    {/* Agency row */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-800 truncate">{SITE_CONFIG.brandName}</span>
+                      <span className="text-[11px] text-slate-400">• {gig.category}</span>
+                    </div>
 
                     <h3 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2 sm:line-clamp-1">
                       <a
@@ -898,148 +797,6 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* Featured Projects Section                                 */}
-      {/* ========================================================= */}
-      {!AGENCY_MODE && projects && projects.length > 0 && (
-        <div className="mt-16 pt-12 border-t border-slate-200/80">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Active Buyer Projects & Bidding Opportunities
-              </h2>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Explore open client requests with funded escrow budgets. Submit proposals, bid on custom work, and collaborate securely.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={(e) => navigate('/projects', e)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-xs shrink-0 cursor-pointer"
-            >
-              <span>View All Projects ({projects.length})</span>
-              <ChevronRight className="w-4 h-4 text-emerald-400" />
-            </button>
-          </div>
-
-          {/* Listicle View of Projects */}
-          <div className="space-y-4">
-            {projects.slice(0, 8).map((project) => {
-              const projectUrl = `/projects/${project.id}`;
-              return (
-                <div
-                  key={project.id}
-                  onClick={(e) => navigate(projectUrl, e)}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-emerald-500/50 hover:shadow-lg transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group cursor-pointer"
-                >
-                  <div className="flex-1 min-w-0 space-y-2.5">
-                    <div className="flex flex-wrap items-center gap-2.5 text-xs">
-                      <div className="flex items-center gap-2">
-                        <img 
-                          src={project.buyerAvatar || DEFAULT_AVATAR} 
-                          alt={project.buyerName} 
-                          className="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200" 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
-                          }}
-                        />
-                        <span className="font-bold text-slate-900 text-xs">{project.buyerName}</span>
-                        <span className="text-[11px] text-slate-400 font-medium">
-                          {project.countryFlag} {project.location || 'Client'}
-                        </span>
-                      </div>
-
-                      <span className="text-slate-300">•</span>
-
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 uppercase tracking-wider">
-                        {project.category}
-                      </span>
-
-                      {project.isUrgent && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800">
-                          <Flame className="w-3 h-3 text-orange-500" /> Urgent
-                        </span>
-                      )}
-
-                      {project.featured && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">
-                          <Sparkles className="w-3 h-3 text-amber-500" /> Featured
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1 leading-snug">
-                      <a 
-                        href={projectUrl} 
-                        onClick={(e) => { e.stopPropagation(); navigate(projectUrl, e); }}
-                        className="text-slate-900 hover:text-emerald-600 transition-colors block"
-                      >
-                        {project.title}
-                      </a>
-                    </h3>
-
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {project.description}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      {project.skills && project.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 items-center">
-                          {project.skills.slice(0, 4).map((skill, idx) => (
-                            <span key={idx} className="text-[10px] font-medium bg-slate-50 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200/60">
-                              {skill}
-                            </span>
-                          ))}
-                          {project.skills.length > 4 && (
-                            <span className="text-[10px] text-slate-400 font-medium">+{project.skills.length - 4} more</span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium ml-auto md:ml-0 pt-1 md:pt-0">
-                        <span className="flex items-center gap-1">
-                          <Send className="w-3 h-3 text-slate-400" />
-                          <strong className="text-slate-700 font-bold">{project.proposalsCount || 0}</strong> proposals
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          Est. {project.deadlineDays || 7} days
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 gap-3 shrink-0">
-                    <div className="text-left md:text-right">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold block">
-                        {project.projectType === 'hourly' ? 'Hourly Budget' : 'Fixed Budget'}
-                      </span>
-                      <span className="text-lg font-black text-emerald-600 font-mono">
-                        ${project.budgetMin} - ${project.budgetMax}
-                        {project.projectType === 'hourly' && <span className="text-xs font-normal text-slate-500">/hr</span>}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(projectUrl, e);
-                      }}
-                      className="px-4 py-2 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5"
-                    >
-                      <span>Submit Proposal</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

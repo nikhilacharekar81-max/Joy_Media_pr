@@ -62,7 +62,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4 forced-13-17">
       <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-3">
-        {AGENCY_MODE ? 'Order Actions' : 'Workstream Actions'}
+        Order Actions
       </h4>
 
       <div className="space-y-2.5">
@@ -78,9 +78,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
               <span>
                 {pendingInvoice
                   ? (isCustomOrderStream ? `Pay Custom Order Invoice (${pendingInvoice.number})` : `Pay Invoice (${pendingInvoice.number})`)
-                  : AGENCY_MODE
-                    ? 'Approve Deliverables & Complete Order'
-                    : (isCustomOrderStream ? 'Approve & Release Custom Order Escrow' : 'Approve & Release Escrow')}
+                  : 'Approve Deliverables & Complete Order'}
               </span>
             </div>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -91,11 +89,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
           <div className="text-xs text-blue-800 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
             <span>
-              {AGENCY_MODE
-                ? `Payment confirmed ($${activeEscrow.toLocaleString()}). Our team is working on your deliverables.`
-                : (isCustomOrderStream
-                    ? `Escrow funded ($${activeEscrow.toLocaleString()}). Awaiting seller delivery & Custom Order Invoice.`
-                    : `Escrow funded ($${activeEscrow.toLocaleString()}). Awaiting seller delivery & invoice.`)}
+              {`Payment confirmed ($${activeEscrow.toLocaleString()}). Our team is working on your deliverables.`}
             </span>
           </div>
         )}
@@ -104,11 +98,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
           <div className="text-xs text-purple-800 flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-purple-600 shrink-0" />
             <span>
-              {AGENCY_MODE
-                ? 'Revision requested. Our team is updating your deliverables.'
-                : (isCustomOrderStream
-                    ? 'Revision requested. Seller is updating deliverables & Custom Order Invoice.'
-                    : 'Revision requested. Seller is updating deliverables & invoice.')}
+              Revision requested. Our team is updating your deliverables.
             </span>
           </div>
         )}
@@ -124,9 +114,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
               <span>
                 {order.status === 'cancelled'
                   ? 'Rate Cancelled Order'
-                  : AGENCY_MODE
-                    ? `Write a Review for ${SITE_CONFIG.brandName}`
-                    : 'Write a Review for Seller'}
+                  : `Write a Review for ${SITE_CONFIG.brandName}`}
               </span>
             </div>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -141,7 +129,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
           >
             <div className="flex items-center gap-2.5">
               <Star className="w-4 h-4 fill-white" />
-              <span>{AGENCY_MODE ? 'Review Client Experience' : 'Review Buyer Experience'}</span>
+              <span>Review Client Experience</span>
             </div>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
@@ -156,9 +144,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
                 <span>
                   {order.review.isCancelledOrder
                     ? 'Post-Cancellation Review'
-                    : AGENCY_MODE
-                      ? 'Client Review'
-                      : 'Buyer Review'}
+                    : 'Client Review'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -175,7 +161,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
             <p className="text-xs text-amber-800 italic line-clamp-3">"{order.review.comment}"</p>
             {order.review.reply && (
               <div className="mt-2 pt-2 border-t border-amber-200 text-xs text-amber-900">
-                <span className="font-bold">{AGENCY_MODE ? `${SITE_CONFIG.brandName} Response: ` : 'Seller Public Response: '}</span>
+                <span className="font-bold">{`${SITE_CONFIG.brandName} Response: `}</span>
                 <span className="italic">"{order.review.reply.text}"</span>
               </div>
             )}
@@ -188,7 +174,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 font-bold text-emerald-900">
                 <Star className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
-                <span>{AGENCY_MODE ? 'Agency Review of Client' : 'Seller Review of Buyer'}</span>
+                <span>Team Review of Client</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono font-bold text-emerald-800 text-xs bg-emerald-100/70 px-2 py-0.5 rounded-full">
@@ -247,15 +233,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
         {/* PRE-PAID ORDER PROPOSAL LOCK / UNLOCK INDICATOR */}
         {isSeller && order.type === 'gig' && !invoiceAlreadyPaid && !isCustomOrderStream && (
           <div className="text-xs text-amber-800 leading-relaxed forced-13-17">
-            {AGENCY_MODE ? (
-              <>
-                <strong>Pre-Paid Service Order:</strong> New quotes are locked while the initial order is active. Deliver the work and complete the first invoice to send follow-on quotes.
-              </>
-            ) : (
-              <>
-                <strong>Pre-Funded Gig WorkStream:</strong> New proposals are locked while the initial Gig escrow is active. Deliver the work and get your first invoice paid to unlock follow-on proposals.
-              </>
-            )}
+            <strong>Pre-Paid Service Order:</strong> New quotes are locked while the initial order is active. Deliver the work and complete the first invoice to send follow-on quotes.
           </div>
         )}
 
@@ -263,16 +241,10 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
           <div className="text-xs font-medium text-emerald-800 flex items-center gap-2">
             <FileSignature className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              {AGENCY_MODE ? (
-                isCustomOrderStream ? (
-                  <><strong>Custom Order Completed!</strong> Order chat remains open and you can now send a <strong>Custom Quote</strong> in the composer below for follow-on work.</>
-                ) : (
-                  <><strong>Invoice Paid!</strong> Order chat remains open and you can now send a <strong>New Quote</strong> in the composer below for follow-on work.</>
-                )
-              ) : isCustomOrderStream ? (
-                <><strong>Custom Order Completed!</strong> WorkStream remains open for chat and you can now send a <strong>Custom Order Proposal</strong> in the composer below for follow-on work.</>
+              {isCustomOrderStream ? (
+                <><strong>Custom Order Completed!</strong> Order chat remains open and you can now send a <strong>Custom Quote</strong> in the composer below for follow-on work.</>
               ) : (
-                <><strong>Invoice Paid!</strong> WorkStream remains open for chat and you can now send a <strong>New Proposal</strong> in the composer below for follow-on work.</>
+                <><strong>Invoice Paid!</strong> Order chat remains open and you can now send a <strong>New Quote</strong> in the composer below for follow-on work.</>
               )}
             </span>
           </div>
@@ -283,13 +255,9 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
           <div className="text-emerald-800 text-xs font-medium flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              {AGENCY_MODE
-                ? (isCustomOrderStream
-                    ? 'Custom order completed & invoice paid. Order chat remains open.'
-                    : 'Order completed & invoice paid. Order chat remains open.')
-                : (isCustomOrderStream
-                    ? 'Custom Order Completed • Invoice paid & funds credited to seller wallet. Chat remains open.'
-                    : 'Invoice paid & funds credited to seller wallet. Chat remains open.')}
+              {isCustomOrderStream
+                ? 'Custom order completed & invoice paid. Order chat remains open.'
+                : 'Order completed & invoice paid. Order chat remains open.'}
             </span>
           </div>
         )}
@@ -396,7 +364,7 @@ export const WorkstreamActionsPanel: React.FC<WorkstreamActionsPanelProps> = ({
             className="w-full py-2 px-3 text-slate-400 hover:text-red-600 rounded-xl text-xs font-medium text-left flex items-center gap-2 transition cursor-pointer mt-1"
           >
             <AlertTriangle className="w-3.5 h-3.5" />
-            <span>{AGENCY_MODE ? 'Order Support & Assistance' : 'Escrow Dispute Assistance'}</span>
+            <span>Order Support & Assistance</span>
           </button>
         )}
       </div>

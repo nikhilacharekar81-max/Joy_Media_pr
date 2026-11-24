@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { Project } from '../../types';
 import { DEFAULT_AVATAR } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const DELETED_PROJECTS_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_deleted_projects`;
 
 interface AdminProjectsModuleProps {
   allProjects?: Project[];
@@ -21,7 +24,7 @@ export const AdminProjectsModule: React.FC<AdminProjectsModuleProps> = ({
   // Local robust project state initialized with defaults and local storage filter
   const [projects, setProjects] = useState<Project[]>(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_projects') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_PROJECTS_KEY) || '[]');
       return (allProjects || []).filter(p => !deletedIds.includes(p.id));
     } catch {
       return allProjects || [];
@@ -31,7 +34,7 @@ export const AdminProjectsModule: React.FC<AdminProjectsModuleProps> = ({
   // Keep local state in sync when allProjects prop updates
   React.useEffect(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_projects') || '[]').map((d: any) => String(d));
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_PROJECTS_KEY) || '[]').map((d: any) => String(d));
       setProjects((allProjects || []).filter(p => !deletedIds.includes(String(p.id))));
     } catch {
       setProjects(allProjects || []);
@@ -144,10 +147,10 @@ export const AdminProjectsModule: React.FC<AdminProjectsModuleProps> = ({
         await Promise.resolve(onDeleteProject(idToDelete));
       }
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_projects') || '[]').map((d: any) => String(d));
+        const deletedIds = JSON.parse(localStorage.getItem(DELETED_PROJECTS_KEY) || '[]').map((d: any) => String(d));
         if (!deletedIds.includes(idToDelete)) {
           deletedIds.push(idToDelete);
-          localStorage.setItem('workperhour_deleted_projects', JSON.stringify(deletedIds));
+          localStorage.setItem(DELETED_PROJECTS_KEY, JSON.stringify(deletedIds));
         }
       } catch (e) {
         console.error("Error writing deleted projects to localStorage", e);

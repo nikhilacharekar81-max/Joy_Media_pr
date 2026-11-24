@@ -121,16 +121,16 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
           <div className="flex items-center gap-2.5">
             <img 
               src={currentGig.freelancerAvatar || DEFAULT_AVATAR} 
-              alt={AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName} 
+              alt={SITE_CONFIG.brandName} 
               className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100" 
               onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
             />
             <div>
               <span className="font-bold text-agency-dark block">
-                {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}
+                {SITE_CONFIG.brandName}
               </span>
               <span className="text-agency-muted font-mono">
-                {AGENCY_MODE ? SITE_CONFIG.domain : `@${currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}`}
+                {SITE_CONFIG.domain}
               </span>
             </div>
           </div>
@@ -150,7 +150,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
           <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
           <span className="bg-orange-50 text-orange-700 border border-orange-200 font-bold px-2.5 py-1 rounded-md text-[11px]">
-            {AGENCY_MODE ? 'Verified Agency Service' : (currentGig.freelancerLevel || 'Top Rated Seller')}
+            Verified Agency Service
           </span>
 
           <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold px-2.5 py-1 rounded-md text-[11px]">
@@ -212,7 +212,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
-                    <span>Produced by {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}</span>
+                    <span>Produced by {SITE_CONFIG.brandName}</span>
                     <span>Puppet Animation & Character Rigging</span>
                   </div>
                 </div>
@@ -239,25 +239,25 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
             </div>
           </div>
 
-          {/* About The Agency / Seller */}
+          {/* About The Agency */}
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-6">
             <h2 className="text-xl font-bold text-agency-dark border-b border-slate-100 pb-3">
-              {AGENCY_MODE ? `About ${SITE_CONFIG.brandName}` : 'About The Seller'}
+              {`About ${SITE_CONFIG.brandName}`}
             </h2>
             
             <div className="flex items-center gap-4">
               <img 
                 src={currentGig.freelancerAvatar || DEFAULT_AVATAR} 
-                alt={AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName} 
+                alt={SITE_CONFIG.brandName} 
                 className="w-16 h-16 rounded-full object-cover ring-4 ring-slate-100" 
                 onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
               />
               <div>
                 <h3 className="text-base font-bold text-agency-dark">
-                  {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}
+                  {SITE_CONFIG.brandName}
                 </h3>
                 <p className="text-xs text-agency-muted font-mono">
-                  {AGENCY_MODE ? SITE_CONFIG.domain : `@${currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}`}
+                  {SITE_CONFIG.domain}
                 </p>
                 {RATINGS_ENABLED && (
                   <div className="flex items-center gap-2 mt-1">
@@ -290,11 +290,11 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
             </div>
 
             <button 
-              onClick={() => handleContactSeller(currentGig.freelancerId, AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName, currentGig.title, currentGig.id)}
+              onClick={() => handleContactSeller(currentGig.freelancerId, SITE_CONFIG.brandName, currentGig.title, currentGig.id)}
               className="w-full sm:w-auto px-6 py-2.5 border-2 border-slate-900 text-agency-dark font-bold rounded-xl text-xs hover:bg-slate-900 hover:text-white transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-4 h-4 text-emerald-600" />
-              <span>{AGENCY_MODE ? 'Contact Our Team' : `Contact Seller (${currentGig.freelancerName})`}</span>
+              <span>Contact Our Team</span>
             </button>
           </div>
 
@@ -407,9 +407,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                   <div className="bg-emerald-50 border border-emerald-200/60 rounded-2xl p-3 flex items-start gap-2.5 text-[11px] text-emerald-900">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>
-                      {AGENCY_MODE
-                        ? 'Secure online payment with itemized invoicing, milestone updates, and direct agency support.'
-                        : 'Escrow-Protected Payments. Funds are safely held until work is delivered and approved.'}
+                      Secure online payment with itemized invoicing, milestone updates, and direct support from our team.
                     </span>
                   </div>
 
@@ -435,7 +433,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                               onClick={(e) => navigate(`/messages/${orderFeedback.orderId}`, e)}
                               className="underline font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer"
                             >
-                              Open Workstream #{orderFeedback.orderId} →
+                              Open Order #{orderFeedback.orderId} →
                             </button>
                           )}
                         </div>
@@ -457,10 +455,10 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                     <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-center space-y-1">
                       <div className="flex items-center justify-center gap-2 text-amber-900 font-bold text-xs">
                         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>{AGENCY_MODE ? 'This service is currently paused and cannot be ordered' : 'This gig has been paused and cannot be purchased'}</span>
+                        <span>This service is currently paused and cannot be ordered</span>
                       </div>
                       <p className="text-[11px] text-amber-700">
-                        {AGENCY_MODE ? 'Our team has temporarily paused orders for this service.' : 'The seller has temporarily paused orders for this service.'}
+                        Our team has temporarily paused orders for this service.
                       </p>
                     </div>
                   ) : (
@@ -482,12 +480,12 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                       {isCreatingOrder ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>{AGENCY_MODE ? 'Processing Order...' : 'Processing Escrow Order...'}</span>
+                          <span>Processing Order...</span>
                         </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4" />
-                          <span>{AGENCY_MODE ? 'Continue to Secure Checkout' : 'Fund in Escrow & Order Now'}</span>
+                          <span>Continue to Secure Checkout</span>
                         </>
                       )}
                     </button>

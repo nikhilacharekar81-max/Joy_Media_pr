@@ -5,6 +5,9 @@ import {
   ArrowRight, FileText, ChevronDown, AlertTriangle
 } from 'lucide-react';
 import { SERVICE_CATEGORIES } from '../HeaderCategoriesNav';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const CATEGORIES_STORAGE_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_categories`;
 
 interface SubcategoryItem {
   id: string;
@@ -32,7 +35,7 @@ export const AdminCategoriesModule: React.FC<AdminCategoriesModuleProps> = ({
   // Local state initialized with default category taxonomy or stored state
   const [categories, setCategories] = useState<CategoryItem[]>(() => {
     try {
-      const saved = localStorage.getItem('workperhour_categories');
+      const saved = localStorage.getItem(CATEGORIES_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -59,7 +62,7 @@ export const AdminCategoriesModule: React.FC<AdminCategoriesModuleProps> = ({
   // Automatically sync categories changes to localStorage
   React.useEffect(() => {
     try {
-      localStorage.setItem('workperhour_categories', JSON.stringify(categories));
+      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
     } catch (e) {
       console.error("Error saving categories to localStorage", e);
     }

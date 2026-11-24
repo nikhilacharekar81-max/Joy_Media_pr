@@ -6,6 +6,9 @@ import {
   ExternalLink, Layers, ArrowUpRight, BarChart2
 } from 'lucide-react';
 import { DEFAULT_AVATAR } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const DELETED_CMS_ARTICLES_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_deleted_cms_articles`;
 
 export type CmsCategory = 'announcement' | 'help_faq' | 'platform_policy' | 'guide' | 'legal';
 export type CmsStatus = 'published' | 'draft' | 'scheduled' | 'archived';
@@ -40,7 +43,7 @@ export const AdminCmsModule: React.FC<AdminCmsModuleProps> = ({
 }) => {
   const [articles, setArticles] = useState<CmsArticle[]>(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_cms_articles') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_CMS_ARTICLES_KEY) || '[]');
       return (initialArticles || []).filter(a => !deletedIds.includes(a.id));
     } catch {
       return initialArticles || [];
@@ -49,7 +52,7 @@ export const AdminCmsModule: React.FC<AdminCmsModuleProps> = ({
 
   React.useEffect(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_cms_articles') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_CMS_ARTICLES_KEY) || '[]');
       setArticles((initialArticles || []).filter(a => !deletedIds.includes(a.id)));
     } catch {
       setArticles(initialArticles || []);
@@ -171,10 +174,10 @@ export const AdminCmsModule: React.FC<AdminCmsModuleProps> = ({
 
   const handleDelete = (id: string) => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_cms_articles') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_CMS_ARTICLES_KEY) || '[]');
       if (!deletedIds.includes(id)) {
         deletedIds.push(id);
-        localStorage.setItem('workperhour_deleted_cms_articles', JSON.stringify(deletedIds));
+        localStorage.setItem(DELETED_CMS_ARTICLES_KEY, JSON.stringify(deletedIds));
       }
     } catch (e) {
       console.error("Error saving deleted CMS article to localStorage", e);

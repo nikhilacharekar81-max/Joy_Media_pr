@@ -337,12 +337,12 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                 <span>{isBuyerOnly ? 'My Client Workspace' : 'Client Project Requests'}</span>
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                {isBuyerOnly ? 'My Posted Projects' : 'Freelance Jobs & Buyer Requests'}
+                {isBuyerOnly ? 'My Custom Requests' : 'Client Project Requests'}
               </h1>
               <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed">
                 {isBuyerOnly
-                  ? 'View and manage your own custom project requests, review freelancer proposals, and track escrow milestones.'
-                  : 'Explore funded client requests, filter by budget and category, and submit winning custom proposals with escrow protection.'}
+                  ? 'View and manage your custom project requests, review quotes from our team, and track order progress.'
+                  : 'Explore client requests, filter by budget and category, and submit custom quotes with secure payment.'}
               </p>
             </div>
 
@@ -627,10 +627,10 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                   />
                 </label>
 
-                {/* Verified Buyers Only */}
+                {/* Verified Clients Only */}
                 <label className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-200/60 cursor-pointer transition-colors">
                   <span className="flex items-center gap-2 text-xs font-bold text-emerald-900">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Verified Buyers Only
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Verified Clients Only
                   </span>
                   <input
                     type="checkbox"
@@ -707,8 +707,8 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                     <option value="newest">Newest First</option>
                     <option value="budget_high">Highest Budget</option>
                     <option value="budget_low">Lowest Budget</option>
-                    <option value="proposals_fewest">Fewest Proposals</option>
-                    <option value="proposals_most">Most Proposals</option>
+                    <option value="proposals_fewest">Fewest Quotes</option>
+                    <option value="proposals_most">Most Quotes</option>
                   </select>
                 </div>
               </div>
@@ -756,7 +756,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                 )}
                 {verifiedOnly && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
-                    🛡️ Verified Buyer
+                    🛡️ Verified Client
                     <button onClick={() => setVerifiedOnly(false)} className="hover:text-emerald-950"><X className="w-3 h-3" /></button>
                   </span>
                 )}
@@ -832,7 +832,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                                   )}
                                 </span>
                               ) : (
-                                <span className="text-[11px] text-slate-500 font-medium">New buyer</span>
+                                <span className="text-[11px] text-slate-500 font-medium">New client</span>
                               )}
                               <span className="text-[11px] text-slate-400 font-medium">• {proj.createdAt}</span>
                             </div>
@@ -914,7 +914,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                           )}
 
                           <span className="text-slate-400 font-medium">
-                            • <strong className="text-slate-700 font-bold">{proj.proposalsCount}</strong> proposals
+                            • <strong className="text-slate-700 font-bold">{proj.proposalsCount}</strong> quotes
                           </span>
 
                           <span className="text-slate-400 font-medium hidden sm:inline">
@@ -938,7 +938,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                             className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
                           >
                             <Send className="w-3.5 h-3.5" />
-                            <span>Submit Proposal</span>
+                            <span>Send Quote</span>
                           </a>
                         </div>
                       </div>
@@ -1083,7 +1083,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                   {previewProject.countryFlag && <span>{previewProject.countryFlag}</span>}
                   {previewProject.verifiedBuyer && (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                      Verified Buyer
+                      Verified Client
                     </span>
                   )}
                 </div>
@@ -1093,7 +1093,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                 <div className="text-xs text-slate-400 flex items-center gap-3">
                   <span>Posted {previewProject.createdAt}</span>
                   <span>•</span>
-                  <span>{previewProject.proposalsCount} proposals</span>
+                  <span>{previewProject.proposalsCount} quotes</span>
                   <span>•</span>
                   <span>{previewProject.category}</span>
                   <span>•</span>
@@ -1167,7 +1167,7 @@ export const ProjectSearchView: React.FC<ProjectSearchViewProps> = ({
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-md flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
-                <span>Submit Custom Proposal</span>
+                <span>Send Custom Quote</span>
               </a>
             </div>
           </div>

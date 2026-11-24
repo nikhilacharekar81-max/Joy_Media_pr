@@ -940,7 +940,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
             await initiateGatewayCheckout({
               amount: topUpAmount,
               purpose: 'order_payment',
-              description: `Gig Order: ${orderTitle}`,
+              description: `Service Order: ${orderTitle}`,
               metadata: {
                 returnAction: 'create_gig_order',
                 returnPath: typeof window !== 'undefined' ? window.location.pathname : '/',
@@ -990,7 +990,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         return;
       }
 
-      const rawTitle = (gigTitle || `Consultation with ${freelancerName || 'Seller'}`).trim();
+      const rawTitle = (gigTitle || `Consultation with ${freelancerName || SITE_CONFIG.brandName}`).trim();
       const inquiryTitle = /^inquiry:/i.test(rawTitle) ? rawTitle : `Inquiry: ${rawTitle}`;
 
       try {

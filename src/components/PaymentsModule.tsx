@@ -348,7 +348,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         const paidInvoiceAmount = Number(paidInvoices.reduce((s, off) => s + Number(off.amount || 0), 0).toFixed(2));
         return {
           ...o,
-          sellerName: seller?.name || (o as any).sellerName || o.sellerUsername || 'Freelancer',
+          sellerName: seller?.name || (o as any).sellerName || o.sellerUsername || SITE_CONFIG.brandName,
           buyerName: currentUser.name,
           inEscrow: 0,
           escrowFunded: 0,
@@ -383,7 +383,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         const paidInvoiceAmount = Number(paidInvoices.reduce((s, off) => s + Number(off.amount || 0), 0).toFixed(2));
         return {
           ...o,
-          buyerName: buyer?.name || (o as any).buyerName || o.buyerUsername || 'Buyer',
+          buyerName: buyer?.name || (o as any).buyerName || o.buyerUsername || 'Client',
           sellerName: currentUser.name,
           inEscrow: 0,
           escrowFunded: 0,
@@ -566,12 +566,12 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             ? Number(preselectedOrder.amount || 25)
             : Number(preselectedOrder.amount || 25);
         setEscrowDepositAmount(defaultAmt > 0 ? String(defaultAmt) : '25');
-        setEscrowDepositTitle(pendingDep?.title || `Escrow deposit for ${preselectedOrder.title}`);
+        setEscrowDepositTitle(pendingDep?.title || `Order payment for ${preselectedOrder.title}`);
         setEscrowFundSource(availableBalance >= defaultAmt ? 'wallet' : 'instant_deposit');
       } else if (mode === 'seller_request') {
         const suggestedAmt = Number(preselectedOrder.amount || 25);
         setEscrowDepositAmount(suggestedAmt > 0 ? String(suggestedAmt) : '25');
-        setEscrowDepositTitle(`Escrow deposit for ${preselectedOrder.title}`);
+        setEscrowDepositTitle(`Payment request for ${preselectedOrder.title}`);
         setEscrowDepositNote('');
       }
     } else {
@@ -579,18 +579,18 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         const first = buyerOrderRows[0];
         setSelectedEscrowOrderId(first.id);
         setEscrowDepositAmount(String(first.amount || 25));
-        setEscrowDepositTitle(`Escrow deposit for ${first.title}`);
+        setEscrowDepositTitle(`Order payment for ${first.title}`);
         setEscrowFundSource(availableBalance >= Number(first.amount || 25) ? 'wallet' : 'instant_deposit');
       } else if (mode === 'seller_request' && freelancerOrderRows.length > 0) {
         const first = freelancerOrderRows[0];
         setSelectedEscrowOrderId(first.id);
         setEscrowDepositAmount(String(first.amount || 25));
-        setEscrowDepositTitle(`Escrow deposit for ${first.title}`);
+        setEscrowDepositTitle(`Payment request for ${first.title}`);
         setEscrowDepositNote('');
       } else {
         setSelectedEscrowOrderId('');
         setEscrowDepositAmount('50');
-        setEscrowDepositTitle('Wallet USD Deposit');
+        setEscrowDepositTitle('Account Credit Top-Up');
       }
     }
     setShowEscrowModal(true);
@@ -606,7 +606,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
       return;
     }
     if ((escrowModalMode === 'buyer_deposit' || escrowModalMode === 'seller_request') && amt < 5) {
-      setEscrowModalError('Minimum escrow deposit amount is $5.00.');
+      setEscrowModalError('Minimum order payment amount is $5.00.');
       return;
     }
 
@@ -1390,8 +1390,8 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         ]
       : [
           ['Available Account Balance', 'USD', availableBalance.toFixed(2)],
-          ['Buyer Escrow Held', 'USD', buyerEscrowTotal.toFixed(2)],
-          ['Freelancer Escrow Held', 'USD', freelancerEscrowTotal.toFixed(2)],
+          ['Client Order Payments Held', 'USD', buyerEscrowTotal.toFixed(2)],
+          ['Team Active Orders Held', 'USD', freelancerEscrowTotal.toFixed(2)],
           ['Paid This Month', 'USD', paidThisMonth.toFixed(2)],
           ['Paid To Date', 'USD', paidToDate.toFixed(2)],
           ['Earned This Month', 'USD', earnedThisMonth.toFixed(2)],
@@ -1770,7 +1770,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     <div className={`text-[15px] font-bold leading-snug ${
                       selectedMoneyBox === 'freelancer_escrow' ? 'text-white' : 'text-slate-900'
                     }`}>
-                      {AGENCY_MODE ? 'Agency Active Orders' : 'My Freelancer Escrow'}
+                      {AGENCY_MODE ? 'Team Active Orders' : 'Team Order Balances'}
                     </div>
                     <div
                       className={`text-xs mt-0.5 mb-4 ${
@@ -1997,14 +1997,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 <div className="space-y-2">
                   <div className="bg-slate-100/80 text-slate-700 px-4 py-3 grid grid-cols-12 items-center text-xs font-semibold rounded-xl gap-2">
                     <div className="col-span-6">Description</div>
-                    <div className="col-span-2 text-center">In Escrow</div>
+                    <div className="col-span-2 text-center">Order Balance</div>
                     <div className="col-span-2 text-center">Invoices</div>
                     <div className="col-span-2 text-right">Actions</div>
                   </div>
 
                   {freelancerOrderRows.length === 0 ? (
                     <div className="py-12 text-center text-xs text-slate-500 bg-white border border-slate-200/80 rounded-xl">
-                      No active or past freelancer escrow workstreams found.
+                      No active or past team order workspaces found.
                     </div>
                   ) : (
                     <div className="bg-white border border-slate-200/80 rounded-xl divide-y divide-slate-100 overflow-hidden">
@@ -2085,7 +2085,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <p className="text-xs text-slate-500 mt-0.5">
                     {isAgencyClient
                       ? `Summary of your USD order payments, account credit, and billing history with ${SITE_CONFIG.brandName}.`
-                      : 'Summary of your USD earnings, buyer payments, escrow balances, and settled withdrawals.'}
+                      : 'Summary of your USD revenue, client payments, active order balances, and settled withdrawals.'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -2237,7 +2237,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                         <div className="col-span-3">
                           <div className="font-bold text-slate-800">{inv.invoiceNumber || inv.id}</div>
                           <div className="text-[11px] text-slate-400">
-                            {inv.issueDate} • {AGENCY_MODE ? (inv.type === 'received' ? 'Client' : 'Agency') : (inv.type === 'received' ? 'Buyer' : 'Freelancer')}
+                            {inv.issueDate} • {inv.type === 'received' ? 'Client' : SITE_CONFIG.brandName}
                           </div>
                         </div>
                         <div className="col-span-4 pr-2">
@@ -2604,11 +2604,11 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Service Fees*</h4>
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between text-slate-600">
-                    <span>First $7,000 earned with a Buyer</span>
+                    <span>First $7,000 billed with a Client</span>
                     <span className="font-bold text-slate-900 font-mono tabular-nums">{effectivePlatformFee}%</span>
                   </div>
                   <div className="flex items-center justify-between text-slate-600">
-                    <span>Over $7,000 earned with a Buyer</span>
+                    <span>Over $7,000 billed with a Client</span>
                     <span className="font-bold text-slate-900 font-mono tabular-nums">3.5%</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed pt-0.5">
@@ -2862,11 +2862,11 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               {!isAgencyClient && escrowModalMode === 'seller_request' && (
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Select Freelancer Workstream (Request from Buyer)
+                    Select Order Workspace (Request from Client)
                   </label>
                   {freelancerOrderRows.length === 0 ? (
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                      You have no active freelancer workstreams to request an escrow deposit on.
+                      You have no active order workspaces to request a payment deposit on.
                     </div>
                   ) : (
                     <select
@@ -2877,14 +2877,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                         const ord = freelancerOrderRows.find(r => r.id === id);
                         if (ord) {
                           setEscrowDepositAmount(String(ord.amount || 25));
-                          setEscrowDepositTitle(`Escrow deposit for ${ord.title}`);
+                          setEscrowDepositTitle(`Payment request for ${ord.title}`);
                         }
                       }}
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800"
                     >
                       {freelancerOrderRows.map(ord => (
                         <option key={ord.id} value={ord.id}>
-                          {ord.title} (for {ord.buyerName}) — In Escrow: {formatUsd(ord.inEscrow)}
+                          {ord.title} (for {ord.buyerName}) — Paid Balance: {formatUsd(ord.inEscrow)}
                         </option>
                       ))}
                     </select>
@@ -2928,13 +2928,13 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               {!isAgencyClient && escrowModalMode === 'seller_request' && (
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Note to Buyer (Optional)
+                    Note to Client (Optional)
                   </label>
                   <textarea
                     rows={2}
                     value={escrowDepositNote}
                     onChange={e => setEscrowDepositNote(e.target.value)}
-                    placeholder="Add details about what this escrow deposit covers..."
+                    placeholder="Add details about what this payment request covers..."
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:bg-white"
                   />
                 </div>
@@ -3198,7 +3198,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               </div>
               <div className="pt-2 border-t border-slate-200 space-y-1.5 text-[11px] text-slate-500">
                 <div className="flex items-center justify-between">
-                  <span>Buyer Service Fee ({effectiveClientServiceFee}%)</span>
+                  <span>Client Service Fee ({effectiveClientServiceFee}%)</span>
                   <span className="font-medium text-slate-700">+{formatUsd(calculatorResult.buyerFee)}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -3206,7 +3206,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <span className="font-medium text-slate-700">+{formatUsd(calculatorResult.smallFee)}</span>
                 </div>
                 <div className="pt-1 border-t border-slate-200/70 flex items-center justify-between text-xs text-slate-700">
-                  <span className="font-semibold">Buyer Checkout Total</span>
+                  <span className="font-semibold">Client Checkout Total</span>
                   <span className="font-bold text-slate-900">{formatUsd(calculatorResult.buyerTotal)}</span>
                 </div>
               </div>
@@ -3429,7 +3429,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <p className="text-[11px] text-slate-500">
                     {isAgencyClient
                       ? 'Save a bank or online payment account for USD billing'
-                      : 'Link a bank or digital wallet for $ USD payouts'}
+                      : 'Link a bank or online payment account for $ USD payouts'}
                   </p>
                 </div>
               </div>

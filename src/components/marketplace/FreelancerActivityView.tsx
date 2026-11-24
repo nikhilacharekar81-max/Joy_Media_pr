@@ -311,7 +311,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
         amountLabel = 'CANCELLED';
       } else if (fin.inEscrow > 0) {
         displayAmount = fin.inEscrow;
-        amountLabel = 'IN ESCROW';
+        amountLabel = 'PAID IN ADVANCE';
       }
 
       const statusCategory: FreelancerProjectActivityItem['statusCategory'] =
@@ -398,11 +398,11 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
         }
       } else if (isCompleted) {
         displayAmount = fin.inEscrow > 0 ? fin.inEscrow : contractAmount;
-        amountLabel = fin.inEscrow > 0 ? 'IN ESCROW' : 'CONTRACT VALUE';
+        amountLabel = fin.inEscrow > 0 ? 'PAID IN ADVANCE' : 'CONTRACT VALUE';
         statusCategory = 'completed';
       } else if (isAccepted) {
         displayAmount = fin.inEscrow > 0 ? fin.inEscrow : contractAmount;
-        amountLabel = fin.inEscrow > 0 ? 'IN ESCROW' : 'CONTRACT VALUE';
+        amountLabel = fin.inEscrow > 0 ? 'PAID IN ADVANCE' : 'CONTRACT VALUE';
         statusCategory = 'in_progress';
       }
 
@@ -494,9 +494,9 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
           <div className="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-emerald-600">
             <Briefcase className="w-10 h-10" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">My Freelancer Activity</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Team Service & Order Activity</h1>
           <p className="text-slate-500 max-w-md mx-auto">
-            Please log in to your account to view your projects, manage your gigs, and track your earnings.
+            Please log in to your account to view client requests, manage services, and track revenue.
           </p>
           <button
             onClick={() => navigate('/login')}
@@ -554,7 +554,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
     const nextStatus = gig.status === 'active' ? 'paused' : 'active';
     setMyGigs(prev => prev.map(g => (g.id === gig.id ? { ...g, status: nextStatus } : g)));
     setActiveDropdownId(null);
-    showToast(`Gig "${gig.title}" is now ${nextStatus === 'active' ? 'Active' : 'Paused'}.`);
+    showToast(`Service "${gig.title}" is now ${nextStatus === 'active' ? 'Active' : 'Paused'}.`);
 
     try {
       const token = getAuthToken();
@@ -572,7 +572,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showToast(data.error || 'Failed to update gig status on server.');
+        showToast(data.error || 'Failed to update service status on server.');
         await fetchMyGigs();
       } else if (onRefresh) {
         onRefresh();
@@ -585,7 +585,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
 
   const handleOpenEdit = (gig: Gig) => {
     if (gig.status === 'deleted') {
-      showToast('Deleted gigs cannot be edited.');
+      showToast('Deleted services cannot be edited.');
       return;
     }
     setEditGigError(null);
@@ -612,7 +612,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
     const featured = formData.get('featured') === 'on';
 
     if (!title) {
-      setEditGigError('Gig title is required.');
+      setEditGigError('Service title is required.');
       return;
     }
 
@@ -627,7 +627,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
     }
 
     if (parsedPrice < 5 || parsedPrice > 10000) {
-      setEditGigError('Gig price must be between $5.00 and $10,000.00 USD.');
+      setEditGigError('Service price must be between $5.00 and $10,000.00 USD.');
       return;
     }
 
@@ -676,14 +676,14 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
       );
       setEditingGig(null);
       setEditGigError(null);
-      showToast('Gig details saved successfully.');
+      showToast('Service details saved successfully.');
       if (onRefresh) {
         onRefresh();
       }
     } catch (e) {
       console.warn('Network error updating gig:', e);
-      setEditGigError('Network error while saving Gig details. Please try again.');
-      showToast('Network error while saving Gig details.');
+      setEditGigError('Network error while saving service details. Please try again.');
+      showToast('Network error while saving service details.');
     } finally {
       setIsSavingGigEdit(false);
     }
@@ -703,7 +703,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
     );
     setGigToDelete(null);
     if (viewingGig?.id === targetId) setViewingGig(null);
-    showToast('Gig has been moved to Declined / Deleted.');
+    showToast('Service has been moved to Declined / Deleted.');
 
     try {
       const token = getAuthToken();
@@ -719,7 +719,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        showToast(err.error || 'Failed to delete gig on server.');
+        showToast(err.error || 'Failed to delete service on server.');
         await fetchMyGigs();
       } else if (onRefresh) {
         onRefresh();
@@ -817,7 +817,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
         if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) {
           delete pendingFeatureActionKeyRef.current[gigId];
         }
-        showToast(data.error || `Failed to ${nextFeatured ? 'feature' : 'unfeature'} gig.`);
+        showToast(data.error || `Failed to ${nextFeatured ? 'feature' : 'unfeature'} service.`);
         return;
       }
 
@@ -838,14 +838,14 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
       );
       showToast(
         updatedFeatured
-          ? `Gig "${gig.title}" is now featured${data.feeCharged ? ` ($${Number(data.feeCharged).toFixed(2)} fee charged)` : ''}!`
-          : `Gig "${gig.title}" unfeatured.`
+          ? `Service "${gig.title}" is now featured${data.feeCharged ? ` ($${Number(data.feeCharged).toFixed(2)} fee charged)` : ''}!`
+          : `Service "${gig.title}" unfeatured.`
       );
       await fetchMyGigs();
       if (onRefresh) onRefresh();
     } catch (e) {
       console.warn('API feature error:', e);
-      showToast(`Network error while trying to ${nextFeatured ? 'feature' : 'unfeature'} gig.`);
+      showToast(`Network error while trying to ${nextFeatured ? 'feature' : 'unfeature'} service.`);
     } finally {
       inFlightFeatureGigIdsRef.current.delete(gigId);
     }
@@ -903,12 +903,12 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
             currency: 'USD',
             gateway: featureGateway,
             purpose: 'deposit',
-            description: `Feature Gig: ${gig.title}`,
+            description: `Feature Service: ${gig.title}`,
             metadata: {
               returnAction: 'feature_gig',
               featureGigId: gig.id,
               returnPath: '/freelance-activity',
-              title: `Feature Gig: ${gig.title}`
+              title: `Feature Service: ${gig.title}`
             }
           })
         });
@@ -922,7 +922,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
         }
       } else if (!depRes.ok) {
         const depData = await depRes.json().catch(() => ({}));
-        throw new Error(depData.error || 'Failed to process external wallet top-up.');
+        throw new Error(depData.error || 'Failed to process external account balance top-up.');
       }
 
       const featRes = await fetch(`/api/gigs/${gig.id}/feature`, {
@@ -940,7 +940,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
       });
       const featData = await featRes.json().catch(() => ({}));
       if (!featRes.ok) {
-        throw new Error(featData.error || 'Wallet topped up, but featuring the gig failed. Please click Feature It again.');
+        throw new Error(featData.error || 'Account topped up, but featuring the service failed. Please click Feature It again.');
       }
 
       delete pendingFeatureActionKeyRef.current[gig.id];
@@ -968,7 +968,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
       await fetchMyGigs();
       if (onRefresh) onRefresh();
     } catch (err: any) {
-      setFeatureModalError(err?.message || 'Failed to complete external payment and feature gig.');
+      setFeatureModalError(err?.message || 'Failed to complete external payment and feature service.');
     } finally {
       setIsProcessingFeatureTopUp(false);
       inFlightFeatureGigIdsRef.current.delete(gig.id);
@@ -991,7 +991,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
 
   const projectSubTabs: { id: ProjectSubTab; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'pending_proposals', label: 'Pending Proposals' },
+    { id: 'pending_proposals', label: 'Pending Quotes' },
     { id: 'in_progress', label: 'In progress' },
     { id: 'completed', label: 'Completed' }
   ];
@@ -1023,10 +1023,10 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight">
-                My Freelancer Activity
+                Team Service & Order Activity
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Manage your active gigs, project proposals, and escrow workstreams.
+                Manage your active services, client quotes, and order workspaces.
               </p>
             </div>
 
@@ -1036,12 +1036,12 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Post New Gig</span>
+                <span>Post New Service</span>
               </button>
             )}
           </div>
 
-          {/* Primary Connected Tabs: PROJECTS | GIGS */}
+          {/* Primary Connected Tabs: CLIENT REQUESTS | SERVICES */}
           <div className="grid grid-cols-2 mb-6 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80">
             <button
               type="button"
@@ -1052,7 +1052,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              PROJECTS
+              CLIENT REQUESTS
             </button>
             <button
               type="button"
@@ -1063,7 +1063,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              GIGS
+              SERVICES
             </button>
           </div>
 
@@ -1121,7 +1121,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
             />
           ) : loading ? (
             <div className="py-12 text-center text-sm text-slate-400">
-              Loading your gigs...
+              Loading your services...
             </div>
           ) : (
             <UserFreelanceOffersList
@@ -1215,8 +1215,8 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Feature Gig — Instant Top-Up & Pay</h3>
-                  <p className="text-[11px] text-slate-500">Top up your USD wallet via external gateway and feature for 7 days</p>
+                  <h3 className="font-bold text-slate-900 text-sm">Feature Service — Instant Top-Up & Pay</h3>
+                  <p className="text-[11px] text-slate-500">Top up your USD account balance via external gateway and feature for 7 days</p>
                 </div>
               </div>
               <button
@@ -1242,7 +1242,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                 <span className="font-bold text-slate-900">${featurePaymentModal.requiredFee.toFixed(2)} USD</span>
               </div>
               <div className="flex items-center justify-between text-slate-600">
-                <span>Available Wallet Balance:</span>
+                <span>Available Account Balance:</span>
                 <span className="font-semibold text-slate-700">${featurePaymentModal.currentBalance.toFixed(2)} USD</span>
               </div>
               <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between text-emerald-700 font-bold">
@@ -1299,7 +1299,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Funds are credited to your wallet first, then ${featurePaymentModal.requiredFee.toFixed(2)} is deducted to feature your Gig.
+                  Funds are credited to your account balance first, then ${featurePaymentModal.requiredFee.toFixed(2)} is deducted to feature your Service.
                 </p>
               </div>
 

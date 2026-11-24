@@ -81,15 +81,13 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-            <span>{AGENCY_MODE ? 'My Orders & Messages' : 'Workstreams & Messages'}</span>
+            <span>My Orders & Messages</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-bold">
               {workstreams.length} Total
             </span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {AGENCY_MODE
-              ? `Manage your active orders, quotes, billing milestones, and deliverables with ${SITE_CONFIG.brandName}.`
-              : 'Manage active client collaborations, escrow funding milestones, and real-time deliverables.'}
+            {`Manage your active orders, quotes, billing milestones, and deliverables with ${SITE_CONFIG.brandName}.`}
           </p>
         </div>
         <button
@@ -97,7 +95,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 active:scale-98"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>{AGENCY_MODE ? 'New Inquiry' : 'New Workstream'}</span>
+          <span>New Inquiry</span>
         </button>
       </div>
 
@@ -106,7 +104,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {AGENCY_MODE ? 'Active Orders' : 'Active Collaborations'}
+              Active Orders
             </span>
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <MessageSquare className="w-4 h-4" />
@@ -121,7 +119,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {AGENCY_MODE ? 'Active Order Value' : 'Escrow Balance Held'}
+              Active Order Value
             </span>
             <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <ShieldCheck className="w-4 h-4" />
@@ -131,7 +129,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
             ${escrowTotal.toLocaleString()}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            {AGENCY_MODE ? 'In Progress Orders (USD)' : 'Protected in USD Escrow'}
+            In Progress Orders (USD)
           </div>
         </div>
 
@@ -151,7 +149,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {AGENCY_MODE ? 'Completed Orders' : 'Completed Jobs'}
+              Completed Orders
             </span>
             <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <CheckCircle2 className="w-4 h-4" />
@@ -161,7 +159,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
             {completedCount}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            {AGENCY_MODE ? 'Delivered & Paid' : 'Escrow Funds Released'}
+            Delivered & Paid
           </div>
         </div>
       </div>
@@ -172,7 +170,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
           <Search className="w-4 h-4 text-slate-400 ml-1 shrink-0" />
           <input
             type="text"
-            placeholder={AGENCY_MODE ? 'Search orders by title or order ID...' : 'Search workstreams by title, client, or order ID...'}
+            placeholder="Search orders by title or order ID..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none"
@@ -242,8 +240,8 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
               </div>
               <p className="font-medium text-xs text-slate-500 dark:text-slate-400">
                 {hasActiveFilters 
-                  ? (AGENCY_MODE ? 'No orders matching the active filters.' : 'No workstreams matching the active filters.')
-                  : (AGENCY_MODE ? 'You have no active orders right now.' : 'You have no active workstreams right now.')}
+                  ? 'No orders matching the active filters.'
+                  : 'You have no active orders right now.'}
               </p>
               {hasActiveFilters && onClearAllFilters ? (
                 <button
@@ -258,7 +256,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                   className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>{AGENCY_MODE ? 'Start New Inquiry' : 'Start New Workstream'}</span>
+                  <span>Start New Inquiry</span>
                 </button>
               )}
             </div>
@@ -328,13 +326,9 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                       ${w.amount.toLocaleString()}
                     </span>
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-medium">
-                      {AGENCY_MODE
-                        ? (isInquiryWorkstream(w as any)
-                            ? (w.status === 'completed' ? 'Custom Order Completed' : w.amount > 0 ? 'Custom Order · Active' : 'Custom Quote')
-                            : (w.amount > 0 ? 'Order Active' : 'Inquiry'))
-                        : (isInquiryWorkstream(w as any)
-                            ? (w.status === 'completed' ? 'Custom Order Completed' : w.amount > 0 ? 'Custom Order · In Escrow' : 'Custom Order Proposal')
-                            : (w.amount > 0 ? 'Escrow Protected' : 'Inquiry'))}
+                      {isInquiryWorkstream(w as any)
+                        ? (w.status === 'completed' ? 'Custom Order Completed' : w.amount > 0 ? 'Custom Order · Active' : 'Custom Quote')
+                        : (w.amount > 0 ? 'Order Active' : 'Inquiry')}
                     </span>
                   </div>
                 </div>
@@ -359,10 +353,10 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                   />
                 </th>
                 <th className="py-3.5 px-2 w-10 text-center">★</th>
-                <th className="py-3.5 px-4">{AGENCY_MODE ? 'With' : 'Contact / Partner'}</th>
-                <th className="py-3.5 px-4">{AGENCY_MODE ? 'Order Scope & Preview' : 'Workstream Scope & Preview'}</th>
-                <th className="py-3.5 px-4">{AGENCY_MODE ? 'Status' : 'Status & Escrow'}</th>
-                <th className="py-3.5 px-4 text-right">{AGENCY_MODE ? 'Order Amount' : 'Escrow Amount'}</th>
+                <th className="py-3.5 px-4">With</th>
+                <th className="py-3.5 px-4">Order Scope & Preview</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right">Order Amount</th>
                 <th className="py-3.5 px-4 text-right">Delivery Due</th>
               </tr>
             </thead>
@@ -376,8 +370,8 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                       </div>
                       <p className="font-medium text-xs text-slate-500 dark:text-slate-400">
                         {hasActiveFilters 
-                          ? (AGENCY_MODE ? 'No orders matching the active filters.' : 'No workstreams matching the active filters.')
-                          : (AGENCY_MODE ? 'You have no active orders right now.' : 'You have no active workstreams right now.')}
+                          ? 'No orders matching the active filters.'
+                          : 'You have no active orders right now.'}
                       </p>
                       {hasActiveFilters && onClearAllFilters ? (
                         <button
@@ -392,7 +386,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                           className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                         >
                           <PlusCircle className="w-4 h-4" />
-                          <span>{AGENCY_MODE ? 'Start New Inquiry' : 'Start New Workstream'}</span>
+                          <span>Start New Inquiry</span>
                         </button>
                       )}
                     </div>
@@ -405,7 +399,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                   const isCurrent = selectedOrderId === w.id;
                   const partner = currentUser?.id && w.sellerId === currentUser.id ? (w.buyer || w.seller) : (w.seller || w.buyer);
                   const displayPartnerName =
-                    AGENCY_MODE && currentUser?.id && w.buyerId === currentUser.id
+                    currentUser?.id && w.buyerId === currentUser.id
                       ? SITE_CONFIG.brandName
                       : (partner?.name || 'Team');
 
@@ -451,7 +445,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                             </span>
                             <span className="text-xs text-slate-400 font-mono">
                               {isInquiryWorkstream(w as any)
-                                ? (w.amount > 0 ? `Custom Order #${w.id}` : `${AGENCY_MODE ? 'Quote' : 'Proposal'} #${w.id}`)
+                                ? (w.amount > 0 ? `Custom Order #${w.id}` : `Quote #${w.id}`)
                                 : `Order #${w.id}`}
                             </span>
                           </div>
@@ -463,7 +457,7 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                             {w.title}
                           </span>
                           <span className="text-xs text-slate-400 truncate block mt-0.5">
-                            {w.lastMessage || w.gig?.title || w.requirements || 'Initial workstream collaboration established.'}
+                            {w.lastMessage || w.gig?.title || w.requirements || 'Order workspace initialized.'}
                           </span>
                         </div>
                       </td>
@@ -477,24 +471,14 @@ export const WorkstreamList: React.FC<WorkstreamListProps> = ({
                         <span className={`text-xs block font-medium ${
                           w.status === 'completed' ? 'text-slate-500' : w.status === 'cancelled' ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'
                         }`}>
-                          {AGENCY_MODE ? (
-                            isInquiryWorkstream(w as any) ? (
-                              w.status === 'completed' ? 'Custom Order Completed' :
-                              w.status === 'cancelled' ? 'Refunded' :
-                              w.amount > 0 ? 'Custom Order · Active' : 'Custom Quote'
-                            ) : (
-                              w.status === 'completed' ? 'Completed & Paid' :
-                              w.status === 'cancelled' ? 'Refunded' :
-                              w.amount > 0 ? 'Paid & Active' : 'Unpaid'
-                            )
-                          ) : isInquiryWorkstream(w as any) ? (
-                            w.status === 'completed' ? 'Custom Order Completed ($0 Held)' :
-                            w.status === 'cancelled' ? 'Refunded ($0 Held)' :
-                            w.amount > 0 ? 'Custom Order · 100% in Escrow' : 'Custom Order Proposal'
+                          {isInquiryWorkstream(w as any) ? (
+                            w.status === 'completed' ? 'Custom Order Completed' :
+                            w.status === 'cancelled' ? 'Refunded' :
+                            w.amount > 0 ? 'Custom Order · Active' : 'Custom Quote'
                           ) : (
-                            w.status === 'completed' ? 'Escrow Released ($0 Held)' :
-                            w.status === 'cancelled' ? 'Refunded ($0 Held)' :
-                            w.amount > 0 ? '100% in Escrow' : 'Unfunded'
+                            w.status === 'completed' ? 'Completed & Paid' :
+                            w.status === 'cancelled' ? 'Refunded' :
+                            w.amount > 0 ? 'Paid & Active' : 'Unpaid'
                           )}
                         </span>
                       </td>

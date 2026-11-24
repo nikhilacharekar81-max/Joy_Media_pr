@@ -60,8 +60,8 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
   defaultInvoiceAmount = 0,
   defaultInvoiceTitle = '',
   isGigOrder = false,
-  proposalHint = AGENCY_MODE ? 'Not available for this order' : 'Not available for this workstream',
-  invoiceHint = AGENCY_MODE ? 'Not available for this order' : 'Not available for this workstream',
+  proposalHint = 'Not available for this order',
+  invoiceHint = 'Not available for this order',
   orderId,
   workspaceId,
   currencySymbol = '$',
@@ -164,9 +164,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
     if (!Number.isFinite(amt) || amt < 5) return setFormError(`Minimum amount is ${currencySymbol}5.00.`);
     if (tab === 'invoice' && defaultInvoiceAmount > 0 && amt < defaultInvoiceAmount) {
       return setFormError(
-        AGENCY_MODE
-          ? `Invoice amount cannot be less than the active order amount (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}).`
-          : `Invoice amount cannot be less than the funded escrow amount (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}).`
+        `Invoice amount cannot be less than the active order amount (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}).`
       );
     }
     if (tab === 'invoice' && defaultInvoiceAmount > 0 && amt > defaultInvoiceAmount) {
@@ -176,7 +174,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
       }
     }
     if (tab !== 'deposit' && title.trim().length < 3) {
-      return setFormError(tab === 'proposal' ? (AGENCY_MODE ? 'Add a quote title (at least 3 characters).' : 'Add a proposal title (at least 3 characters).') : 'Add a description for the invoice (at least 3 characters).');
+      return setFormError(tab === 'proposal' ? 'Add a quote title (at least 3 characters).' : 'Add a description for the invoice (at least 3 characters).');
     }
     const d = Number(days);
     if (tab === 'proposal' && (!Number.isInteger(d) || d < 1 || d > 365)) return setFormError('Delivery time must be 1-365 days.');
@@ -185,7 +183,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
     setFormError(null);
     const result = await onCreateOffer({
       kind: tab,
-      title: tab === 'deposit' ? (title.trim() || (AGENCY_MODE ? 'Order deposit' : 'Escrow deposit')) : title.trim(),
+      title: tab === 'deposit' ? (title.trim() || 'Order deposit') : title.trim(),
       amount: amt,
       deliveryDays: tab === 'proposal' ? d : undefined,
       note: note.trim() || undefined,
@@ -227,26 +225,18 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
 
   const headings: Record<WorkstreamOfferKind, { title: string; hint: string; icon: React.ReactNode }> = {
     proposal: {
-      title: AGENCY_MODE ? (isCustomOrderStream ? 'Custom Quote' : 'New Quote') : (isCustomOrderStream ? 'Custom Order Proposal' : 'New Proposal'),
-      hint: AGENCY_MODE
-        ? 'Set the scope, price, and delivery time. The client pays when they accept your quote.'
-        : (isCustomOrderStream
-            ? 'Set the scope, price and delivery time. The buyer accepts the proposal and funds escrow to create the Custom Order.'
-            : 'Set the scope, price and delivery time. The buyer accepts it and pays into escrow.'),
+      title: isCustomOrderStream ? 'Custom Quote' : 'New Quote',
+      hint: 'Set the scope, price, and delivery time. The client pays when they accept your quote.',
       icon: <FileSignature className="w-4 h-4 text-emerald-600" />
     },
     invoice: {
       title: isCustomOrderStream ? 'Raise Custom Order Invoice' : 'Raise an Invoice & Deliver Work',
-      hint: AGENCY_MODE
-        ? 'Attach deliverables and submit your invoice to complete this order.'
-        : (isCustomOrderStream
-            ? 'Submit your invoice for completed work under this Custom Order to release escrow.'
-            : 'Attach deliverables and submit your invoice to release escrow funds into your wallet.'),
+      hint: 'Attach deliverables and submit your invoice to complete this order.',
       icon: <Receipt className="w-4 h-4 text-emerald-600" />
     },
     deposit: {
       title: 'Request Deposit',
-      hint: AGENCY_MODE ? 'Request an initial deposit from the client before work starts.' : 'Ask the buyer to fund escrow before you start.',
+      hint: 'Request an initial deposit from the client before work starts.',
       icon: <Lock className="w-4 h-4 text-emerald-600" />
     }
   };
@@ -263,9 +253,9 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
             <Video className="w-3.5 h-3.5" /> Video Call
           </button>
 
-          <button type="button" disabled={proposalOff} title={proposalOff ? proposalHint : (AGENCY_MODE ? 'Send a Quote' : (isCustomOrderStream ? 'Send a Custom Order Proposal' : 'Send a Proposal'))}
+          <button type="button" disabled={proposalOff} title={proposalOff ? proposalHint : 'Send a Quote'}
             onClick={() => switchTab('proposal')} className={tabBtn(tab === 'proposal', proposalOff, '!text-[11px] leading-[15px]')}>
-            <FileSignature className="w-3.5 h-3.5" /> {AGENCY_MODE ? (isCustomOrderStream ? 'Custom Quote' : 'New Quote') : (isCustomOrderStream ? 'Custom Order Proposal' : 'New Proposal')}
+            <FileSignature className="w-3.5 h-3.5" /> {isCustomOrderStream ? 'Custom Quote' : 'New Quote'}
           </button>
 
           <button type="button" disabled={invoiceOff} title={invoiceOff ? invoiceHint : (isCustomOrderStream ? 'Raise Custom Order Invoice' : 'Raise an Invoice')}
@@ -285,10 +275,10 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                   className={`w-full px-3.5 py-2 !text-[11px] leading-[15px] font-bold uppercase tracking-wider flex items-center gap-2 text-left ${proposalOff ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer'}`}>
                   <Lock className="w-3.5 h-3.5" /> Request Deposit
                 </button>
-                <button type="button" role="menuitem" disabled={refundOff} title={refundOff ? (AGENCY_MODE ? 'Only agency staff on an active order can issue a refund' : 'Only the seller of an active funded workstream can issue an escrow refund') : undefined}
+                <button type="button" role="menuitem" disabled={refundOff} title={refundOff ? 'Only our team on an active order can issue a refund' : undefined}
                   onClick={() => switchTab('refund')}
                   className={`w-full px-3.5 py-2 !text-[11px] leading-[15px] font-bold uppercase tracking-wider flex items-center gap-2 text-left ${refundOff ? 'text-slate-300 cursor-not-allowed' : 'text-rose-600 hover:bg-rose-50 cursor-pointer'}`}>
-                  <RotateCcw className="w-3.5 h-3.5" /> {AGENCY_MODE ? 'Issue Order Refund' : 'Issue Escrow Refund'}
+                  <RotateCcw className="w-3.5 h-3.5" /> Issue Order Refund
                 </button>
               </div>
             )}
@@ -317,9 +307,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
 
             <p className="text-xs text-slate-500 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              {AGENCY_MODE
-                ? `Keep all payments and project communication on ${SITE_CONFIG.brandName} to stay protected.`
-                : 'Keep all payments and project transactions on the platform to stay protected.'}
+              {`Keep all payments and project communication on ${SITE_CONFIG.brandName} to stay protected.`}
             </p>
 
             <div className="flex items-center justify-end gap-4">
@@ -339,12 +327,10 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
               <span className="p-2 bg-rose-50 rounded-xl shrink-0"><RotateCcw className="w-4 h-4 text-rose-600" /></span>
               <div>
                 <h4 className="text-sm font-bold text-agency-dark">
-                  {AGENCY_MODE ? 'Issue Order Refund to Client' : 'Issue Escrow Refund to Buyer'}
+                  Issue Order Refund to Client
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {AGENCY_MODE
-                    ? `Refund the active order amount (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}) back to the client and close this order.`
-                    : `Refund the active escrow balance (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}) back to the buyer's wallet and close this order.`}
+                  {`Refund the active order amount (${currencySymbol}${defaultInvoiceAmount.toLocaleString()}) back to the client and close this order.`}
                 </p>
               </div>
             </div>
@@ -357,7 +343,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                 rows={3}
                 maxLength={500}
                 className={inputCls + ' resize-none leading-relaxed'}
-                placeholder={AGENCY_MODE ? 'Explain why you are issuing a full refund for this order...' : 'Explain why you are issuing a full refund of the escrow deposit...'}
+                placeholder="Explain why you are issuing a full refund for this order..."
               />
             </div>
 
@@ -389,11 +375,9 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                 <Receipt className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">
-                    {AGENCY_MODE ? 'Order Billing:' : (isGigOrder ? 'Gig Escrow Policy:' : 'Escrow Coverage:')}
+                    Order Billing:
                   </span>{' '}
-                  {AGENCY_MODE
-                    ? `${currencySymbol}${defaultInvoiceAmount.toLocaleString()} is confirmed for this order.`
-                    : `${currencySymbol}${defaultInvoiceAmount.toLocaleString()} is currently held in escrow. When the buyer pays this invoice, the funds are released directly to your wallet.`}
+                  {`${currencySymbol}${defaultInvoiceAmount.toLocaleString()} is confirmed for this order.`}
                 </div>
               </div>
             )}
@@ -403,7 +387,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                 <div className="sm:col-span-2">
                   <label className={labelCls}>
                     {tab === 'proposal'
-                      ? (AGENCY_MODE ? 'Quote Title' : (isCustomOrderStream ? 'Custom Order Proposal Title' : 'Proposal title'))
+                      ? 'Quote Title'
                       : (isCustomOrderStream ? 'Custom Order Invoice Description' : 'Invoice Description')}
                   </label>
                   <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className={inputCls}
@@ -432,7 +416,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                 <label className={labelCls}>{tab === 'invoice' ? (isCustomOrderStream ? 'Custom Order Delivery Notes & Breakdown' : 'Delivery Notes & Breakdown') : 'Note (optional)'}</label>
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000}
                   className={inputCls + ' resize-none leading-relaxed'}
-                  placeholder={tab === 'invoice' ? (isCustomOrderStream ? 'Describe the completed work under this Custom Order...' : 'Describe the completed work and deliverables included with this invoice...') : `Add scope, terms or anything the ${AGENCY_MODE ? 'client' : 'buyer'} should know...`} />
+                  placeholder={tab === 'invoice' ? (isCustomOrderStream ? 'Describe the completed work under this Custom Order...' : 'Describe the completed work and deliverables included with this invoice...') : 'Add scope, terms or anything the client should know...'} />
               </div>
 
               {tab === 'invoice' && (
@@ -475,13 +459,9 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-slate-400 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                {AGENCY_MODE
-                  ? (tab === 'invoice'
-                      ? 'When the client pays this invoice, the order is marked completed.'
-                      : 'The client completes payment when they accept this quote.')
-                  : (tab === 'invoice'
-                      ? (isCustomOrderStream ? 'When the buyer pays this Custom Order Invoice, funds are released directly to your wallet.' : 'When the buyer pays this invoice, funds are credited to your wallet.')
-                      : (isCustomOrderStream ? 'The buyer funds escrow when they accept the Custom Order Proposal.' : 'The buyer pays into escrow when they accept.'))}
+                {tab === 'invoice'
+                  ? 'When the client pays this invoice, the order is marked completed.'
+                  : 'The client completes payment when they accept this quote.'}
               </p>
               <div className="flex items-center gap-2">
                 <button type="button" onClick={() => { resetForm(); setTab('message'); }} disabled={submitting}
@@ -491,7 +471,7 @@ export const WorkstreamMessageInput: React.FC<WorkstreamMessageInputProps> = ({
                 <button type="button" onClick={submitOffer} disabled={submitting || disabled}
                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center gap-2 shadow-xs transition cursor-pointer">
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  {tab === 'invoice' ? (isCustomOrderStream ? 'Send Custom Order Invoice' : 'Send Invoice') : (AGENCY_MODE ? 'Send Quote' : (isCustomOrderStream ? 'Send Custom Order Proposal' : 'Send'))}
+                  {tab === 'invoice' ? (isCustomOrderStream ? 'Send Custom Order Invoice' : 'Send Invoice') : 'Send Quote'}
                 </button>
               </div>
             </div>

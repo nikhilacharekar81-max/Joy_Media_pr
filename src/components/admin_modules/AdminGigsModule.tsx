@@ -9,6 +9,9 @@ import { Gig, UserAccount } from '../../types';
 import { DEFAULT_AVATAR, DEFAULT_GIG_IMAGE } from '../../constants';
 import { getAuthToken } from '../../utils/authToken';
 import { getDeviceId } from '../../utils/deviceId';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const DELETED_GIGS_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_deleted_gigs`;
 
 interface AdminGigsModuleProps {
   allGigs?: Gig[];
@@ -40,7 +43,7 @@ export const AdminGigsModule: React.FC<AdminGigsModuleProps> = ({
 
   const [gigs, setGigs] = useState<Gig[]>(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_gigs') || '[]').map((d: any) => String(d));
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_GIGS_KEY) || '[]').map((d: any) => String(d));
       return (effectiveGigs || []).filter(g => !deletedIds.includes(String(g.id)));
     } catch {
       return effectiveGigs || [];
@@ -49,7 +52,7 @@ export const AdminGigsModule: React.FC<AdminGigsModuleProps> = ({
 
   useEffect(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_gigs') || '[]').map((d: any) => String(d));
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_GIGS_KEY) || '[]').map((d: any) => String(d));
       const source = allGigs || [];
       setGigs((source || []).filter(g => !deletedIds.includes(String(g.id))));
     } catch {
@@ -203,10 +206,10 @@ export const AdminGigsModule: React.FC<AdminGigsModuleProps> = ({
         throw new Error(err.error || 'Failed to delete gig');
       }
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_gigs') || '[]').map((d: any) => String(d));
+        const deletedIds = JSON.parse(localStorage.getItem(DELETED_GIGS_KEY) || '[]').map((d: any) => String(d));
         if (!deletedIds.includes(targetId)) {
           deletedIds.push(targetId);
-          localStorage.setItem('workperhour_deleted_gigs', JSON.stringify(deletedIds));
+          localStorage.setItem(DELETED_GIGS_KEY, JSON.stringify(deletedIds));
         }
       } catch {}
 
@@ -269,11 +272,11 @@ export const AdminGigsModule: React.FC<AdminGigsModuleProps> = ({
 
     if (succeededIds.length > 0) {
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_gigs') || '[]').map((d: any) => String(d));
+        const deletedIds = JSON.parse(localStorage.getItem(DELETED_GIGS_KEY) || '[]').map((d: any) => String(d));
         for (const idStr of succeededIds) {
           if (!deletedIds.includes(idStr)) deletedIds.push(idStr);
         }
-        localStorage.setItem('workperhour_deleted_gigs', JSON.stringify(deletedIds));
+        localStorage.setItem(DELETED_GIGS_KEY, JSON.stringify(deletedIds));
       } catch {}
 
       setGigs(prev => prev.filter(g => !succeededIds.includes(String(g.id))));

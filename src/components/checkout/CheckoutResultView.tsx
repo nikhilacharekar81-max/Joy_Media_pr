@@ -58,9 +58,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>(
     mode === 'cancel'
-      ? (AGENCY_MODE
-          ? 'Payment was cancelled. Your account and order have not been charged.'
-          : 'Payment was cancelled. Your wallet and order have not been charged.')
+      ? 'Payment was cancelled. Your account and order have not been charged.'
       : 'Confirming your payment with PayPal...'
   );
   const [completedWorkstreamId, setCompletedWorkstreamId] = useState<string | null>(null);
@@ -122,11 +120,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
       let actionResult: any = null;
 
       if (meta.returnAction === 'create_gig_order' && meta.gigOrderPayload) {
-        setStatusMessage(
-          AGENCY_MODE
-            ? 'Payment confirmed! Creating your order...'
-            : 'Payment confirmed! Creating your funded escrow order...'
-        );
+        setStatusMessage('Payment confirmed! Creating your order...');
         const orderRes = await fetch('/api/orders', {
           method: 'POST',
           headers: {
@@ -139,24 +133,16 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
         if (!orderRes.ok) {
           throw new Error(
             orderData.error ||
-              (AGENCY_MODE
-                ? `Your account credit was updated, but automatic order placement encountered an issue. Your balance is safely saved in your ${SITE_CONFIG.brandName} account.`
-                : `Your wallet was credited, but automatic order placement encountered an issue. Your funds are safely in your ${SITE_CONFIG.brandName} account.`)
+              `Your account credit was updated, but automatic order placement encountered an issue. Your balance is safely saved in your ${SITE_CONFIG.brandName} account.`
           );
         }
         const createdId = orderData.id;
         setCompletedWorkstreamId(createdId);
-        const summary = AGENCY_MODE
-          ? `Order #${createdId} ("${orderData.title || meta.gigOrderPayload.title}") has been confirmed!`
-          : `Order #${createdId} ("${orderData.title || meta.gigOrderPayload.title}") has been created and funded in Escrow!`;
+        const summary = `Order #${createdId} ("${orderData.title || meta.gigOrderPayload.title}") has been confirmed!`;
         setContinuationSummary(summary);
         actionResult = { orderId: createdId, workstreamOrderId: createdId, summary };
       } else if (meta.returnAction === 'accept_proposal' && meta.proposalId) {
-        setStatusMessage(
-          AGENCY_MODE
-            ? 'Payment confirmed! Confirming your custom quote and activating your order...'
-            : 'Payment confirmed! Hiring freelancer and funding project escrow...'
-        );
+        setStatusMessage('Payment confirmed! Confirming your custom quote and activating your order...');
         const propRes = await fetch(`/api/proposals/${meta.proposalId}/accept`, {
           method: 'POST',
           headers
@@ -165,24 +151,16 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
         if (!propRes.ok) {
           throw new Error(
             propData.error ||
-              (AGENCY_MODE
-                ? 'Your account balance was credited, but confirming the custom quote requires one more click on the request page.'
-                : 'Your wallet was credited, but accepting the proposal requires one more click on the Project page.')
+              'Your account balance was credited, but confirming the custom quote requires one more click on the request page.'
           );
         }
         const wsId = propData.workstreamOrderId || propData.order?.id;
         if (wsId) setCompletedWorkstreamId(wsId);
-        const summary = AGENCY_MODE
-          ? `Custom quote accepted and ${formatUsd(sess.amount)} payment confirmed!`
-          : `Proposal accepted and ${formatUsd(sess.amount)} funded in project escrow!`;
+        const summary = `Custom quote accepted and ${formatUsd(sess.amount)} payment confirmed!`;
         setContinuationSummary(summary);
         actionResult = { workstreamOrderId: wsId, proposalId: meta.proposalId, summary };
       } else if (meta.returnAction === 'accept_offer' && meta.offerId) {
-        setStatusMessage(
-          AGENCY_MODE
-            ? 'Payment confirmed! Completing order payment...'
-            : 'Payment confirmed! Completing WorkStream payment...'
-        );
+        setStatusMessage('Payment confirmed! Completing order payment...');
         const offRes = await fetch(`/api/offers/${meta.offerId}/accept`, {
           method: 'POST',
           headers,
@@ -192,24 +170,16 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
         if (!offRes.ok) {
           throw new Error(
             offData.error ||
-              (AGENCY_MODE
-                ? 'Your account balance was credited, but completing the order payment requires one more click inside the order workspace.'
-                : 'Your wallet was credited, but completing the WorkStream offer requires one more click inside the WorkStream.')
+              'Your account balance was credited, but completing the order payment requires one more click inside the order workspace.'
           );
         }
         const wsId = offData.newOrder?.id || offData.order?.id || meta.orderId || sess.orderId;
         if (wsId) setCompletedWorkstreamId(wsId);
-        const summary = AGENCY_MODE
-          ? `${offData.offer?.kind === 'invoice' ? 'Invoice paid' : 'Order payment confirmed'} (${formatUsd(offData.offer?.amount || sess.amount)})!`
-          : `WorkStream ${offData.offer?.kind === 'invoice' ? 'invoice paid' : 'proposal/deposit funded in escrow'} (${formatUsd(offData.offer?.amount || sess.amount)})!`;
+        const summary = `${offData.offer?.kind === 'invoice' ? 'Invoice paid' : 'Order payment confirmed'} (${formatUsd(offData.offer?.amount || sess.amount)})!`;
         setContinuationSummary(summary);
         actionResult = { workstreamOrderId: wsId, offerId: meta.offerId, summary };
       } else if (meta.returnAction === 'escrow_deposit' && meta.escrowPayload) {
-        setStatusMessage(
-          AGENCY_MODE
-            ? 'Payment confirmed! Applying order payment...'
-            : 'Payment confirmed! Funding order escrow...'
-        );
+        setStatusMessage('Payment confirmed! Applying order payment...');
         const escRes = await fetch('/api/payments/escrow/deposit', {
           method: 'POST',
           headers,
@@ -224,23 +194,15 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
         if (!escRes.ok) {
           throw new Error(
             escData.error ||
-              (AGENCY_MODE
-                ? 'Your account balance was credited, but applying the payment to your order failed.'
-                : 'Your wallet was credited, but transferring funds into order escrow failed.')
+              'Your account balance was credited, but applying the payment to your order failed.'
           );
         }
         setCompletedWorkstreamId(meta.escrowPayload.orderId);
-        const summary = AGENCY_MODE
-          ? `Applied ${formatUsd(meta.escrowPayload.amount)} order payment successfully!`
-          : `Deposited ${formatUsd(meta.escrowPayload.amount)} into Order Escrow!`;
+        const summary = `Applied ${formatUsd(meta.escrowPayload.amount)} order payment successfully!`;
         setContinuationSummary(summary);
         actionResult = { workstreamOrderId: meta.escrowPayload.orderId, summary };
       } else if (meta.returnAction === 'feature_gig' && meta.featureGigId) {
-        setStatusMessage(
-          AGENCY_MODE
-            ? 'Payment confirmed! Activating Featured Service placement...'
-            : 'Payment confirmed! Activating Featured Gig placement...'
-        );
+        setStatusMessage('Payment confirmed! Activating Featured Service placement...');
         const featRes = await fetch(`/api/gigs/${meta.featureGigId}/feature`, {
           method: 'PATCH',
           headers: {
@@ -258,12 +220,10 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
         if (!featRes.ok) {
           throw new Error(
             featData.error ||
-              (AGENCY_MODE
-                ? 'Your account balance was credited, but featuring the service requires clicking Feature again.'
-                : 'Your wallet was credited, but featuring the gig requires clicking Feature It again.')
+              'Your account balance was credited, but featuring the service requires clicking Feature again.'
           );
         }
-        const summary = AGENCY_MODE ? 'Service featured successfully!' : 'Gig featured successfully!';
+        const summary = 'Service featured successfully!';
         setContinuationSummary(summary);
         actionResult = { featureGigId: meta.featureGigId, summary };
       }
@@ -546,11 +506,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
           {isContinuingAction && (
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-xs font-bold text-emerald-900">
               <RefreshCw className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
-              <span>
-                {AGENCY_MODE
-                  ? 'Completing your order and confirming payment...'
-                  : 'Completing your order and locking funds in Escrow...'}
-              </span>
+              <span>Completing your order and confirming payment...</span>
             </div>
           )}
 
@@ -559,7 +515,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-emerald-900">
-                  {AGENCY_MODE ? 'Order & Payment Confirmed' : 'Order & Escrow Funded'}
+                  Order & Payment Confirmed
                 </div>
                 <div className="text-sm font-medium text-emerald-800 mt-0.5">{continuationSummary}</div>
               </div>
@@ -659,7 +615,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
                   onClick={e => navigate(`/workstream/${completedWorkstreamId}`, e)}
                   className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <span>{AGENCY_MODE ? 'Open Order Workspace' : 'Open WorkStream'}</span>
+                  <span>Open Order Workspace</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
@@ -685,7 +641,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
                 }`}
               >
                 <Wallet className="w-4 h-4" />
-                <span>{AGENCY_MODE ? 'Billing & Payments' : 'Go to Wallet & Payments'}</span>
+                <span>Billing & Payments</span>
               </button>
 
               <button
@@ -693,7 +649,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
                 onClick={e => navigate('/gigs', e)}
                 className="px-5 py-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer"
               >
-                <span>{AGENCY_MODE ? 'Browse Services' : 'Browse Marketplace'}</span>
+                <span>Browse Services</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
             </div>

@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { Review } from '../../types';
 import { DEFAULT_AVATAR } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const DELETED_REVIEWS_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_deleted_reviews`;
 
 interface ExtendedReview extends Review {
   moderationStatus?: 'approved' | 'flagged' | 'hidden';
@@ -29,7 +32,7 @@ export const AdminReviewsModule: React.FC<AdminReviewsModuleProps> = ({
   // Local robust state for reviews with localStorage filter
   const [reviews, setReviews] = useState<ExtendedReview[]>(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_reviews') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_REVIEWS_KEY) || '[]');
       return (initialReviews || []).filter(r => !deletedIds.includes(r.id));
     } catch {
       return initialReviews || [];
@@ -38,7 +41,7 @@ export const AdminReviewsModule: React.FC<AdminReviewsModuleProps> = ({
 
   React.useEffect(() => {
     try {
-      const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_reviews') || '[]');
+      const deletedIds = JSON.parse(localStorage.getItem(DELETED_REVIEWS_KEY) || '[]');
       setReviews((initialReviews || []).filter(r => !deletedIds.includes(r.id)));
     } catch {
       setReviews(initialReviews || []);
@@ -123,10 +126,10 @@ export const AdminReviewsModule: React.FC<AdminReviewsModuleProps> = ({
         await Promise.resolve(onDeleteReview(idToDelete));
       }
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_reviews') || '[]');
+        const deletedIds = JSON.parse(localStorage.getItem(DELETED_REVIEWS_KEY) || '[]');
         if (!deletedIds.includes(idToDelete)) {
           deletedIds.push(idToDelete);
-          localStorage.setItem('workperhour_deleted_reviews', JSON.stringify(deletedIds));
+          localStorage.setItem(DELETED_REVIEWS_KEY, JSON.stringify(deletedIds));
         }
       } catch (e) {
         console.error("Error saving deleted review ID to localStorage", e);

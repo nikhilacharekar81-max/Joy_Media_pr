@@ -77,7 +77,7 @@ export function getStatusBadge(status: string): React.ReactNode {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">
           <ShieldCheck className="w-3 h-3 text-emerald-600" />
-          <span>{normalized === 'in_escrow' ? 'In Escrow' : normalized === 'funded_in_escrow' ? 'Escrow Funded' : 'In Progress'}</span>
+          <span>{normalized === 'in_escrow' ? 'Order Protected' : normalized === 'funded_in_escrow' ? 'Payment Confirmed' : 'In Progress'}</span>
         </span>
       );
   }

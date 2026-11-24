@@ -6,6 +6,7 @@ import {
   FileCode, Settings, Activity, ShieldAlert, LogOut, Award, CreditCard, Sparkles
 } from 'lucide-react';
 import { UserAccount, Gig, Project, Proposal, Order } from '../types';
+import { SITE_CONFIG } from '../siteConfig';
 import { getDeviceId as defaultGetDeviceId } from '../utils/deviceId';
 import { AdminOrdersManager } from '../components/AdminOrdersManager';
 import { PaymentsModule } from '../components/PaymentsModule';
@@ -171,15 +172,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-slate-800">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl mx-auto shadow-md">
-              W
+              {SITE_CONFIG.brandName.charAt(0)}
             </div>
             <h2 className="text-2xl font-bold text-agency-dark tracking-tight">Admin Portal Login</h2>
-            <p className="text-xs text-agency-muted">Enter your Administrator credentials to access the WorkPerHour Super Admin Suite.</p>
+            <p className="text-xs text-agency-muted">Enter your Administrator credentials to access the {SITE_CONFIG.brandName} Super Admin Suite.</p>
           </div>
 
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const emailToUse = loginEmail.trim() || 'admin@workperhour.com';
+            const emailToUse = loginEmail.trim();
             const passToUse = loginPassword || 'Password123!';
             const deviceId = getDeviceId();
             try {
@@ -233,7 +234,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                     <ShieldAlert className="w-4 h-4 text-emerald-600" />
                     <span>Admin Verification Code Sent</span>
                   </div>
-                  <p>Enter the 6-digit email verification code sent to {loginEmail || 'admin@workperhour.com'}.</p>
+                  <p>Enter the 6-digit email verification code sent to {loginEmail.trim()}.</p>
                 </div>
 
                 {adminMockCodeDisplay && (
@@ -281,7 +282,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         const res = await fetch('/api/auth/resend-email-code', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: loginEmail || 'admin@workperhour.com' })
+                          body: JSON.stringify({ email: loginEmail.trim() })
                         });
                         const data = await res.json();
                         const codeVal = data.mockEmailCode || data.mockCode;
@@ -348,7 +349,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 onClick={(e) => navigate('/gigs', e)}
                 className="text-xs text-agency-muted hover:text-slate-800 font-medium"
               >
-                ← Return to Marketplace Home
+                ← Return to {SITE_CONFIG.brandName} Home
               </a>
             </div>
           </form>
@@ -368,10 +369,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-200">
             <a href="/gigs" onClick={(e) => navigate('/gigs', e)} className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
-                W
+                {SITE_CONFIG.brandName.charAt(0)}
               </div>
               <div>
-                <span className="text-sm font-bold text-agency-dark block leading-none">WorkPerHour</span>
+                <span className="text-sm font-bold text-agency-dark block leading-none">{SITE_CONFIG.brandName}</span>
                 <span className="text-[10px] text-emerald-600 font-semibold tracking-wider uppercase">Super Admin Suite</span>
               </div>
             </a>

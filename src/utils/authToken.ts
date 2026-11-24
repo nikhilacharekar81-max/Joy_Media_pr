@@ -1,8 +1,8 @@
-import { AGENCY_MODE } from '../siteConfig';
+import { AGENCY_MODE, SITE_CONFIG } from '../siteConfig';
 
 // Single source of truth for the session token in the browser.
 // Every component/hook reads, writes and clears the token through these helpers.
-const TOKEN_KEY = 'workperhour_token';
+const TOKEN_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_token`;
 // Legacy key written by older builds. Still read (so existing sessions survive) and always cleared.
 const LEGACY_TOKEN_KEY = 'token';
 

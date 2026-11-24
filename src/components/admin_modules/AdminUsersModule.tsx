@@ -18,6 +18,9 @@ interface AdminUsersModuleProps {
 
 import { useLocalStorageFilter } from '../../hooks/admin/useLocalStorageFilter';
 import { usePagination } from '../../hooks/admin/usePagination';
+import { SITE_CONFIG } from '../../siteConfig';
+
+const DELETED_USERS_KEY = `${SITE_CONFIG.brandWordmark.toLowerCase()}_deleted_users`;
 
 export const AdminUsersModule: React.FC<AdminUsersModuleProps> = ({
   allUsers = [],
@@ -26,7 +29,7 @@ export const AdminUsersModule: React.FC<AdminUsersModuleProps> = ({
   onUpdateUser,
   onDeleteUser
 }) => {
-  const [users, setUsers] = useLocalStorageFilter(allUsers, 'workperhour_deleted_users');
+  const [users, setUsers] = useLocalStorageFilter(allUsers, DELETED_USERS_KEY);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -116,10 +119,10 @@ export const AdminUsersModule: React.FC<AdminUsersModuleProps> = ({
         await Promise.resolve(onDeleteUser(idToDelete));
       }
       try {
-        const deletedIds = JSON.parse(localStorage.getItem('workperhour_deleted_users') || '[]').map((d: any) => String(d));
+        const deletedIds = JSON.parse(localStorage.getItem(DELETED_USERS_KEY) || '[]').map((d: any) => String(d));
         if (!deletedIds.includes(idToDelete)) {
           deletedIds.push(idToDelete);
-          localStorage.setItem('workperhour_deleted_users', JSON.stringify(deletedIds));
+          localStorage.setItem(DELETED_USERS_KEY, JSON.stringify(deletedIds));
         }
       } catch (e) {
         console.error("Error persisting deleted user ID to localStorage", e);
