@@ -206,15 +206,26 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
             <p className="font-bold text-slate-900 text-sm mt-0.5">
               {SITE_CONFIG.brandName}
             </p>
-            <p className="text-slate-600 mt-0.5">
-              Legal Business Name: [Legal Business Name Placeholder]
-            </p>
-            <p className="text-slate-600 mt-0.5">
-              Address: [Business Address Placeholder]
-            </p>
-            <p className="text-slate-600 mt-0.5">
-              Tax ID / EIN: [Tax ID Placeholder]
-            </p>
+            {SITE_CONFIG.business.legalName && (
+              <p className="text-slate-600 mt-0.5">
+                Legal Business Name: {SITE_CONFIG.business.legalName}
+              </p>
+            )}
+            {SITE_CONFIG.business.address && (
+              <p className="text-slate-600 mt-0.5">
+                Address: {SITE_CONFIG.business.address}
+              </p>
+            )}
+            {SITE_CONFIG.business.taxId && (
+              <p className="text-slate-600 mt-0.5">
+                Tax ID / EIN: {SITE_CONFIG.business.taxId}
+              </p>
+            )}
+            {SITE_CONFIG.business.supportPhone && (
+              <p className="text-slate-600 mt-0.5">
+                Phone: {SITE_CONFIG.business.supportPhone}
+              </p>
+            )}
             <p className="text-slate-400 mt-0.5">
               {SITE_CONFIG.domain} • {SITE_CONFIG.emails.support}
             </p>

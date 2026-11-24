@@ -2,11 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { PassThrough } from 'stream';
 
-const configuredBucketName = process.env.GCS_BUCKET_NAME || process.env.CLOUD_STORAGE_BUCKET;
-const bucketName = configuredBucketName || 'workperhour-uploads-bucket';
+const bucketName = (process.env.GCS_BUCKET_NAME || '').trim();
 
 let cachedBucketPromise: Promise<any> | null = null;
 function getGcsBucket(): Promise<any> {
+  if (!bucketName) {
+    console.error('[CloudStorage ERROR] GCS_BUCKET_NAME is not set. Configure GCS_BUCKET_NAME in your environment variables.');
+    return Promise.reject(new Error('Cloud storage configuration missing: GCS_BUCKET_NAME must be set.'));
+  }
   if (!cachedBucketPromise) {
     cachedBucketPromise = import('@google-cloud/storage')
       .then(({ Storage }) => {
@@ -22,14 +25,17 @@ function getGcsBucket(): Promise<any> {
 }
 
 function assertProductionBucketConfigured(): void {
-  if (process.env.NODE_ENV === 'production' && !configuredBucketName) {
-    throw new Error('Cloud storage configuration missing: GCS_BUCKET_NAME or CLOUD_STORAGE_BUCKET must be set in production.');
+  if (!bucketName) {
+    console.error('[CloudStorage ERROR] GCS_BUCKET_NAME is not set. Configure GCS_BUCKET_NAME in your environment variables.');
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Cloud storage configuration missing: GCS_BUCKET_NAME must be set in production.');
+    }
   }
 }
 
 export async function uploadFileToCloudStorage(filename: string, buffer: Buffer, mimeType: string): Promise<string> {
   const safeFilename = path.basename(filename);
-  const isTestOrLocal = process.env.NODE_ENV === 'test' || (!configuredBucketName && !process.env.GOOGLE_CLOUD_PROJECT && process.env.NODE_ENV !== 'production');
+  const isTestOrLocal = process.env.NODE_ENV === 'test' || (!bucketName && !process.env.GOOGLE_CLOUD_PROJECT && process.env.NODE_ENV !== 'production');
   
   if (isTestOrLocal) {
     const localDir = path.join(process.cwd(), 'data', 'uploads', 'workstream');
@@ -57,7 +63,7 @@ export async function uploadFileToCloudStorage(filename: string, buffer: Buffer,
 
 export async function deleteFileFromCloudStorage(filename: string): Promise<void> {
   const safeFilename = path.basename(filename);
-  const isTestOrLocal = process.env.NODE_ENV === 'test' || (!configuredBucketName && !process.env.GOOGLE_CLOUD_PROJECT && process.env.NODE_ENV !== 'production');
+  const isTestOrLocal = process.env.NODE_ENV === 'test' || (!bucketName && !process.env.GOOGLE_CLOUD_PROJECT && process.env.NODE_ENV !== 'production');
   if (isTestOrLocal) {
     const localPath = path.join(process.cwd(), 'data', 'uploads', 'workstream', safeFilename);
     try { await fs.promises.unlink(localPath); } catch {}

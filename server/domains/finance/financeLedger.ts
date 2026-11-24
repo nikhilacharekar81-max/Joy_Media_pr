@@ -1344,27 +1344,27 @@ export class FinanceLedgerEngine {
         const summary = this.getReconciliationSummary();
         for (const a of summary.trialBalance.accounts) line(a.code, a.name, a.type, a.normalBalance, a.totalDebits, a.totalCredits, a.netBalance);
         line('TOTAL', 'Trial Balance Sum', '', `Balanced: ${summary.trialBalance.isBalanced}`, summary.trialBalance.totalDebits, summary.trialBalance.totalCredits, summary.trialBalance.difference);
-        return { filename: `workperhour_trial_balance_${now}.csv`, content: rows.join('\n') };
+        return { filename: `joymediapr_trial_balance_${now}.csv`, content: rows.join('\n') };
       }
       case 'ledger_journals': {
         line('Journal ID', 'Posting Date', 'Reference', 'Event Type', 'Status', 'Account Code', 'Account Name', 'Debit', 'Credit', 'Description', 'User ID', 'Order ID');
         for (const j of this.journals) for (const e of j.entries) line(j.id, j.postingDate, j.reference, j.eventType, j.status, e.accountCode, e.accountName, e.debit, e.credit, e.description, e.userId || '', e.orderId || '');
-        return { filename: `workperhour_double_entry_ledger_${now}.csv`, content: rows.join('\n') };
+        return { filename: `joymediapr_double_entry_ledger_${now}.csv`, content: rows.join('\n') };
       }
       case 'wallets': {
         line('Wallet ID', 'User ID', 'User Name', 'Email', 'Role', 'Currency', 'Available Balance', 'Escrow On Hold', 'Pending Incoming', 'Status', 'Ledger Reconciled');
         for (const w of this.getWallets()) line(w.id, w.userId, w.userName, w.userEmail, w.userRole, w.currency, w.availableBalance, w.fundsOnHold, w.pendingIncoming, w.status, String(w.isReconciled));
-        return { filename: `workperhour_wallet_balances_${now}.csv`, content: rows.join('\n') };
+        return { filename: `joymediapr_wallet_balances_${now}.csv`, content: rows.join('\n') };
       }
       case 'transactions': {
         line('Transaction ID', 'Type', 'Amount', 'Currency', 'Status', 'Timestamp', 'User Name', 'Role', 'Order ID', 'Journal ID', 'Description');
         for (const t of this.transactions) line(t.id, t.type, t.amount, t.currency, t.status, t.timestamp, t.userName, t.userRole, t.relatedOrderId || '', t.journalId || '', t.description);
-        return { filename: `workperhour_financial_transactions_${now}.csv`, content: rows.join('\n') };
+        return { filename: `joymediapr_financial_transactions_${now}.csv`, content: rows.join('\n') };
       }
       case 'audit_trail': {
         line('Log ID', 'Actor', 'Role', 'Action', 'Target', 'Reason', 'Journal ID', 'Timestamp');
         for (const a of this.auditLogs) line(a.id, a.actor, a.role, a.action, a.target, a.reason || '', a.journalId || '', a.timestamp);
-        return { filename: `workperhour_financial_audit_${now}.csv`, content: rows.join('\n') };
+        return { filename: `joymediapr_financial_audit_${now}.csv`, content: rows.join('\n') };
       }
       default:
         throw new Error(`Unsupported export type: ${reportType}`);

@@ -9,6 +9,12 @@ export const SITE_CONFIG = {
     privacy: 'privacy@joymediapr.com',
     notifications: 'notifications@joymediapr.com',
   },
+  business: {
+    legalName: '',
+    address: '',
+    taxId: '',
+    supportPhone: '',
+  },
   tagline: 'Digital PR, Media Placement & Growth Agency',
   copyright: '© 2026 Joy Media PR. All rights reserved.',
   AGENCY_MODE: true,

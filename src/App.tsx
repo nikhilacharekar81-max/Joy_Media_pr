@@ -406,7 +406,14 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('worksphere_liked_gigs');
+        let stored = localStorage.getItem('joymediapr_liked_gigs');
+        if (stored === null) {
+          const legacy = localStorage.getItem('worksphere_liked_gigs');
+          if (legacy !== null) {
+            stored = legacy;
+            localStorage.setItem('joymediapr_liked_gigs', legacy);
+          }
+        }
         if (stored) setLikedGigIds(JSON.parse(stored));
       } catch {}
     }
@@ -420,7 +427,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
     setLikedGigIds(prev => {
       const next = prev.includes(gigId) ? prev.filter(id => id !== gigId) : [...prev, gigId];
       if (typeof window !== 'undefined') {
-        try { localStorage.setItem('worksphere_liked_gigs', JSON.stringify(next)); } catch {}
+        try { localStorage.setItem('joymediapr_liked_gigs', JSON.stringify(next)); } catch {}
       }
       return next;
     });

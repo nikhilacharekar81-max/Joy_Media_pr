@@ -1338,7 +1338,7 @@ export class PostgresAsyncStore implements StoreInterface {
     if (message.senderId === 'system') {
       await dbRunner.query(
         `INSERT INTO users (id, name, username, email, role, status, verified, email_verified, mobile_verified, wallet_balance, created_at)
-         VALUES ('system', 'WorkSphere System', 'system', 'system@worksphere.internal', 'internal', 'active', TRUE, TRUE, TRUE, 0, $1)
+         VALUES ('system', 'Joy Media PR System', 'system', 'system@joymediapr.internal', 'internal', 'active', TRUE, TRUE, TRUE, 0, $1)
          ON CONFLICT (id) DO NOTHING`,
         [message.timestamp || new Date().toISOString()]
       );

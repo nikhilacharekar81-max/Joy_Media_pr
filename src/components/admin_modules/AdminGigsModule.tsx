@@ -309,7 +309,7 @@ export const AdminGigsModule: React.FC<AdminGigsModuleProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `workperhour_gigs_export_${Date.now()}.csv`);
+    link.setAttribute('download', `joymediapr_gigs_export_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

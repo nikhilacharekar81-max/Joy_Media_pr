@@ -1332,6 +1332,10 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
       `Issue Date     : ${inv.issueDate || '-'}`,
       `Due Date       : ${inv.dueDate || '-'}`,
       `Issuer         : ${SITE_CONFIG.brandName}`,
+      ...(SITE_CONFIG.business.legalName ? [`Legal Name     : ${SITE_CONFIG.business.legalName}`] : []),
+      ...(SITE_CONFIG.business.address ? [`Address        : ${SITE_CONFIG.business.address}`] : []),
+      ...(SITE_CONFIG.business.taxId ? [`Tax ID / EIN   : ${SITE_CONFIG.business.taxId}`] : []),
+      ...(SITE_CONFIG.business.supportPhone ? [`Phone          : ${SITE_CONFIG.business.supportPhone}`] : []),
       `Recipient      : ${inv.recipientName || 'Client'} (${inv.recipientEmail || ''})`,
       `Description    : ${inv.title || 'Order Services'}`,
       '----------------------------------------------------',
@@ -3566,6 +3570,34 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             </div>
 
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Issued By</span>
+                <span className="font-semibold text-slate-900">{SITE_CONFIG.brandName}</span>
+              </div>
+              {SITE_CONFIG.business.legalName && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Legal Business Name</span>
+                  <span className="font-semibold text-slate-900">{SITE_CONFIG.business.legalName}</span>
+                </div>
+              )}
+              {SITE_CONFIG.business.address && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Address</span>
+                  <span className="font-semibold text-slate-900 text-right">{SITE_CONFIG.business.address}</span>
+                </div>
+              )}
+              {SITE_CONFIG.business.taxId && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Tax ID / EIN</span>
+                  <span className="font-semibold text-slate-900">{SITE_CONFIG.business.taxId}</span>
+                </div>
+              )}
+              {SITE_CONFIG.business.supportPhone && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Support Phone</span>
+                  <span className="font-semibold text-slate-900">{SITE_CONFIG.business.supportPhone}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Description</span>
                 <span className="font-semibold text-slate-900">{viewingInvoice.title}</span>

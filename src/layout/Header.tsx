@@ -62,7 +62,14 @@ export function Header({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const stored = localStorage.getItem('worksphere_notif_sound');
+        let stored = localStorage.getItem('joymediapr_notif_sound');
+        if (stored === null) {
+          const legacy = localStorage.getItem('worksphere_notif_sound');
+          if (legacy !== null) {
+            stored = legacy;
+            localStorage.setItem('joymediapr_notif_sound', legacy);
+          }
+        }
         if (stored === 'false') {
           setSoundEnabled(false);
         }
@@ -72,7 +79,9 @@ export function Header({
 
   const playNotificationSound = () => {
     try {
-      const soundOn = typeof window !== 'undefined' ? localStorage.getItem('worksphere_notif_sound') !== 'false' : true;
+      const soundOn = typeof window !== 'undefined'
+        ? (localStorage.getItem('joymediapr_notif_sound') ?? localStorage.getItem('worksphere_notif_sound')) !== 'false'
+        : true;
       if (!soundOn) return;
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
@@ -107,7 +116,7 @@ export function Header({
     const next = !soundEnabled;
     setSoundEnabled(next);
     if (typeof window !== 'undefined') {
-      try { localStorage.setItem('worksphere_notif_sound', String(next)); } catch {}
+      try { localStorage.setItem('joymediapr_notif_sound', String(next)); } catch {}
     }
   };
 
