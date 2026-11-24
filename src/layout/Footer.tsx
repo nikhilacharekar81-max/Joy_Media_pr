@@ -64,8 +64,8 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
             </li>
             <li>
               <a
-                href="/gigs"
-                onClick={(e) => navigate('/gigs', e)}
+                href="/services"
+                onClick={(e) => navigate('/services', e)}
                 className="hover:text-slate-900 transition-colors"
               >
                 Explore All Placements

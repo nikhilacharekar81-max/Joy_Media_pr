@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, Trash2 } from 'lucide-react';
 import { Gig } from '../../types';
 import { DEFAULT_GIG_IMAGE } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface WishlistModalProps {
   isOpen: boolean;
@@ -31,9 +32,9 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           <div>
             <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
               <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-              <span>Your Liked Gigs & Wishlist ({likedGigIds.length})</span>
+              <span>Saved Services ({likedGigIds.length})</span>
             </h3>
-            <p className="text-xs text-agency-muted mt-0.5">Quickly access and manage the freelance service gigs you have saved.</p>
+            <p className="text-xs text-agency-muted mt-0.5">Quickly access and manage the services you have saved.</p>
           </div>
           <button 
             onClick={onClose}
@@ -47,7 +48,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
           {likedGigIds.length === 0 ? (
             <div className="p-12 text-center text-slate-400 text-xs space-y-3">
               <Heart className="w-10 h-10 text-slate-300 mx-auto" />
-              <p>You haven't liked any gigs yet. Click the heart icon on any gig card to save it to your wishlist!</p>
+              <p>You haven't saved any services yet. Click the heart icon on any service card to save it for later!</p>
             </div>
           ) : (
             gigs.filter(g => likedGigIds.includes(g.id)).map(gig => {
@@ -72,7 +73,7 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                       >
                         {gig.title}
                       </a>
-                      <span className="text-[11px] text-agency-muted block mt-0.5">{gig.category} · By {gig.freelancerName}</span>
+                      <span className="text-[11px] text-agency-muted block mt-0.5">{gig.category} · By {SITE_CONFIG.brandName}</span>
                     </div>
                   </div>
 
@@ -86,12 +87,12 @@ export const WishlistModal: React.FC<WishlistModalProps> = ({
                       }}
                       className="px-3 py-1.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800"
                     >
-                      View Gig
+                      View Service
                     </a>
                     <button 
                       onClick={() => onToggleLike(gig.id)}
                       className="p-1.5 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer"
-                      title="Remove from wishlist"
+                      title="Remove from saved services"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

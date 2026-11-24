@@ -27,6 +27,7 @@ const SSR_HTML_CACHE_TTL_MS = 30_000;
 const ssrHtmlCache = new Map<string, SsrHtmlCacheEntry>();
 const CACHEABLE_PUBLIC_PATHS = new Set([
   '/',
+  '/services',
   '/gigs',
   '/projects',
   '/search-projects',
@@ -53,9 +54,8 @@ function safeDecodeURIComponent(str: string): string {
 }
 
 function getGigUrl(gig: any) {
-  const uname = (gig.freelancerUsername || slugify(gig.freelancerName)).toLowerCase();
   const gslug = (gig.slug || slugify(gig.title)).toLowerCase();
-  return `/${uname}/${gslug}`;
+  return `/services/${gslug}`;
 }
 
 function getLatestMtimeMs(targetPath: string): number {
@@ -194,7 +194,7 @@ export async function setupSSR(
       initialData.pageType = 'private';
     } else if (pathname === '/' || pathname === '') {
       initialData.pageType = 'home';
-    } else if (pathname === '/gigs') {
+    } else if (pathname === '/services' || pathname === '/gigs') {
       initialData.pageType = 'gigs';
     } else if (pathname.startsWith('/categories/')) {
       initialData.pageType = 'gigs';
@@ -205,10 +205,10 @@ export async function setupSSR(
     } else if (['/terms', '/privacy', '/refund-policy'].includes(pathname)) {
       initialData.pageType = 'legal';
       initialData.legalType = pathname.slice(1);
-    } else if (pathParts.length >= 2 && (pathParts[0].toLowerCase() === 'gig' || pathParts[0].toLowerCase() === 'gigs')) {
+    } else if (pathParts.length >= 2 && ['services', 'service', 'gig', 'gigs'].includes(pathParts[0].toLowerCase())) {
       const gigId = pathParts[1];
       const subSlug = pathParts[2];
-      const matchedGig = PUBLIC_GIGS.find(g => g.id === gigId || (g.slug && g.slug.toLowerCase() === gigId.toLowerCase()) || (subSlug && g.slug && g.slug.toLowerCase() === subSlug.toLowerCase()));
+      const matchedGig = PUBLIC_GIGS.find(g => g.id === gigId || (g.slug && g.slug.toLowerCase() === gigId.toLowerCase()) || (subSlug && g.slug && g.slug.toLowerCase() === subSlug.toLowerCase()) || slugify(g.title || '') === gigId.toLowerCase());
       if (matchedGig) {
         initialData.pageType = 'gig_detail';
         initialData.gig = matchedGig;

@@ -267,7 +267,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
       <div className="p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center gap-1 overflow-x-auto pb-1 mb-6 scrollbar-none border border-slate-200/60 dark:border-slate-800/80">
         {['All', 'UGC AI Videos', 'Development & IT', 'AI & Data', 'Design & Creative', 'Mobile Apps'].map(catName => {
           const slug = CATEGORY_SLUGS[catName];
-          const catUrl = slug === 'all' ? '/gigs' : `/categories/${slug}`;
+          const catUrl = slug === 'all' ? '/services' : `/categories/${slug}`;
           const isActive = currentCategory === catName;
           return (
             <a
@@ -569,7 +569,6 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
           {sortedAndFilteredGigs.map(gig => {
             const currentSlide = carouselIndices[gig.id] || 0;
             const gigUrl = getGigUrl(gig);
-            const sellerUrl = `/${slugify(gig.freelancerName)}`;
             const isLiked = likedGigIds.includes(gig.id);
             const isTopSeller = gig.freelancerLevel?.toLowerCase().includes('top') || gig.rating >= 4.9;
 
@@ -705,7 +704,6 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
         <div className="space-y-4">
           {sortedAndFilteredGigs.map(gig => {
             const gigUrl = getGigUrl(gig);
-            const sellerUrl = `/${slugify(gig.freelancerName)}`;
             const isLiked = likedGigIds.includes(gig.id);
 
             return (

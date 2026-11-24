@@ -232,7 +232,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
         DEFAULT_GIG_IMAGE;
       const gigUrl =
         ord.serviceUrl ||
-        (linkedGig ? getGigUrl(linkedGig) : ord.gigId ? `/gig/${ord.gigId}${ord.gigSlug ? `/${ord.gigSlug}` : ''}` : undefined);
+        (linkedGig ? getGigUrl(linkedGig) : ord.gigSlug ? `/services/${ord.gigSlug}` : ord.gigId ? `/services/${ord.gigId}` : undefined);
 
       return {
         sellerName,
@@ -558,7 +558,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
               </button>
             ) : (
               <button
-                onClick={() => navigate('/gigs')}
+                onClick={() => navigate('/services')}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />

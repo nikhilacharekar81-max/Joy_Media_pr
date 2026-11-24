@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Receipt, Download, Printer, ShieldCheck, CheckCircle2, Clock, RotateCcw } from 'lucide-react';
 import { fetchWithRetry } from '../../utils/fetchRetry';
-import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface InvoiceData {
   id: string;
@@ -104,12 +104,12 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
 
   const statusBadge = {
     paid: {
-      label: AGENCY_MODE ? 'PAID' : 'PAID & RELEASED',
+      label: 'PAID',
       bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       icon: CheckCircle2
     },
     in_escrow: {
-      label: AGENCY_MODE ? 'CONFIRMED' : 'HELD IN ESCROW',
+      label: 'CONFIRMED',
       bg: 'bg-blue-50 text-blue-700 border-blue-200',
       icon: Clock
     },
@@ -156,7 +156,7 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
             <div className="flex items-center gap-2">
               <span className="text-xl font-black tracking-tight text-slate-900">{SITE_CONFIG.brandWordmark}</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                {AGENCY_MODE ? 'Official Invoice' : 'Agency'}
+                Official Invoice
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">{SITE_CONFIG.tagline}</p>
@@ -183,17 +183,8 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-indigo-600 shrink-0" />
               <span>
-                {AGENCY_MODE ? (
-                  <>
-                    <strong>Auto-Acceptance Scheduled:</strong> Order deliverables will be automatically accepted on{' '}
-                    <strong>{new Date(invoice.autoReleaseAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</strong> unless a revision or support review is requested.
-                  </>
-                ) : (
-                  <>
-                    <strong>Auto-Release Scheduled:</strong> Funds held in escrow will automatically release on{' '}
-                    <strong>{new Date(invoice.autoReleaseAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</strong> unless a revision or dispute is requested.
-                  </>
-                )}
+                <strong>Auto-Acceptance Scheduled:</strong> Order deliverables will be automatically accepted on{' '}
+                <strong>{new Date(invoice.autoReleaseAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</strong> unless a revision or support review is requested.
               </span>
             </div>
             <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-full shrink-0">7-day review period</span>
@@ -210,18 +201,22 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
           </div>
           <div className="sm:text-right">
             <span className="font-bold text-slate-400 uppercase tracking-wider text-xs">
-              {AGENCY_MODE ? 'Provided By (Agency)' : 'Provided By (Freelancer)'}
+              Provided By
             </span>
             <p className="font-bold text-slate-900 text-sm mt-0.5">
-              {AGENCY_MODE ? SITE_CONFIG.brandName : invoice.seller.name}
+              {SITE_CONFIG.brandName}
             </p>
             <p className="text-slate-600 mt-0.5">
-              {AGENCY_MODE ? SITE_CONFIG.emails.support : invoice.seller.email}
+              Legal Business Name: [Legal Business Name Placeholder]
+            </p>
+            <p className="text-slate-600 mt-0.5">
+              Address: [Business Address Placeholder]
+            </p>
+            <p className="text-slate-600 mt-0.5">
+              Tax ID / EIN: [Tax ID Placeholder]
             </p>
             <p className="text-slate-400 mt-0.5">
-              {AGENCY_MODE
-                ? SITE_CONFIG.domain
-                : `Account ID: ${invoice.seller.id} • ${invoice.seller.country || 'Global'}`}
+              {SITE_CONFIG.domain} • {SITE_CONFIG.emails.support}
             </p>
           </div>
         </div>
@@ -255,12 +250,10 @@ export const WorkstreamInvoiceTab: React.FC<WorkstreamInvoiceTabProps> = ({ orde
           <div className="max-w-xs space-y-2 text-xs text-slate-500">
             <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>{AGENCY_MODE ? 'Verified Agency Payment' : 'Protected Payments'}</span>
+              <span>Verified Agency Payment</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-400">
-              {AGENCY_MODE
-                ? `Payment was verified and recorded by ${SITE_CONFIG.brandName} in accordance with our Terms of Service.`
-                : `Payment was verified and held securely. All funds are cleared in accordance with ${SITE_CONFIG.brandName} Terms of Service.`}
+              {`Payment was verified and recorded by ${SITE_CONFIG.brandName} in accordance with our Terms of Service.`}
             </p>
           </div>
 

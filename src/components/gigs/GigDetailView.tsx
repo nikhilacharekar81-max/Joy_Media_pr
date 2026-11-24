@@ -98,7 +98,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs text-agency-muted font-medium">
-        <a href="/gigs" onClick={(e) => navigate('/gigs', e)} className="hover:text-agency-dark">Home</a>
+        <a href="/services" onClick={(e) => navigate('/services', e)} className="hover:text-agency-dark">Home</a>
         <span>/</span>
         <a 
           href={`/categories/${CATEGORY_SLUGS[currentGig.category] || 'technology-programming'}`} 

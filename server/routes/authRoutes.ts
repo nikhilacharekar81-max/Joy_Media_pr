@@ -742,6 +742,9 @@ authRouter.post('/withdrawal/request-code', requireAuth, requireFinancialActiveS
   const authUserId = resolveAuthenticatedUserId(req);
   const caller = authUserId ? await store.getUser(authUserId) : null;
   if (!caller || !caller.email) return res.status(400).json({ error: 'User email not found.' });
+  if (SITE_CONFIG.AGENCY_MODE && caller.role !== 'admin' && caller.role !== 'super_admin') {
+    return res.status(403).json({ error: 'Forbidden: Only administrators can request payouts or withdrawals.' });
+  }
 
   if (req.body?.amount !== undefined && req.body?.amount !== null && String(req.body.amount).trim() !== '') {
     const numAmount = Number(req.body.amount);
@@ -864,6 +867,9 @@ authRouter.post('/withdrawal/request-code', requireAuth, requireFinancialActiveS
 
 authRouter.post('/withdrawal/verify-and-execute', requireAuth, requireActiveStatus, requireFinancialActiveStatus, rateLimit(10, 60_000), (req: Request, res: Response) => {
   const caller = (req as any).authenticatedUser;
+  if (SITE_CONFIG.AGENCY_MODE && caller?.role !== 'admin' && caller?.role !== 'super_admin') {
+    return res.status(403).json({ error: 'Forbidden: Only administrators can request payouts or withdrawals.' });
+  }
   req.body.userId = caller.id;
   return handlePayoutRequest(req, res);
 });

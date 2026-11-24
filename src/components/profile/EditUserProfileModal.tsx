@@ -75,7 +75,7 @@ export const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
                 onChange={(e) => setEditUserForm((prev: any) => ({ ...prev, role: e.target.value }))}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:bg-white focus:border-emerald-500"
               >
-                <option value="user">Marketplace User</option>
+                <option value="user">Client Account</option>
                 <option value="super_admin">Super Admin</option>
                 <option value="moderator">Moderator</option>
                 <option value="support">Support Staff</option>
@@ -136,12 +136,12 @@ export const EditUserProfileModal: React.FC<EditUserProfileModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-slate-900 font-bold uppercase mb-1">Wallet Balance ($)</label>
+              <label className="block text-slate-900 font-bold uppercase mb-1">Account Balance ($)</label>
               <input 
                 type="number" 
                 value={editUserForm.walletBalance}
                 readOnly
-                title="Wallet balances are controlled by the ledger. Use Finance > Adjustments."
+                title="Account balances are controlled by the ledger. Use Finance > Adjustments."
                 className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono cursor-not-allowed"
               />
             </div>

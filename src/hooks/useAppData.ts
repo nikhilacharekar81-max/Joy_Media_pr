@@ -108,7 +108,7 @@ export const useAppData = (initialData?: any, options?: UseAppDataOptions) => {
     const legalRoute = isLegalOnlyPath(activePath);
     const initialToken = getAuthToken();
     const isAdminRouteKey = cleanPathKey.startsWith('/admin');
-    const isLandingKey = cleanPathKey === '/' || cleanPathKey === '/gigs' || cleanPathKey.startsWith('/categories/');
+    const isLandingKey = cleanPathKey === '/' || cleanPathKey === '/services' || cleanPathKey === '/gigs' || cleanPathKey.startsWith('/categories/');
     const dedupeKey = `${currentUserId || ''}|${initialToken || ''}|${legalRoute ? 'legal' : isAdminRouteKey ? 'admin' : isLandingKey ? 'landing' : 'app'}|${needsCategoriesForPath(activePath) ? 'cat' : 'nocat'}`;
 
     if (inFlightFetchRef.current && inFlightFetchRef.current.key === dedupeKey) {
@@ -152,6 +152,7 @@ export const useAppData = (initialData?: any, options?: UseAppDataOptions) => {
         const cleanActivePath = activePath.split('?')[0].replace(/\/+$/, '').toLowerCase() || '/';
         const isPublicCatalogLanding =
           cleanActivePath === '/' ||
+          cleanActivePath === '/services' ||
           cleanActivePath === '/gigs' ||
           cleanActivePath.startsWith('/categories/');
 

@@ -8,7 +8,7 @@ export const rootRouter = Router();
 
 rootRouter.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send(
-    `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /workstream/\nDisallow: /checkout/\nDisallow: /payments/\nDisallow: /wallet/\n\nSitemap: ${SITE_CONFIG.baseUrl}/sitemap.xml\n`
+    `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /workstream/\nDisallow: /checkout/\nDisallow: /payments/\nDisallow: /wallet/\nDisallow: /add-service\n\nSitemap: ${SITE_CONFIG.baseUrl}/sitemap.xml\n`
   );
 });
 
@@ -19,7 +19,7 @@ rootRouter.get('/sitemap.xml', async (_req, res) => {
     const gigs = rawGigs.filter(isGigPublic);
     const staticEntries = [
       { loc: `${baseUrl}/`, changefreq: 'daily', priority: '1.0' },
-      { loc: `${baseUrl}/gigs`, changefreq: 'daily', priority: '0.9' },
+      { loc: `${baseUrl}/services`, changefreq: 'daily', priority: '0.9' },
       { loc: `${baseUrl}/categories/seo`, changefreq: 'weekly', priority: '0.8' },
       { loc: `${baseUrl}/categories/pr-press-releases`, changefreq: 'weekly', priority: '0.8' },
       { loc: `${baseUrl}/categories/ugc-ai-videos`, changefreq: 'weekly', priority: '0.8' },
@@ -32,9 +32,8 @@ rootRouter.get('/sitemap.xml', async (_req, res) => {
       { loc: `${baseUrl}/refund-policy`, changefreq: 'monthly', priority: '0.5' }
     ];
     const gigEntries = gigs.map((g) => {
-      const uname = (g.freelancerUsername || slugify(g.freelancerName || '')).toLowerCase();
       const gslug = (g.slug || slugify(g.title || '')).toLowerCase();
-      return { loc: `${baseUrl}/${uname}/${gslug}`, changefreq: 'weekly', priority: '0.7' };
+      return { loc: `${baseUrl}/services/${gslug}`, changefreq: 'weekly', priority: '0.7' };
     });
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
       [...staticEntries, ...gigEntries]

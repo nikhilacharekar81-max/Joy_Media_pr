@@ -7,10 +7,9 @@ export const slugify = (text?: string | null): string =>
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-/** Constructs canonical Gig URL: /:username/:slug */
+/** Constructs canonical Service URL: /services/:slug */
 export const getGigUrl = (gig: any): string => {
-  if (!gig) return '/gigs';
-  const username = slugify(gig.freelancerUsername || gig.freelancerName || 'freelancer');
-  const gigSlug = slugify(gig.slug || gig.title || gig.id || 'gig');
-  return `/${username}/${gigSlug}`;
+  if (!gig) return '/services';
+  const gigSlug = slugify(gig.slug || gig.title || gig.id || 'service');
+  return `/services/${gigSlug}`;
 };

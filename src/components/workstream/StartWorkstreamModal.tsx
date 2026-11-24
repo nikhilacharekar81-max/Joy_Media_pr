@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, DollarSign, Calendar, User, FileText } from 'lucide-react';
 import { UserAccount, Gig } from '../../types';
-import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface StartWorkstreamModalProps {
   isOpen: boolean;
@@ -59,12 +59,10 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-agency-dark">
-                {AGENCY_MODE ? 'Start New Order Inquiry' : 'Start New Workstream'}
+                Start New Order Inquiry
               </h3>
               <p className="text-[11px] text-slate-400">
-                {AGENCY_MODE
-                  ? `Initiate a project workspace with ${SITE_CONFIG.brandName}`
-                  : 'Initiate a secure escrow collaboration'}
+                {`Initiate a project workspace with ${SITE_CONFIG.brandName}`}
               </p>
             </div>
           </div>
@@ -113,7 +111,7 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
-                {AGENCY_MODE ? 'Estimated Budget ($ USD)' : 'Escrow Budget ($ USD)'}
+                Estimated Budget ($ USD)
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">$</span>
@@ -159,9 +157,7 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
           <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-[11px] text-emerald-800">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              {AGENCY_MODE
-                ? `Payments are securely processed by ${SITE_CONFIG.brandName} with transparent deliverable tracking.`
-                : 'Escrow funds will remain 100% protected until client approves completed work.'}
+              {`Payments are securely processed by ${SITE_CONFIG.brandName} with transparent deliverable tracking.`}
             </span>
           </div>
 
@@ -177,7 +173,7 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
               type="submit"
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer"
             >
-              {AGENCY_MODE ? 'Start Order Inquiry' : 'Start Workstream'}
+              Start Order Inquiry
             </button>
           </div>
         </form>

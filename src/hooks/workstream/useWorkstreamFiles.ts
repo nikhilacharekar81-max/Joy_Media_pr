@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { SharedFileItem } from '../../components/workstream/types';
 import { Message, Order } from '../../types';
+import { SITE_CONFIG } from '../../siteConfig';
 
 export interface UseWorkstreamFilesProps {
   selectedOrder?: (Order & { deliverableFiles?: Array<any>; deliveries?: Array<any> }) | null;
@@ -59,7 +60,7 @@ export function useWorkstreamFiles({
             size: f.size || '3.5 MB',
             url: f.url || '#',
             uploadedAt: f.uploadedAt || ord.createdAt,
-            uploadedBy: 'Seller',
+            uploadedBy: SITE_CONFIG.brandName,
             uploaderId: ord.sellerId,
             type: f.category || 'deliverable',
             orderId: ord.id,
@@ -90,7 +91,7 @@ export function useWorkstreamFiles({
                   uploadedAt: d.deliveredAt
                     ? new Date(d.deliveredAt).toLocaleDateString()
                     : (d.submittedAt ? new Date(d.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ord.createdAt),
-                  uploadedBy: 'Seller',
+                  uploadedBy: SITE_CONFIG.brandName,
                   uploaderId: ord.sellerId,
                   type: 'deliverable',
                   orderId: ord.id,
@@ -124,7 +125,7 @@ export function useWorkstreamFiles({
                 size: f.size || '1.0 MB',
                 url: f.url || '#',
                 uploadedAt: m.timestamp,
-                uploadedBy: m.senderName || 'Seller',
+                uploadedBy: m.senderName || SITE_CONFIG.brandName,
                 uploaderId: m.senderId,
                 type: 'deliverable',
                 orderId: msgOrderId,

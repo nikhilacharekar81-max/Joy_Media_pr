@@ -32,6 +32,7 @@ import {
   adminActor,
   rateLimit,
   resolveAuthenticatedUserId,
+  isStaffUser,
   IS_PRODUCTION,
   formatApiError,
   areSimulatedDepositsAllowed
@@ -2637,6 +2638,9 @@ router.post('/payments/invoices', requireAuth, async (req: Request, res: Respons
     const caller = callerRes.rows[0];
     if (!caller) {
       return res.status(401).json({ error: 'Unauthorized: Authenticated user not found.' });
+    }
+    if (SITE_CONFIG.AGENCY_MODE && !isStaffUser(caller)) {
+      return res.status(403).json({ error: 'Forbidden: Only agency staff can create invoices.' });
     }
     const isAdmin = caller.role === 'admin' || caller.role === 'super_admin';
 

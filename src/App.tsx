@@ -108,9 +108,6 @@ const LoginModal = lazyWithRetry(() =>
 const SignupModal = lazyWithRetry(() =>
   import('./components/modals/SignupModal').then(m => ({ default: m.SignupModal }))
 );
-const UserSwitchModal = lazyWithRetry(() =>
-  import('./components/modals/UserSwitchModal').then(m => ({ default: m.UserSwitchModal }))
-);
 const ForgotPasswordModal = lazyWithRetry(() =>
   import('./components/modals/ForgotPasswordModal').then(m => ({ default: m.ForgotPasswordModal }))
 );
@@ -353,7 +350,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
 
       const cleanNow = (initialPath || '/').split('?')[0].replace(/\/+$/, '').toLowerCase() || '/';
       const isPublicLanding =
-        cleanNow === '/' || cleanNow === '/gigs' || cleanNow.startsWith('/categories/');
+        cleanNow === '/' || cleanNow === '/services' || cleanNow === '/gigs' || cleanNow.startsWith('/categories/');
       const canSkipAnonymousLandingRefresh =
         Boolean(initialData?.ssrHydrated) && isPublicLanding && !tokenBefore;
 
@@ -377,6 +374,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
     const cleanInitPath = (initialPath || '/').split('?')[0].replace(/\/+$/, '') || '/';
     const isPublicCatalogLanding =
       cleanInitPath === '/' ||
+      cleanInitPath === '/services' ||
       cleanInitPath === '/gigs' ||
       cleanInitPath.startsWith('/categories/');
 
@@ -431,7 +429,6 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
   // Modal open states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isUserSwitchModalOpen, setIsUserSwitchModalOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
@@ -616,7 +613,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         navigate(getGigUrl(created));
       }
     } catch (err) {
-      console.error('Publish gig failed:', err);
+      console.error('Publish service failed:', err);
     }
   };
 
@@ -915,9 +912,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           workstream.fetchMessages(newOrder.id);
           setOrderFeedback({
             type: 'success',
-            message: AGENCY_MODE
-              ? `Order #${newOrder.id} placed successfully! Payment confirmed.`
-              : `Order #${newOrder.id} placed successfully! Funds are secured in escrow.`,
+            message: `Order #${newOrder.id} placed successfully! Payment confirmed.`,
             orderId: newOrder.id
           });
           navigate(`/workstream/${newOrder.id}`);
@@ -1053,7 +1048,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           });
         }
       } catch (err: any) {
-        console.error('Contact seller inquiry failed:', err);
+        console.error('Contact team inquiry failed:', err);
         setOrderFeedback({
           type: 'error',
           message: err?.message || 'Network error while opening inquiry.'
@@ -1071,11 +1066,48 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
   const cleanPath = rawCleanPath;
   const pathParts = cleanPath.split('/').filter(Boolean);
 
+  // Client-side canonical redirects for legacy /gigs, /gig/*, /service/:id, /create-gig, /post-gig paths
+  useEffect(() => {
+    const querySuffix = currentPath.includes('?') ? currentPath.slice(currentPath.indexOf('?')) : '';
+    let redirectTarget: string | null = null;
+
+    if (cleanPath === '/gigs') {
+      redirectTarget = `/services${querySuffix}`;
+    } else if (cleanPath === '/create-gig' || cleanPath === '/post-gig') {
+      redirectTarget = `/add-service${querySuffix}`;
+    } else if (
+      pathParts.length >= 2 &&
+      (pathParts[0].toLowerCase() === 'gig' || pathParts[0].toLowerCase() === 'service')
+    ) {
+      const param = pathParts[1];
+      const slugParam = pathParts[2];
+      const matched = gigs.find(
+        g =>
+          g.id === param ||
+          (g.slug && g.slug.toLowerCase() === param.toLowerCase()) ||
+          (slugParam && g.slug && g.slug.toLowerCase() === slugParam.toLowerCase())
+      );
+      if (matched) {
+        redirectTarget = `${getGigUrl(matched)}${querySuffix}`;
+      } else if (slugParam) {
+        redirectTarget = `/services/${slugParam}${querySuffix}`;
+      } else if (gigs.length > 0) {
+        redirectTarget = `/services/${param}${querySuffix}`;
+      }
+    }
+
+    if (redirectTarget && redirectTarget !== currentPath) {
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', redirectTarget);
+      }
+      setCurrentPath(redirectTarget);
+    }
+  }, [cleanPath, currentPath, pathParts, gigs]);
+
   // Check modal trigger routes
   useEffect(() => {
     if (cleanPath === '/login') setIsLoginModalOpen(true);
     if (cleanPath === '/signup') setIsSignupModalOpen(true);
-    if (!AGENCY_MODE && cleanPath === '/switch-user') setIsUserSwitchModalOpen(true);
     if (cleanPath === '/support') setIsSupportModalOpen(true);
     if (cleanPath === '/wishlist') setIsWishlistModalOpen(true);
     if (cleanPath === '/notifications') setIsEmailNotificationsModalOpen(true);
@@ -1105,7 +1137,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       cleanPath.startsWith('/projects/') ||
       cleanPath.startsWith('/project/');
 
-    const wasLanding = prev === '/' || prev === '/gigs' || prev.startsWith('/categories/');
+    const wasLanding = prev === '/' || prev === '/services' || prev === '/gigs' || prev.startsWith('/categories/');
     const needsAdminData = cleanPath.startsWith('/admin');
     const needsWorkstreamOrActivity =
       cleanPath === '/buyer-activity' ||
@@ -1200,13 +1232,13 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
   }, [activeUser, cleanPath, pathParts, resolveOrderFromRouteParam, selectedOrder]);
 
   // Route flags
-  const isGigsList = cleanPath === '/gigs' || cleanPath.startsWith('/categories');
+  const isGigsList = cleanPath === '/services' || cleanPath === '/gigs' || cleanPath.startsWith('/categories');
   const isProjectsList = ['/projects', '/search-projects', '/project-search', '/freelance-jobs'].includes(cleanPath);
   const isFreelancersList = ['/freelancers', '/search-freelancers', '/freelancer-search'].includes(cleanPath);
   const isCategoryRoute = cleanPath.startsWith('/categories');
   const isProjectDetail = pathParts.length === 2 && (pathParts[0].toLowerCase() === 'projects' || pathParts[0].toLowerCase() === 'project');
   const isGigDetail =
-    (pathParts.length >= 2 && (pathParts[0].toLowerCase() === 'gig' || pathParts[0].toLowerCase() === 'gigs')) ||
+    (pathParts.length >= 2 && ['services', 'service', 'gig', 'gigs'].includes(pathParts[0].toLowerCase())) ||
     (pathParts.length === 2 && !RESERVED_ROUTES.includes(pathParts[0].toLowerCase()));
 
   // Active Category detection
@@ -1392,19 +1424,19 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         navigate={navigate}
       />
     );
-  } else if (cleanPath === '/create-gig' || cleanPath === '/post-gig') {
-    if (AGENCY_MODE && (!activeUser || !isStaffRole(activeUser.role))) {
+  } else if (cleanPath === '/add-service' || cleanPath === '/create-gig' || cleanPath === '/post-gig') {
+    if (!activeUser || !isStaffRole(activeUser.role)) {
       mainContent = (
         <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
-            <h1 className="text-2xl font-bold text-slate-900">Agency Staff Only</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Agency Staff Area</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Only authorized Joy Media PR team members can publish or edit agency services.
+              Only authorized {SITE_CONFIG.brandName} team members can publish or edit agency services.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={(e) => navigate('/gigs', e)}
+                onClick={(e) => navigate('/services', e)}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
               >
                 Explore Services
@@ -1456,12 +1488,10 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
           <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              {AGENCY_MODE ? 'Request a Custom Quote' : 'Post a Custom Project Request'}
+              Request a Custom Quote
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              {AGENCY_MODE
-                ? `Describe your project requirements and budget to receive a custom quote from ${SITE_CONFIG.brandName}.`
-                : 'Describe your project requirements and budget to receive proposals from vetted freelancers.'}
+              Describe your project requirements and budget to receive a custom quote from {SITE_CONFIG.brandName}.
             </p>
           </div>
           {postProjectError && (
@@ -1476,11 +1506,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               </label>
               <input
                 type="text"
-                placeholder={
-                  AGENCY_MODE
-                    ? 'e.g. Digital PR campaign, guest posting package, or Shopify storefront...'
-                    : 'e.g. Build a responsive SaaS analytics dashboard...'
-                }
+                placeholder="e.g. Digital PR campaign, guest posting package, or Shopify storefront..."
                 value={newProjectTitle}
                 onChange={(e) => setNewProjectTitle(e.target.value)}
                 required
@@ -1507,7 +1533,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               </select>
             </div>
 
-            <div className={`grid grid-cols-1 ${AGENCY_MODE ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                   Min Budget ($ USD)
@@ -1536,22 +1562,6 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
-              {!AGENCY_MODE && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                    Freelancers Needed
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={newProjectMaxHires}
-                    onChange={(e) => setNewProjectMaxHires(Number(e.target.value))}
-                    required
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-              )}
             </div>
 
             <div>
@@ -1571,7 +1581,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={(e) => navigate(AGENCY_MODE ? '/gigs' : '/projects', e)}
+                onClick={(e) => navigate('/services', e)}
                 className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer"
               >
                 Cancel
@@ -1581,9 +1591,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 disabled={isSubmittingProject}
                 className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
               >
-                {isSubmittingProject
-                  ? (AGENCY_MODE ? 'Submitting Request...' : 'Posting Project...')
-                  : (AGENCY_MODE ? 'Submit Custom Request' : 'Post Project')}
+                {isSubmittingProject ? 'Submitting Request...' : 'Submit Custom Request'}
               </button>
             </div>
           </form>
@@ -1614,7 +1622,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">Agency Staff Area</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              This dashboard is reserved for the Joy Media PR team. View and track your orders from your client dashboard.
+              This dashboard is reserved for the {SITE_CONFIG.brandName} team. View and track your orders from your client dashboard.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1626,7 +1634,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               </button>
               <button
                 type="button"
-                onClick={(e) => navigate('/gigs', e)}
+                onClick={(e) => navigate('/services', e)}
                 className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
               >
                 Browse Services
@@ -1673,9 +1681,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">Sign In Required</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {AGENCY_MODE
-                ? 'Order workspaces, messages, and invoices are private to signed-in accounts. Please sign in to access your orders.'
-                : 'Workstreams, messages, and escrow orders are private to signed-in accounts. Please sign in to access your workstreams.'}
+              Order workspaces, messages, and invoices are private to signed-in accounts. Please sign in to access your orders.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1697,7 +1703,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 onClick={(e) => navigate('/', e)}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer"
               >
-                {AGENCY_MODE ? 'Back to Home' : 'Back to Marketplace'}
+                Back to Home
               </button>
             </div>
           </div>
@@ -1825,7 +1831,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
             onToggleStar={toggleStarOrder}
             searchQuery={workstreamSearch}
             onSearchChange={setWorkstreamSearch}
-            onStartNewWorkstream={() => navigate('/gigs')}
+            onStartNewWorkstream={() => navigate('/services')}
           />
         </div>
       );
@@ -1838,7 +1844,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">Custom Project Quotes</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Every project request at Joy Media PR is handled privately by our in-house team. Submit a brief or view your existing requests.
+              Every project request at {SITE_CONFIG.brandName} is handled privately by our in-house team. Submit a brief or view your existing requests.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1876,12 +1882,12 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">Work Directly With Our Team</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Joy Media PR is a dedicated digital PR and growth agency. All services are delivered directly by our in-house specialists.
+              {SITE_CONFIG.brandName} is a dedicated digital PR and growth agency. All services are delivered directly by our in-house specialists.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={(e) => navigate('/gigs', e)}
+                onClick={(e) => navigate('/services', e)}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
               >
                 Explore Our Services
@@ -1932,12 +1938,10 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">
-              {AGENCY_MODE ? 'Request Access Restricted' : 'Project Access Restricted'}
+              Request Access Restricted
             </h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {AGENCY_MODE
-                ? 'As a client, you can only view and manage your own custom requests.'
-                : 'As a buyer, you can only view and manage your own posted projects.'}
+              As a client, you can only view and manage your own custom requests.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1945,14 +1949,14 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 onClick={(e) => navigate('/buyer-activity', e)}
                 className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
               >
-                {AGENCY_MODE ? 'View My Requests' : 'View My Projects'}
+                View My Requests
               </button>
               <button
                 type="button"
                 onClick={(e) => navigate('/post-project', e)}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
               >
-                {AGENCY_MODE ? 'Request Custom Quote' : 'Post a Project'}
+                Request Custom Quote
               </button>
             </div>
           </div>
@@ -1961,9 +1965,17 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
     }
   } else if (isGigDetail) {
     let gig: Gig | undefined;
-    if (pathParts[0].toLowerCase() === 'gig' || pathParts[0].toLowerCase() === 'gigs') {
-      const gigId = pathParts[1];
-      gig = gigs.find(g => g.id === gigId || (g.slug && g.slug.toLowerCase() === gigId.toLowerCase()));
+    const firstSeg = pathParts[0].toLowerCase();
+    if (['services', 'service', 'gig', 'gigs'].includes(firstSeg)) {
+      const gigParam = pathParts[1];
+      const gigSlugParam = pathParts[2];
+      gig = gigs.find(
+        g =>
+          (g.slug && g.slug.toLowerCase() === gigParam.toLowerCase()) ||
+          g.id === gigParam ||
+          (gigSlugParam && g.slug && g.slug.toLowerCase() === gigSlugParam.toLowerCase()) ||
+          slugify(g.title) === gigParam.toLowerCase()
+      );
     } else if (pathParts.length === 2) {
       const [, gigSlug] = pathParts;
       gig = gigs.find(
@@ -2134,7 +2146,6 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         fetchMessages={workstream.fetchMessages}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenSignup={() => setIsSignupModalOpen(true)}
-        onOpenSwitchUser={AGENCY_MODE ? undefined : () => setIsUserSwitchModalOpen(true)}
       />
 
       {/* Order Purchase Status Banner */}
@@ -2250,20 +2261,6 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               setIsSignupModalOpen(false);
               setIsLoginModalOpen(true);
             }}
-          />
-        </Suspense>
-      )}
-
-      {!AGENCY_MODE && isUserSwitchModalOpen && (
-        <Suspense fallback={null}>
-          <UserSwitchModal
-            isOpen={isUserSwitchModalOpen}
-            onClose={() => setIsUserSwitchModalOpen(false)}
-            usersList={users}
-            currentUser={activeUser}
-            setCurrentUser={updateCurrentUser}
-            setImpersonatedUser={setImpersonatedUser}
-            refresh={refresh}
           />
         </Suspense>
       )}

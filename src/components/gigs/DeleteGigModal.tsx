@@ -19,7 +19,7 @@ export const DeleteGigModal: React.FC<DeleteGigModalProps> = ({
     <BaseModal 
       isOpen={!!gigToDelete}
       onClose={onClose}
-      title="Are you sure you want to delete this gig?"
+      title="Are you sure you want to delete this service?"
       maxWidth="max-w-md"
     >
       <div className="space-y-4">
@@ -29,7 +29,7 @@ export const DeleteGigModal: React.FC<DeleteGigModalProps> = ({
           </div>
           <div className="space-y-1">
             <p className="text-xs text-agency-muted leading-relaxed">
-              This action is permanent and cannot be undone. This service listing will be immediately removed from your profile and marketplace.
+              This action is permanent and cannot be undone. This service listing will be immediately removed from our service catalog.
             </p>
             {gigToDelete.title && (
               <div className="mt-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 line-clamp-2">
@@ -53,7 +53,7 @@ export const DeleteGigModal: React.FC<DeleteGigModalProps> = ({
             className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
           >
             <Trash2 className="w-4 h-4" />
-            <span>Yes, Delete Gig</span>
+            <span>Yes, Delete Service</span>
           </button>
         </div>
       </div>

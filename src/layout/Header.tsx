@@ -31,7 +31,6 @@ export interface HeaderProps {
   fetchMessages: (orderId: string) => void | Promise<void>;
   onOpenLogin?: () => void;
   onOpenSignup?: () => void;
-  onOpenSwitchUser?: () => void;
   sessionReady?: boolean;
 }
 
@@ -40,7 +39,7 @@ export function Header({
   navigate, currentUser, orders, likedGigIds,
   isGigsList, isGigDetail, isProjectsList, isProjectDetail, isCategoryRoute,
   loadUserSession, updateCurrentUser, setImpersonatedUser, setSelectedOrder, setPath, fetchMessages,
-  onOpenLogin, onOpenSignup, onOpenSwitchUser, sessionReady = true
+  onOpenLogin, onOpenSignup, sessionReady = true
 }: HeaderProps) {
   // Dropdown state is local to the header (moved out of App).
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -390,7 +389,7 @@ export function Header({
                         type="button"
                         onClick={(e) => {
                           setIsWorkstreamsDropdownOpen(false);
-                          navigate('/gigs', e);
+                          navigate('/services', e);
                         }}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
                       >
@@ -660,7 +659,7 @@ export function Header({
                     {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
                       <button
                         type="button"
-                        onClick={(e) => { setIsUserDropdownOpen(false); navigate('/create-gig', e); }}
+                        onClick={(e) => { setIsUserDropdownOpen(false); navigate('/add-service', e); }}
                         className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                       >
                         <PlusCircle className="w-4 h-4 text-emerald-600" />
@@ -731,7 +730,7 @@ export function Header({
                       className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                     >
                       <Wallet className="w-4 h-4 text-emerald-600" />
-                      <span>Payments</span>
+                      <span>Billing</span>
                     </button>
 
                     <button
@@ -768,8 +767,8 @@ export function Header({
                           localStorage.removeItem('user');
                           localStorage.removeItem('current_user');
                         } catch {}
-                        setPath('/gigs');
-                        window.history.pushState({}, '', '/gigs');
+                        setPath('/services');
+                        window.history.pushState({}, '', '/services');
                       }}
                       className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                     >
@@ -867,7 +866,7 @@ export function Header({
               <button
                 onClick={(e) => {
                   setIsMobileMenuOpen(false);
-                  navigate('/gigs', e);
+                  navigate('/services', e);
                 }}
                 className="w-full py-3 bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-colors text-center cursor-pointer"
               >
@@ -970,8 +969,8 @@ export function Header({
                         localStorage.removeItem('user');
                         localStorage.removeItem('current_user');
                       } catch {}
-                      setPath('/gigs');
-                      window.history.pushState({}, '', '/gigs');
+                      setPath('/services');
+                      window.history.pushState({}, '', '/services');
                     }}
                     className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition text-center cursor-pointer"
                   >

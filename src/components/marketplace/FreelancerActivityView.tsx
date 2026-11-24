@@ -1032,7 +1032,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
 
             {activeSection === 'gigs' && (
               <button
-                onClick={() => navigate('/create-gig')}
+                onClick={() => navigate('/add-service')}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />

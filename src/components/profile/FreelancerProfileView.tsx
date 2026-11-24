@@ -315,7 +315,7 @@ export const FreelancerProfileView: React.FC<FreelancerProfileViewProps> = ({
               {filteredGigs.map((gig) => (
                 <div
                   key={gig.id}
-                  onClick={(e) => onNavigate(`/gig/${gig.id}`, e)}
+                  onClick={(e) => onNavigate(`/services/${gig.slug || gig.id}`, e)}
                   className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg hover:border-slate-300 transition duration-200 cursor-pointer flex flex-col group"
                 >
                   <div className="aspect-video bg-slate-100 relative overflow-hidden">

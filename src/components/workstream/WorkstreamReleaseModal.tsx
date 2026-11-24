@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, CheckCircle2, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import { WorkstreamItem, WorkstreamOffer } from './types';
-import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamReleaseModalProps {
   isOpen: boolean;
@@ -33,9 +33,7 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
     e.preventDefault();
     if (hasHigherInvoice) {
       setError(
-        AGENCY_MODE
-          ? `Cannot finalize order directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the order workspace.`
-          : `Cannot release escrow directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the workstream.`
+        `Cannot finalize order directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the order workspace.`
       );
       return;
     }
@@ -50,7 +48,7 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
       setError(
         err instanceof Error
           ? err.message
-          : String(err || (AGENCY_MODE ? 'Failed to finalize order approval' : 'Failed to release escrow funds'))
+          : String(err || 'Failed to finalize order approval')
       );
     } finally {
       setIsSubmitting(false);
@@ -67,7 +65,7 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-agency-dark">
-                {AGENCY_MODE ? 'Approve Deliverables & Complete Order' : 'Release Escrow Funds'}
+                Approve Deliverables & Complete Order
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Order #{order.id}</p>
             </div>
@@ -85,14 +83,14 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold block">
-                {AGENCY_MODE ? 'Order Total' : 'Total Escrow Release'}
+                Order Total
               </span>
               <span className="text-xl font-bold font-mono text-emerald-600">
                 ${order.amount.toLocaleString()} USD
               </span>
             </div>
             <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold uppercase rounded-full">
-              {AGENCY_MODE ? 'Final Approval' : 'Instant Payout'}
+              Final Approval
             </span>
           </div>
 
@@ -103,24 +101,14 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
                 <span>Final Invoice Pending (${pendingInvoice.amount.toLocaleString()})</span>
               </div>
               <p className="text-xs text-amber-800 leading-relaxed">
-                {AGENCY_MODE ? (
-                  <>
-                    A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Direct approval is locked to keep billing accurate. Please click <strong>Pay Invoice</strong> on the invoice card in the order chat to complete payment.
-                  </>
-                ) : (
-                  <>
-                    A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Releasing escrow directly is locked to avoid financial mismatch. Please click <strong>Pay Invoice</strong> on the invoice card in the workstream message stream to pay the invoice and release funds.
-                  </>
-                )}
+                A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Direct approval is locked to keep billing accurate. Please click <strong>Pay Invoice</strong> on the invoice card in the order chat to complete payment.
               </p>
             </div>
           ) : (
             <div className="p-3 bg-emerald-50/80 text-xs text-emerald-800 rounded-2xl border border-emerald-200 flex items-start gap-2.5 leading-relaxed">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                {AGENCY_MODE
-                  ? `Approving deliverables marks this order with ${SITE_CONFIG.brandName} as completed. Leaving a review is optional and handled separately.`
-                  : 'Releasing escrow accepts the deliverables, marks the Workstream as completed, and transfers the funds to the seller. Review submission is completely optional and handled separately.'}
+                {`Approving deliverables marks this order with ${SITE_CONFIG.brandName} as completed. Leaving a review is optional and handled separately.`}
               </span>
             </div>
           )}
@@ -151,8 +139,8 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
                 {hasHigherInvoice
                   ? 'Pay Invoice in Chat First'
                   : isSubmitting
-                    ? (AGENCY_MODE ? 'Completing...' : 'Releasing...')
-                    : (AGENCY_MODE ? 'Approve & Complete Order' : 'Confirm & Release Funds')}
+                    ? 'Completing...'
+                    : 'Approve & Complete Order'}
               </span>
             </button>
           </div>

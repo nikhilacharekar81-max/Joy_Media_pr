@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { WorkstreamItem } from './types';
-import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamReviewModalProps {
   isOpen: boolean;
@@ -83,9 +83,7 @@ export const WorkstreamReviewModal: React.FC<WorkstreamReviewModalProps> = ({
             <h3 className="text-base font-bold text-agency-dark">
               {existingReview
                 ? 'Update Your Review'
-                : AGENCY_MODE
-                  ? (isSeller ? `Review Client${partnerName ? ` (${partnerName})` : ''}` : `Review ${SITE_CONFIG.brandName}`)
-                  : (isSeller ? `Review Buyer${partnerName ? ` (${partnerName})` : ''}` : `Review Freelancer${partnerName ? ` (${partnerName})` : ''}`)}
+                : (isSeller ? `Review Client${partnerName ? ` (${partnerName})` : ''}` : `Review ${SITE_CONFIG.brandName}`)}
             </h3>
             <p className="text-xs text-slate-400">Order #{order.id} • {order.title}</p>
           </div>
@@ -126,17 +124,13 @@ export const WorkstreamReviewModal: React.FC<WorkstreamReviewModalProps> = ({
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-agency-dark block">
-              {AGENCY_MODE
-                ? (isSeller ? 'Share your experience working with this client' : `Share your experience working with ${SITE_CONFIG.brandName}`)
-                : (isSeller ? 'Share your experience working with this buyer' : 'Share your experience working with this seller')}
+              {isSeller ? 'Share your experience working with this client' : `Share your experience working with ${SITE_CONFIG.brandName}`}
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={
-                AGENCY_MODE
-                  ? (isSeller ? 'Was the client clear with requirements and responsive?' : 'How was the quality of work, communication, and adherence to deadlines?')
-                  : (isSeller ? 'Was the buyer clear with requirements, responsive, and fair?' : 'How was the quality of work, communication, and adherence to deadlines?')
+                isSeller ? 'Was the client clear with requirements and responsive?' : 'How was the quality of work, communication, and adherence to deadlines?'
               }
               rows={4}
               disabled={isSubmitting}

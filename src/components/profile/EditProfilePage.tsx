@@ -309,7 +309,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-300">
           <div className="flex items-center gap-2">
             <button 
-              onClick={(e) => navigate('/gigs', e)}
+              onClick={(e) => navigate('/services', e)}
               className="text-slate-400 hover:text-white transition flex items-center gap-1 cursor-pointer"
             >
               <ArrowLeft size={13} />
@@ -957,7 +957,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex items-center justify-between">
             <button
               type="button"
-              onClick={(e) => navigate('/gigs', e)}
+              onClick={(e) => navigate('/services', e)}
               className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
             >
               Cancel

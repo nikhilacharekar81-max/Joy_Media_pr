@@ -44,7 +44,7 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
         )}
 
         <div>
-          <label className="block text-agency-dark font-bold uppercase mb-1">Gig Title</label>
+          <label className="block text-agency-dark font-bold uppercase mb-1">Service Title</label>
           <input 
             type="text" 
             name="title"
@@ -128,7 +128,7 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
               defaultChecked={editingGig.featured}
               className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
             />
-            <span>Feature Gig on Homepage & Listings</span>
+            <span>Feature Service on Homepage & Listings</span>
           </label>
         </div>
 
@@ -156,7 +156,7 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
               disabled={isSaving}
               className="px-5 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-500 text-xs shadow-xs cursor-pointer disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : 'Save Gig Details'}
+              {isSaving ? 'Saving...' : 'Save Service Details'}
             </button>
           </div>
         </div>

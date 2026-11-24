@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Receipt, X, Upload, Link as LinkIcon, FileText, Trash2, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import { WorkstreamItem, isInquiryWorkstream } from './types';
 import { uploadWorkstreamFile } from '../../utils/workstreamUpload';
-import { AGENCY_MODE } from '../../siteConfig';
 
 interface WorkstreamDeliverModalProps {
   isOpen: boolean;
@@ -112,9 +111,7 @@ export const WorkstreamDeliverModal: React.FC<WorkstreamDeliverModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-agency-dark">{isCustomOrderStream ? 'Raise Custom Order Invoice & Deliver Work' : 'Raise Invoice & Deliver Work'}</h3>
               <p className="text-[11px] text-slate-400">
-                {AGENCY_MODE
-                  ? `Order #${order.id} • Posts an interactive Invoice card in the order chat`
-                  : (isCustomOrderStream ? `Custom Order #${order.id} • Posts an interactive Custom Order Invoice card in WorkStream` : `Order #${order.id} • Posts an interactive Invoice card in WorkStream`)}
+                {`Order #${order.id} • Posts an interactive Invoice card in the order chat`}
               </p>
             </div>
           </div>
@@ -130,7 +127,7 @@ export const WorkstreamDeliverModal: React.FC<WorkstreamDeliverModalProps> = ({
           <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
             <div className="flex items-center gap-2 font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{AGENCY_MODE ? 'Active Order Value' : 'Funded in WorkStream Escrow'}</span>
+              <span>Active Order Value</span>
             </div>
             <span className="font-mono font-black text-sm">{currencySymbol}{defaultEscrow.toLocaleString()}</span>
           </div>
@@ -173,7 +170,7 @@ export const WorkstreamDeliverModal: React.FC<WorkstreamDeliverModalProps> = ({
               rows={4}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={AGENCY_MODE ? 'Summarize what has been completed, links, or instructions for the client...' : 'Summarize what has been completed, testing instructions, or credentials for the buyer...'}
+              placeholder="Summarize what has been completed, links, or instructions for the client..."
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
             />
           </div>

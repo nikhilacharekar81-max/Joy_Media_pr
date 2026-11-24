@@ -4,6 +4,7 @@ import { Gig } from '../../types';
 import { slugify } from '../../utils/slugify';
 import { Avatar, GigImage } from '../../components/ui';
 import { RATINGS_ENABLED } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface RelatedGigsSectionProps {
   currentGig: Gig;
@@ -42,9 +43,8 @@ export const RelatedGigsSection: React.FC<RelatedGigsSectionProps> = ({
 
 
   const getGigUrl = (gig: Gig) => {
-    const uname = (gig.freelancerUsername || slugify(gig.freelancerName || 'freelancer')).toLowerCase();
     const gslug = (gig.slug || slugify(gig.title)).toLowerCase();
-    return `/${uname}/${gslug}`;
+    return `/services/${gslug}`;
   };
 
   const handleGigClick = (gig: Gig, e: React.MouseEvent) => {
@@ -97,8 +97,8 @@ export const RelatedGigsSection: React.FC<RelatedGigsSectionProps> = ({
 
               <div className="p-3.5 space-y-2.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{gig.freelancerName}</span>
+                  <Avatar src={gig.freelancerAvatar} name={SITE_CONFIG.brandName} size="xs" />
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{SITE_CONFIG.brandName}</span>
                 </div>
 
                 <h4 className="text-sm sm:text-base leading-snug font-normal text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 min-h-[44px]">

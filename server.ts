@@ -258,6 +258,43 @@ app.use('/api', apiRouter);
 // Register root routes (robots.txt, sitemap.xml)
 app.use('/', rootRouter);
 
+// 301 Canonical Redirects for legacy /gigs, /gig/*, /service/:id, /create-gig, /post-gig paths
+app.use(async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const [rawPath, rawQuery] = req.originalUrl.split('?');
+  const qs = rawQuery ? `?${rawQuery}` : '';
+  const cleanPath = safeDecodeURIComponent(rawPath).replace(/\/+$/, '') || '/';
+  const lowerPath = cleanPath.toLowerCase();
+
+  if (lowerPath === '/gigs') {
+    return res.redirect(301, `/services${qs}`);
+  }
+  if (lowerPath === '/create-gig' || lowerPath === '/post-gig') {
+    return res.redirect(301, `/add-service${qs}`);
+  }
+
+  const parts = cleanPath.split('/').filter(Boolean);
+  const firstSeg = parts[0]?.toLowerCase() || '';
+  if (parts.length >= 2 && (firstSeg === 'gig' || firstSeg === 'gigs' || firstSeg === 'service')) {
+    const idOrSlug = parts[1];
+    const subSlug = parts[2];
+    const allGigs = gigs || [];
+    const matched = allGigs.find(
+      (g: any) =>
+        g.id === idOrSlug ||
+        (g.slug && g.slug.toLowerCase() === idOrSlug.toLowerCase()) ||
+        (subSlug && g.slug && g.slug.toLowerCase() === subSlug.toLowerCase()) ||
+        slugify(g.title || '') === idOrSlug.toLowerCase()
+    );
+    const targetSlug = matched
+      ? slugify(matched.slug || matched.title || matched.id)
+      : slugify(subSlug || idOrSlug);
+    return res.redirect(301, `/services/${targetSlug}${qs}`);
+  }
+
+  return next();
+});
+
 // SSR Middleware (Real Data) & Error Handlers registration order
 try {
   await setupSSR(app, IS_PROD, __dirname, async (pathname?: string) => {
@@ -284,12 +321,12 @@ try {
       }
 
       const isHomeOrGigsRoute =
-        cleanPath === '/' || lowerPath === '/gigs' || (pathParts.length >= 1 && firstSeg === 'categories');
+        cleanPath === '/' || lowerPath === '/services' || lowerPath === '/gigs' || (pathParts.length >= 1 && firstSeg === 'categories');
       const isProjectsListRoute = ['/projects', '/search-projects', '/project-search', '/freelance-jobs'].includes(lowerPath);
       const isProjectDetailRoute = pathParts.length === 2 && (firstSeg === 'projects' || firstSeg === 'project');
       const isFreelancersListRoute = ['/freelancers', '/search-freelancers', '/freelancer-search'].includes(lowerPath);
       const isGigDetailRoute =
-        (pathParts.length >= 2 && (firstSeg === 'gig' || firstSeg === 'gigs')) ||
+        (pathParts.length >= 2 && ['services', 'service', 'gig', 'gigs'].includes(firstSeg)) ||
         (pathParts.length === 2 && !RESERVED_ROUTES.includes(firstSeg));
       const isProfileRoute = pathParts.length === 1 && !RESERVED_ROUTES.includes(firstSeg);
 
@@ -324,7 +361,7 @@ try {
         ? Array.from(
             new Set(
               pathParts.filter(
-                p => p.length > 0 && p.length <= 120 && !['gig', 'gigs', 'project', 'projects', 'categories'].includes(p.toLowerCase())
+                p => p.length > 0 && p.length <= 120 && !['services', 'service', 'gig', 'gigs', 'project', 'projects', 'categories'].includes(p.toLowerCase())
               )
             )
           )

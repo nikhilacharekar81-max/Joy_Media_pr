@@ -180,7 +180,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
 
   const handleHeroSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/gigs');
+    navigate('/services');
   };
 
   const handleServiceNavigation = (path: string, categoryFilter?: string, e?: React.MouseEvent) => {
@@ -199,7 +199,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
         return;
       }
     }
-    navigate('/gigs', e);
+    navigate('/services', e);
   };
 
   const coreServices = [
@@ -790,7 +790,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
               </p>
               <button
                 type="button"
-                onClick={(e) => navigate('/gigs', e)}
+                onClick={(e) => navigate('/services', e)}
                 className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
               >
                 Browse All Media Placements
@@ -800,7 +800,6 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
             <div className="space-y-4">
               {featuredPlacements.slice(0, 6).map((gig) => {
                 const gigUrl = getGigUrl(gig);
-                const sellerUrl = `/${slugify(gig.freelancerName)}`;
                 const isLiked = likedGigIds.includes(gig.id);
                 const serviceType = gig.subcategory || gig.category || 'Media Placement';
 
@@ -839,27 +838,8 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                           <span>{serviceType}</span>
                           <span aria-hidden="true" className="text-slate-300">·</span>
                           <div className="inline-flex items-center gap-1.5">
-                            {AGENCY_MODE ? (
-                              <>
-                                <span className="font-bold text-slate-800">{SITE_CONFIG.brandName}</span>
-                                <span className="text-slate-400">(Agency Team)</span>
-                              </>
-                            ) : (
-                              <>
-                                <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
-                                <a
-                                  href={sellerUrl}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(sellerUrl, e);
-                                  }}
-                                  className="font-bold text-slate-800 hover:underline"
-                                >
-                                  {gig.freelancerName}
-                                </a>
-                                <span className="text-slate-400">({gig.freelancerLevel || 'Verified Specialist'})</span>
-                              </>
-                            )}
+                            <span className="font-bold text-slate-800">{SITE_CONFIG.brandName}</span>
+                            <span className="text-slate-400">(Agency Team)</span>
                           </div>
                         </div>
 
@@ -920,7 +900,6 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredPlacements.slice(0, 6).map((gig) => {
                 const gigUrl = getGigUrl(gig);
-                const sellerUrl = `/${slugify(gig.freelancerName)}`;
                 const isLiked = likedGigIds.includes(gig.id);
                 const serviceType = gig.subcategory || gig.category || 'Media Placement';
 
@@ -1005,35 +984,14 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                     {/* Card Footer: Provider, Real Database Price & CTA */}
                     <div className="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        {AGENCY_MODE ? (
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold text-slate-900 block truncate">
-                              {SITE_CONFIG.brandName}
-                            </span>
-                            <span className="text-xs text-slate-500 block truncate">
-                              Agency Team
-                            </span>
-                          </div>
-                        ) : (
-                          <>
-                            <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
-                            <div className="min-w-0">
-                              <a
-                                href={sellerUrl}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(sellerUrl, e);
-                                }}
-                                className="text-xs font-bold text-slate-900 hover:underline block truncate"
-                              >
-                                {gig.freelancerName}
-                              </a>
-                              <span className="text-xs text-slate-500 block truncate">
-                                {gig.freelancerLevel || 'Verified Specialist'}
-                              </span>
-                            </div>
-                          </>
-                        )}
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-slate-900 block truncate">
+                            {SITE_CONFIG.brandName}
+                          </span>
+                          <span className="text-xs text-slate-500 block truncate">
+                            Agency Team
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
@@ -1061,8 +1019,8 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
               Showing live services from our catalog. Every order includes secure online payment and direct team support.
             </p>
             <a
-              href="/gigs"
-              onClick={(e) => navigate('/gigs', e)}
+              href="/services"
+              onClick={(e) => navigate('/services', e)}
               className="inline-flex items-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               <span>Browse All Media Placements</span>
@@ -1223,7 +1181,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                 description:
                   'Browse media placements, PR services, development solutions, and digital products across our verified catalog.',
                 actionLabel: 'Browse Catalog',
-                actionPath: '/gigs'
+                actionPath: '/services'
               },
               {
                 step: '02',
@@ -1431,8 +1389,8 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
             </p>
           </div>
           <a
-            href="/gigs"
-            onClick={(e) => navigate('/gigs', e)}
+            href="/services"
+            onClick={(e) => navigate('/services', e)}
             className="inline-flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <span>Explore Digital Products</span>
@@ -1687,8 +1645,8 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
             </p>
             <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4">
               <a
-                href="/gigs"
-                onClick={(e) => navigate('/gigs', e)}
+                href="/services"
+                onClick={(e) => navigate('/services', e)}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
                 <span>Explore Media Placements</span>

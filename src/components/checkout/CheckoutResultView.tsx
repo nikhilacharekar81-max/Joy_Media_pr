@@ -646,7 +646,7 @@ export const CheckoutResultView: React.FC<CheckoutResultViewProps> = ({
 
               <button
                 type="button"
-                onClick={e => navigate('/gigs', e)}
+                onClick={e => navigate('/services', e)}
                 className="px-5 py-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer"
               >
                 <span>Browse Services</span>

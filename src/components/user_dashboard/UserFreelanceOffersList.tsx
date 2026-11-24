@@ -38,8 +38,8 @@ export const UserFreelanceOffersList: React.FC<UserFreelanceOffersListProps> = (
   if (gigs.length === 0) {
     return (
       <div className="text-center py-16 text-slate-500 text-sm space-y-1.5 bg-white font-sans">
-        <p className="font-bold text-slate-900 text-base">No gigs found under &ldquo;{freelanceSubFilter}&rdquo;.</p>
-        <p className="text-slate-500 text-sm">Post a new gig or switch filters above to view your listings.</p>
+        <p className="font-bold text-slate-900 text-base">No services found under &ldquo;{freelanceSubFilter}&rdquo;.</p>
+        <p className="text-slate-500 text-sm">Add a new service or switch filters above to view your listings.</p>
       </div>
     );
   }
@@ -187,7 +187,7 @@ export const UserFreelanceOffersList: React.FC<UserFreelanceOffersListProps> = (
                     <button
                       type="button"
                       onClick={(e) => onToggleDropdown(gig.id, e)}
-                      aria-label="Gig actions"
+                      aria-label="Service actions"
                       className={`px-2.5 py-2 border-l flex items-center justify-center transition-colors cursor-pointer ${
                         isDropdownOpen
                           ? 'bg-emerald-600 text-white border-emerald-600'

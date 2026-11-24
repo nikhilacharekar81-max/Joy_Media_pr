@@ -345,8 +345,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
             <div className="pt-4 border-t border-slate-100 text-center">
               <a 
-                href="/gigs" 
-                onClick={(e) => navigate('/gigs', e)}
+                href="/services" 
+                onClick={(e) => navigate('/services', e)}
                 className="text-xs text-agency-muted hover:text-slate-800 font-medium"
               >
                 ← Return to {SITE_CONFIG.brandName} Home
@@ -367,7 +367,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div>
           {/* Admin Brand */}
           <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-200">
-            <a href="/gigs" onClick={(e) => navigate('/gigs', e)} className="flex items-center gap-2.5">
+            <a href="/services" onClick={(e) => navigate('/services', e)} className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
                 {SITE_CONFIG.brandName.charAt(0)}
               </div>
@@ -434,8 +434,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           </div>
 
           <a 
-            href="/gigs" 
-            onClick={(e) => navigate('/gigs', e)}
+            href="/services" 
+            onClick={(e) => navigate('/services', e)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-agency-dark bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200 cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-emerald-600" />

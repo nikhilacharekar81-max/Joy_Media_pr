@@ -13,6 +13,7 @@ import {
 import { verifyAndConsumeWithdrawalCode } from '../../services/authService.js';
 import { syncUserBalances, registerAuditLog } from '../../services/orderService.js';
 import { paymentGatewayManager } from './paymentGateways.js';
+import { SITE_CONFIG } from '../../../src/siteConfig.js';
 
 export const ALLOWED_METHODS: Record<string, keyof typeof DEFAULT_SITE_SETTINGS.wallets.allowedPayoutMethods> = {
   'UPI': 'upi',
@@ -109,6 +110,9 @@ export async function handlePayoutRequest(req: Request, res: Response) {
     const user = await store.getUser(freelancerId);
     if (!user) {
       return res.status(404).json({ error: 'User account not found.' });
+    }
+    if (SITE_CONFIG.AGENCY_MODE && user.role !== 'admin' && user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Forbidden: Only administrators can request payouts or withdrawals.' });
     }
     if (user.status === 'frozen') {
       return res.status(403).json({ error: 'User account is frozen. Financial transactions are restricted.' });

@@ -30,7 +30,12 @@ export function render(url: string, initialData?: any) {
   const isPrivate = initialData?.isPrivate;
 
   const baseUrl = SITE_CONFIG.baseUrl;
-  const canonical = `${baseUrl}${url.split('?')[0]}`;
+  const cleanUrlPath = url.split('?')[0];
+  const canonical = gig
+    ? `${baseUrl}/services/${(gig.slug || slugify(gig.title || '')).toLowerCase()}`
+    : (pageType === 'gigs' && (cleanUrlPath === '/gigs' || cleanUrlPath === '/services'))
+      ? `${baseUrl}/services`
+      : `${baseUrl}${cleanUrlPath}`;
 
   // Robots
   if (notFound || isPrivate || pageType === 'private') {
@@ -81,7 +86,7 @@ export function render(url: string, initialData?: any) {
         "@context": "https://schema.org",
         "@type": "ItemList",
         "itemListElement": initialData.gigs.map((g: any, i: number) => ({
-          "@type": "ListItem", "position": i + 1, "url": `${baseUrl}/${(g.freelancerUsername || slugify(g.freelancerName)).toLowerCase()}/${(g.slug || slugify(g.title)).toLowerCase()}`
+          "@type": "ListItem", "position": i + 1, "url": `${baseUrl}/services/${(g.slug || slugify(g.title)).toLowerCase()}`
         }))
       };
       headTags.push(`<script type="application/ld+json">${JSON.stringify(itemList).replace(/</g, '\\u003c')}</script>`);

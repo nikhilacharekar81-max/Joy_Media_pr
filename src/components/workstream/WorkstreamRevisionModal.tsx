@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
 import { WorkstreamItem } from './types';
-import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamRevisionModalProps {
   isOpen: boolean;
@@ -78,9 +78,7 @@ export const WorkstreamRevisionModal: React.FC<WorkstreamRevisionModalProps> = (
           <div className="p-3 bg-purple-50/70 text-xs text-purple-800 rounded-2xl border border-purple-200 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
             <span>
-              {AGENCY_MODE
-                ? `Your order stays active while ${SITE_CONFIG.brandName} makes the requested updates.`
-                : 'Escrow remains safely held while the freelancer makes the requested updates.'}
+              {`Your order stays active while ${SITE_CONFIG.brandName} makes the requested updates.`}
             </span>
           </div>
 

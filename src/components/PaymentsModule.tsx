@@ -115,6 +115,12 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
   // 3-card selection inside "My Money"
   const [selectedMoneyBox, setSelectedMoneyBox] = useState<MoneyBoxTab>('account');
 
+  useEffect(() => {
+    if (isAgencyClient && (activeTab === 'statements' || activeTab === 'methods')) {
+      setActiveTab('my_money');
+    }
+  }, [isAgencyClient, activeTab]);
+
   // Toast feedback
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const showToast = useCallback((text: string, type: 'success' | 'error' = 'success') => {
@@ -644,15 +650,10 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         }
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error(
-            data.error ||
-              (AGENCY_MODE ? 'Failed to add credit to your account.' : 'Failed to deposit funds into wallet.')
-          );
+          throw new Error(data.error || 'Failed to add credit to your account.');
         }
         showToast(
-          AGENCY_MODE
-            ? `Successfully added ${formatUsd(amt)} to your ${SITE_CONFIG.brandName} account.`
-            : `Successfully deposited ${formatUsd(amt)} into your ${SITE_CONFIG.brandName} USD Account.`
+          `Successfully added ${formatUsd(amt)} to your ${SITE_CONFIG.brandName} account.`
         );
         setShowEscrowModal(false);
         if (onBalanceUpdate) onBalanceUpdate();
@@ -701,14 +702,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 orderId: selectedEscrowOrderId,
                 description:
                   pendingOffer.title ||
-                  `${AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit'} (${targetRow?.title || selectedEscrowOrderId})`,
+                  `Order Payment (${targetRow?.title || selectedEscrowOrderId})`,
                 headers,
                 metadata: {
                   returnAction: 'accept_offer',
                   offerId: pendingOffer.id,
                   orderId: selectedEscrowOrderId,
                   returnPath: '/payments',
-                  title: pendingOffer.title || targetRow?.title || (AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit')
+                  title: pendingOffer.title || targetRow?.title || 'Order Payment'
                 }
               });
               return;
@@ -716,10 +717,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             if (!depRes.ok) {
               const depErr = await depRes.json().catch(() => ({}));
               throw new Error(
-                depErr.error ||
-                  (AGENCY_MODE
-                    ? 'Unable to add credit for this payment request.'
-                    : 'Unable to top up wallet for deposit request.')
+                depErr.error || 'Unable to add credit for this payment request.'
               );
             }
           }
@@ -741,14 +739,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 orderId: selectedEscrowOrderId,
                 description:
                   pendingOffer.title ||
-                  `${AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit'} (${targetRow?.title || selectedEscrowOrderId})`,
+                  `Order Payment (${targetRow?.title || selectedEscrowOrderId})`,
                 headers,
                 metadata: {
                   returnAction: 'accept_offer',
                   offerId: pendingOffer.id,
                   orderId: selectedEscrowOrderId,
                   returnPath: '/payments',
-                  title: pendingOffer.title || targetRow?.title || (AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit')
+                  title: pendingOffer.title || targetRow?.title || 'Order Payment'
                 }
               });
               return;
@@ -756,9 +754,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             throw new Error(accData.error || 'Failed to accept and fund deposit request.');
           }
           showToast(
-            AGENCY_MODE
-              ? `Order payment of ${formatUsd(amt)} confirmed for "${targetRow?.title}".`
-              : `Escrow deposit of ${formatUsd(amt)} funded for "${targetRow?.title}".`
+            `Order payment of ${formatUsd(amt)} confirmed for "${targetRow?.title}".`
           );
         } else {
           // Direct buyer escrow deposit / top-up on order
@@ -786,13 +782,13 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 orderId: selectedEscrowOrderId,
                 description:
                   escrowDepositTitle.trim() ||
-                  `${AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit'} (${targetRow?.title || selectedEscrowOrderId})`,
+                  `Order Payment (${targetRow?.title || selectedEscrowOrderId})`,
                 headers,
                 metadata: {
                   returnAction: 'escrow_deposit',
                   orderId: selectedEscrowOrderId,
                   returnPath: '/payments',
-                  title: escrowDepositTitle.trim() || targetRow?.title || (AGENCY_MODE ? 'Order Payment' : 'Escrow Deposit'),
+                  title: escrowDepositTitle.trim() || targetRow?.title || 'Order Payment',
                   escrowPayload: {
                     orderId: selectedEscrowOrderId,
                     amount: amt,
@@ -803,14 +799,11 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               return;
             }
             throw new Error(
-              data.error ||
-                (AGENCY_MODE ? 'Failed to apply payment to your order.' : 'Failed to deposit funds into order escrow.')
+              data.error || 'Failed to apply payment to your order.'
             );
           }
           showToast(
-            AGENCY_MODE
-              ? `Successfully applied ${formatUsd(amt)} USD payment to your order.`
-              : `Successfully deposited ${formatUsd(amt)} USD into Buyer Escrow.`
+            `Successfully applied ${formatUsd(amt)} USD payment to your order.`
           );
         }
 
@@ -821,7 +814,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
       }
 
       if (escrowModalMode === 'seller_request') {
-        const cleanTitle = escrowDepositTitle.trim() || (AGENCY_MODE ? 'Order payment request' : 'Escrow deposit');
+        const cleanTitle = escrowDepositTitle.trim() || 'Order payment request';
         const res = await fetch(`/api/orders/${selectedEscrowOrderId}/offers`, {
           method: 'POST',
           headers,
@@ -835,9 +828,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to send deposit request.');
         showToast(
-          AGENCY_MODE
-            ? `Payment request (${formatUsd(amt)} USD) sent to client.`
-            : `Deposit request (${formatUsd(amt)} USD) sent to buyer.`
+          `Payment request (${formatUsd(amt)} USD) sent to client.`
         );
         setShowEscrowModal(false);
         if (onBalanceUpdate) onBalanceUpdate();
@@ -913,9 +904,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           const depErr = await depRes.json().catch(() => ({}));
           throw new Error(
             depErr.error ||
-              (AGENCY_MODE
-                ? `Insufficient account balance (${formatUsd(availableBalance)}). Please add ${formatUsd(shortfall)} first.`
-                : `Insufficient wallet balance (${formatUsd(availableBalance)}). Please deposit ${formatUsd(shortfall)} first.`)
+              `Insufficient account balance (${formatUsd(availableBalance)}). Please add ${formatUsd(shortfall)} first.`
           );
         }
       }
@@ -953,12 +942,8 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
 
       showToast(
         offer.kind === 'invoice'
-          ? (AGENCY_MODE
-              ? `Invoice ${offer.number} (${formatUsd(amt)}) paid successfully!`
-              : `Invoice ${offer.number} (${formatUsd(amt)}) paid and released to freelancer!`)
-          : (AGENCY_MODE
-              ? `Payment request ${offer.number} (${formatUsd(amt)}) confirmed!`
-              : `Deposit request ${offer.number} (${formatUsd(amt)}) funded into escrow!`)
+          ? `Invoice ${offer.number} (${formatUsd(amt)}) paid successfully!`
+          : `Payment request ${offer.number} (${formatUsd(amt)}) confirmed!`
       );
       if (onBalanceUpdate) onBalanceUpdate();
       await fetchData();
@@ -1029,11 +1014,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             })
           });
           if (offerRes.ok) {
-            showToast(
-              AGENCY_MODE
-                ? `Invoice (${formatUsd(amt)} USD) sent to client!`
-                : `Workstream invoice (${formatUsd(amt)} USD) sent to buyer!`
-            );
+            showToast(`Invoice (${formatUsd(amt)} USD) sent to client!`);
             setShowCreateInvoiceModal(false);
             if (onBalanceUpdate) onBalanceUpdate();
             await fetchData();
@@ -1078,7 +1059,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           orderId: invoiceOrderId || fallbackOrder?.id || undefined,
           recipientName: invoiceRecipientName.trim() || fallbackOrder?.buyerName || 'Client',
           recipientEmail: invoiceRecipientEmail.trim() || undefined,
-          title: invoiceTitle.trim() || (AGENCY_MODE ? 'Professional Agency Services' : 'Professional Freelance Services'),
+          title: invoiceTitle.trim() || 'Professional Agency Services',
           dueDate: invoiceDueDate,
           notes: invoiceNote.trim() || `${SITE_CONFIG.brandName} Standard USD Invoice`,
           items: [
@@ -1341,8 +1322,8 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
   };
 
   const handleDownloadInvoice = (inv: any) => {
-    const rawStatus = String(inv.status || (AGENCY_MODE ? 'confirmed' : 'in_escrow'));
-    const displayStatus = AGENCY_MODE && rawStatus === 'in_escrow' ? 'CONFIRMED' : rawStatus.toUpperCase();
+    const rawStatus = String(inv.status || 'confirmed');
+    const displayStatus = rawStatus === 'in_escrow' ? 'CONFIRMED' : rawStatus.toUpperCase();
     const lines = [
       `${SITE_CONFIG.brandName.toUpperCase()} - OFFICIAL USD INVOICE STATEMENT`,
       '====================================================',
@@ -1350,7 +1331,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
       `Status         : ${displayStatus}`,
       `Issue Date     : ${inv.issueDate || '-'}`,
       `Due Date       : ${inv.dueDate || '-'}`,
-      `Issuer         : ${AGENCY_MODE ? SITE_CONFIG.brandName : (inv.issuerName || currentUser?.name || 'Freelancer')}`,
+      `Issuer         : ${SITE_CONFIG.brandName}`,
       `Recipient      : ${inv.recipientName || 'Client'} (${inv.recipientEmail || ''})`,
       `Description    : ${inv.title || 'Order Services'}`,
       '----------------------------------------------------',
@@ -1510,13 +1491,19 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
     };
   }, [calcInputAmount, calcMode, effectivePlatformFee, effectiveClientServiceFee, effectiveSmallOrderThreshold, effectiveSmallOrderFee]);
 
-  const topTabs: { id: TopPaymentTab; label: string }[] = [
-    { id: 'my_money', label: AGENCY_MODE ? 'Billing Overview' : 'My Money' },
-    { id: 'statements', label: 'Statements' },
-    { id: 'invoices', label: 'Invoices' },
-    { id: 'transactions', label: 'Transactions' },
-    { id: 'methods', label: 'Payment methods' }
-  ];
+  const topTabs: { id: TopPaymentTab; label: string }[] = isAgencyClient
+    ? [
+        { id: 'my_money', label: 'Billing Overview' },
+        { id: 'invoices', label: 'Invoices' },
+        { id: 'transactions', label: 'Payment History' }
+      ]
+    : [
+        { id: 'my_money', label: 'Billing Overview' },
+        { id: 'statements', label: 'Statements' },
+        { id: 'invoices', label: 'Invoices' },
+        { id: 'transactions', label: 'Payment History' },
+        { id: 'methods', label: 'Payment methods' }
+      ];
 
   return (
     <div className="max-w-7xl mx-auto py-2 font-sans">
@@ -1548,14 +1535,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           {/* Page Header */}
           <div className="flex items-center justify-between gap-4 mb-3">
             <h1 className="text-2xl sm:text-[28px] font-normal text-slate-800 tracking-tight leading-tight">
-              {AGENCY_MODE ? 'Billing & Payments' : 'Payments'}
+              Billing
             </h1>
             <button
               type="button"
               onClick={fetchData}
               disabled={isLoadingData}
               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer"
-              title={AGENCY_MODE ? 'Refresh USD balances and order billing records' : 'Refresh USD balances and escrow records'}
+              title="Refresh USD balances and order billing records"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoadingData ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -1637,14 +1624,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     <div className={`text-[15px] font-bold leading-snug ${
                       selectedMoneyBox === 'account' ? 'text-white' : 'text-slate-900'
                     }`}>
-                      {AGENCY_MODE ? 'Account Credit' : 'My User Account'}
+                      Account Credit
                     </div>
                     <div
                       className={`text-xs mt-0.5 mb-4 ${
                         selectedMoneyBox === 'account' ? 'text-slate-300' : 'text-slate-500'
                       }`}
                     >
-                      {AGENCY_MODE ? 'Available balance' : 'Available money'}
+                      Available balance
                     </div>
                   </div>
 
@@ -1666,7 +1653,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   </div>
                 </div>
 
-                {/* Card 2: Active Order Payments / Buyer Escrow */}
+                {/* Card 2: Active Order Payments */}
                 <div
                   role="button"
                   tabIndex={0}
@@ -1703,14 +1690,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     <div className={`text-[15px] font-bold leading-snug ${
                       selectedMoneyBox === 'buyer_escrow' ? 'text-white' : 'text-slate-900'
                     }`}>
-                      {AGENCY_MODE ? 'Active Order Payments' : 'My Buyer Escrow'}
+                      Active Order Payments
                     </div>
                     <div
                       className={`text-xs mt-0.5 mb-4 ${
                         selectedMoneyBox === 'buyer_escrow' ? 'text-slate-300' : 'text-slate-500'
                       }`}
                     >
-                      {AGENCY_MODE ? `Orders with ${SITE_CONFIG.brandName}` : 'Work others are doing for me'}
+                      Orders with {SITE_CONFIG.brandName}
                     </div>
                   </div>
 
@@ -1732,7 +1719,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   </div>
                 </div>
 
-                {/* Card 3: Agency / Freelancer Escrow (hidden from clients in AGENCY_MODE) */}
+                {/* Card 3: Team Active Orders (hidden from clients) */}
                 {!isAgencyClient && (
                 <div
                   role="button"
@@ -1770,14 +1757,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     <div className={`text-[15px] font-bold leading-snug ${
                       selectedMoneyBox === 'freelancer_escrow' ? 'text-white' : 'text-slate-900'
                     }`}>
-                      {AGENCY_MODE ? 'Team Active Orders' : 'Team Order Balances'}
+                      Team Active Orders
                     </div>
                     <div
                       className={`text-xs mt-0.5 mb-4 ${
                         selectedMoneyBox === 'freelancer_escrow' ? 'text-slate-300' : 'text-slate-500'
                       }`}
                     >
-                      {AGENCY_MODE ? 'Client orders managed by our team' : 'Work I am doing for others'}
+                      Client orders managed by our team
                     </div>
                   </div>
 
@@ -1809,7 +1796,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <div className="bg-slate-100/80 text-slate-700 px-5 py-3 grid grid-cols-12 items-center text-xs font-semibold rounded-xl">
                     <div className={isAgencyClient ? 'col-span-6' : 'col-span-4'}>Currency</div>
                     <div className={isAgencyClient ? 'col-span-6 text-right' : 'col-span-4 text-center'}>
-                      {AGENCY_MODE ? 'Available Account Credit' : 'Available Balance'}
+                      Available Account Credit
                     </div>
                     {!isAgencyClient && (
                       <div className="col-span-4 text-right">Available for Withdraw</div>
@@ -1837,7 +1824,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <div className="pt-2 flex flex-wrap items-center justify-between gap-3 bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
                     <div>
                       <div className="text-xs font-bold text-slate-900">
-                        {AGENCY_MODE ? `${SITE_CONFIG.brandName} Account Credit` : `${SITE_CONFIG.brandName} USD Account Controls`}
+                        {SITE_CONFIG.brandName} Account Credit
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
                         {isAgencyClient
@@ -1852,7 +1839,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>{AGENCY_MODE ? 'Add Account Credit ($ USD)' : 'Add Funds ($ USD)'}</span>
+                        <span>Add Account Credit ($ USD)</span>
                       </button>
                       {!isAgencyClient && (
                         <button
@@ -1875,21 +1862,21 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               )}
 
               {/* ===================================================== */}
-              {/* SUB-VIEW 2: ACTIVE ORDER PAYMENTS / BUYER ESCROW      */}
+              {/* SUB-VIEW 2: ACTIVE ORDER PAYMENTS                     */}
               {/* ===================================================== */}
               {selectedMoneyBox === 'buyer_escrow' && (
                 <div className="space-y-2">
                   <div className="bg-slate-100/80 text-slate-700 px-4 py-3 grid grid-cols-12 items-center text-xs font-semibold rounded-xl gap-2">
                     <div className="col-span-5">Description</div>
-                    <div className="col-span-2 text-center">{AGENCY_MODE ? 'Order Balance' : 'In Escrow'}</div>
-                    <div className="col-span-2 text-center">{AGENCY_MODE ? 'Payment Requests' : 'Deposit Requests'}</div>
+                    <div className="col-span-2 text-center">Order Balance</div>
+                    <div className="col-span-2 text-center">Payment Requests</div>
                     <div className="col-span-1 text-center">Invoices</div>
                     <div className="col-span-2 text-right">Actions</div>
                   </div>
 
                   {buyerOrderRows.length === 0 ? (
                     <div className="py-12 text-center text-xs text-slate-500 bg-white border border-slate-200/80 rounded-xl">
-                      {AGENCY_MODE ? 'No active or past orders found.' : 'No active or past buyer escrow workstreams found.'}
+                      No active or past orders found.
                     </div>
                   ) : (
                     <div className="bg-white border border-slate-200/80 rounded-xl divide-y divide-slate-100 overflow-hidden">
@@ -1911,16 +1898,16 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                                 {row.title || row.serviceTitle || `Order #${row.id}`}
                               </button>
                               <div className="text-[11px] text-slate-400 mt-0.5">
-                                by {AGENCY_MODE ? SITE_CONFIG.brandName : (row.sellerName || 'Freelancer')}
+                                by {SITE_CONFIG.brandName}
                               </div>
                             </div>
 
-                            {/* Order Balance / In Escrow */}
+                            {/* Order Balance */}
                             <div className="col-span-2 text-center font-bold text-slate-900 font-mono tabular-nums">
                               {formatUsd(row.inEscrow || 0)}
                             </div>
 
-                            {/* Payment / Deposit Requests */}
+                            {/* Payment Requests */}
                             <div className="col-span-2 text-center">
                               {pendingDep ? (
                                 <div className="inline-flex flex-col items-center gap-1">
@@ -1933,9 +1920,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                                     onClick={() => handleAcceptOrderOffer(pendingDep, row)}
                                     className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 transition"
                                   >
-                                    {processingOfferId === pendingDep.id
-                                      ? 'Processing...'
-                                      : (AGENCY_MODE ? 'Pay Now' : 'Accept & Fund')}
+                                    {processingOfferId === pendingDep.id ? 'Processing...' : 'Pay Now'}
                                   </button>
                                 </div>
                               ) : (
@@ -1979,7 +1964,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                                 className="inline-flex items-center justify-end gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs transition cursor-pointer"
                               >
                                 <CornerRightUp className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5] shrink-0" />
-                                <span>{AGENCY_MODE ? 'Add Payment' : 'Escrow Deposit'}</span>
+                                <span>Add Payment</span>
                               </button>
                             </div>
                           </div>
@@ -2077,15 +2062,13 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           {/* ========================================================= */}
           {/* TAB 2: STATEMENTS                                          */}
           {/* ========================================================= */}
-          {activeTab === 'statements' && (
+          {!isAgencyClient && activeTab === 'statements' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">USD Financial Statements</h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {isAgencyClient
-                      ? `Summary of your USD order payments, account credit, and billing history with ${SITE_CONFIG.brandName}.`
-                      : 'Summary of your USD revenue, client payments, active order balances, and settled withdrawals.'}
+                    Summary of your USD revenue, client payments, active order balances, and settled withdrawals.
                   </p>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -2110,10 +2093,10 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 </div>
               </div>
 
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${isAgencyClient ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    {AGENCY_MODE ? 'Account Credit' : 'Available USD'}
+                    Account Credit
                   </div>
                   <div className="text-lg font-bold text-slate-900 mt-1">{formatUsd(availableBalance)}</div>
                 </div>
@@ -2121,18 +2104,16 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Paid to Date</div>
                   <div className="text-lg font-bold text-slate-900 mt-1">{formatUsd(paidToDate)}</div>
                 </div>
-                {!isAgencyClient && (
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Earned to Date</div>
-                    <div className="text-lg font-bold text-emerald-600 mt-1">{formatUsd(earnedToDate)}</div>
-                  </div>
-                )}
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Earned to Date</div>
+                  <div className="text-lg font-bold text-emerald-600 mt-1">{formatUsd(earnedToDate)}</div>
+                </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    {AGENCY_MODE ? 'Active Orders' : 'Active in Escrow'}
+                    Active Orders
                   </div>
                   <div className="text-lg font-bold text-slate-900 mt-1">
-                    {formatUsd(isAgencyClient ? buyerEscrowTotal : buyerEscrowTotal + freelancerEscrowTotal)}
+                    {formatUsd(buyerEscrowTotal + freelancerEscrowTotal)}
                   </div>
                 </div>
               </div>
@@ -2226,9 +2207,9 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <div className="divide-y divide-slate-100">
                     {filteredInvoices.map(inv => {
                       const invStatusDisplay =
-                        AGENCY_MODE && (!inv.status || inv.status === 'in_escrow')
+                        !inv.status || inv.status === 'in_escrow'
                           ? 'confirmed'
-                          : (inv.status || 'in_escrow');
+                          : inv.status;
                       return (
                       <div
                         key={inv.id}
@@ -2244,7 +2225,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                           <div className="font-medium text-slate-800 line-clamp-1">{inv.title}</div>
                           <div className="text-[11px] text-slate-400">
                             {inv.type === 'received'
-                              ? `From: ${AGENCY_MODE ? SITE_CONFIG.brandName : (inv.issuerName || 'Freelancer')}`
+                              ? `From: ${SITE_CONFIG.brandName}`
                               : `To: ${inv.recipientName || 'Client'}`}
                           </div>
                         </div>
@@ -2292,7 +2273,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           )}
 
           {/* ========================================================= */}
-          {/* TAB 4: TRANSACTIONS                                        */}
+          {/* TAB 4: PAYMENT HISTORY                                     */}
           {/* ========================================================= */}
           {activeTab === 'transactions' && (
             <div className="space-y-5">
@@ -2301,7 +2282,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search transactions..."
+                    placeholder="Search payment history..."
                     value={txSearch}
                     onChange={e => setTxSearch(e.target.value)}
                     className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-hidden focus:bg-white"
@@ -2314,10 +2295,10 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:outline-hidden"
                   >
                     <option value="all">All Types ({transactions.length})</option>
-                    <option value="deposit">{AGENCY_MODE ? 'Account Credit' : 'Deposits'}</option>
-                    <option value="escrow_fund">{AGENCY_MODE ? 'Order Payments' : 'Escrow Funded'}</option>
-                    <option value="escrow_release">{AGENCY_MODE ? 'Completed Orders' : 'Escrow Released'}</option>
-                    <option value="escrow_refund">{AGENCY_MODE ? 'Refunds' : 'Escrow Refunds'}</option>
+                    <option value="deposit">Account Credit</option>
+                    <option value="escrow_fund">Order Payments</option>
+                    <option value="escrow_release">Completed Orders</option>
+                    <option value="escrow_refund">Refunds</option>
                     {!isAgencyClient && <option value="withdrawal">Withdrawals</option>}
                   </select>
                   <button
@@ -2340,21 +2321,20 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 </div>
                 {filteredTransactions.length === 0 ? (
                   <div className="py-12 text-center text-xs text-slate-400">
-                    No USD transactions match your filter criteria.
+                    No USD payment records match your filter criteria.
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
                     {filteredTransactions.map(tx => {
                       const rawType = String(tx.type || 'transaction');
-                      const displayType = AGENCY_MODE
-                        ? rawType === 'escrow_fund'
+                      const displayType =
+                        rawType === 'escrow_fund'
                           ? 'order payment'
                           : rawType === 'escrow_release'
                             ? 'order completed'
                             : rawType === 'escrow_refund'
                               ? 'order refund'
-                              : rawType.replace(/_/g, ' ')
-                        : rawType.replace(/_/g, ' ');
+                              : rawType.replace(/_/g, ' ');
                       return (
                       <div
                         key={tx.id}
@@ -2422,17 +2402,15 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
           {/* ========================================================= */}
           {/* TAB 5: PAYMENT METHODS (Payment Settings)                  */}
           {/* ========================================================= */}
-          {activeTab === 'methods' && (
+          {!isAgencyClient && activeTab === 'methods' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
-                    {isAgencyClient ? 'Saved USD Payment Methods' : 'USD Payment & Withdrawal Methods'}
+                    USD Payment & Withdrawal Methods
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {isAgencyClient
-                      ? `Manage your saved USD billing methods for ${SITE_CONFIG.brandName} orders. All transactions are processed in $ USD.`
-                      : 'Manage your verified USD payout accounts and billing preferences. All settlements are processed in $ USD.'}
+                    Manage your verified USD payout accounts and billing preferences. All settlements are processed in $ USD.
                   </p>
                 </div>
                 <button
@@ -2542,7 +2520,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
             <div className="flex items-center gap-2.5 pb-3.5 border-b border-slate-100">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-50 inline-block shrink-0" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                {AGENCY_MODE ? 'BILLING SUMMARY' : 'CONTROL PANEL'}
+                BILLING SUMMARY
               </h3>
             </div>
 
@@ -2593,12 +2571,12 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold underline cursor-pointer inline-flex items-center gap-1"
                 >
                   <Info className="w-3 h-3" />
-                  <span>{AGENCY_MODE ? 'How billing & payments work' : 'Learn more'}</span>
+                  <span>How billing & payments work</span>
                 </button>
               </div>
             </div>
 
-            {/* Section 3: Service Fees* (hidden from clients in AGENCY_MODE) */}
+            {/* Section 3: Service Fees* (hidden from clients) */}
             {!isAgencyClient && (
               <div className="pt-4 border-t border-slate-100 space-y-2.5">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Service Fees*</h4>
@@ -2638,7 +2616,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     <CornerRightUp className="w-3.5 h-3.5 stroke-[2.5]" />
                   </div>
                   <span className="text-xs font-semibold">
-                    {AGENCY_MODE ? 'Add Payment / Credit' : 'Escrow Deposit'}
+                    Add Payment / Credit
                   </span>
                 </div>
                 <span className="text-[11px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2664,21 +2642,23 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('methods')}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-800 hover:text-slate-900 font-medium transition cursor-pointer text-left group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-slate-200">
-                    <Settings className="w-3.5 h-3.5" />
+              {!isAgencyClient && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('methods')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 text-slate-800 hover:text-slate-900 font-medium transition cursor-pointer text-left group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-slate-200">
+                      <Settings className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-semibold">Payment Settings</span>
                   </div>
-                  <span className="text-xs font-semibold">Payment Settings</span>
-                </div>
-                <span className="text-[11px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                  View →
-                </span>
-              </button>
+                  <span className="text-[11px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    View →
+                  </span>
+                </button>
+              )}
 
               {!isAgencyClient && (
                 <button
@@ -2697,13 +2677,25 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   </span>
                 </button>
               )}
+
+              <div className="pt-2">
+                <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Secure online payments</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Payment is finalized when you approve the delivery or the review window ends.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* MODAL 1: ESCROW DEPOSIT / REQUEST DEPOSIT / WALLET DEPOSIT */}
+      {/* MODAL 1: ORDER PAYMENT & ACCOUNT CREDIT                   */}
       {/* ========================================================= */}
       {showEscrowModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
@@ -2715,7 +2707,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">
-                    {AGENCY_MODE ? 'Order Payment & Account Credit' : 'USD Escrow & Account Deposit'}
+                    Order Payment & Account Credit
                   </h3>
                   <p className="text-[11px] text-slate-500">All amounts are processed strictly in $ USD</p>
                 </div>
@@ -2746,7 +2738,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {AGENCY_MODE ? 'Order Payment' : 'Buyer Escrow'}
+                Order Payment
               </button>
               {!isAgencyClient && (
                 <button
@@ -2779,7 +2771,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {AGENCY_MODE ? 'Add Account Credit' : 'Add Wallet USD'}
+                Add Account Credit
               </button>
             </div>
 
@@ -2788,13 +2780,11 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                 <>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      {AGENCY_MODE ? 'Select Order' : 'Select Buyer Workstream'}
+                      Select Order
                     </label>
                     {buyerOrderRows.length === 0 ? (
                       <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                        {AGENCY_MODE
-                          ? 'You do not have any active orders yet. Switch to "Add Account Credit" to add funds to your account balance.'
-                          : 'You do not have any buyer orders yet. Switch to "Add Wallet USD" to fund your account balance.'}
+                        You do not have any active orders yet. Switch to "Add Account Credit" to add funds to your account balance.
                       </div>
                     ) : (
                       <select
@@ -2805,18 +2795,14 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                           const ord = buyerOrderRows.find(r => r.id === id);
                           if (ord) {
                             setEscrowDepositAmount(String(ord.depositRequests?.[0]?.amount || ord.amount || 25));
-                            setEscrowDepositTitle(
-                              AGENCY_MODE ? `Order payment for ${ord.title}` : `Escrow deposit for ${ord.title}`
-                            );
+                            setEscrowDepositTitle(`Order payment for ${ord.title}`);
                           }
                         }}
                         className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800"
                       >
                         {buyerOrderRows.map(ord => (
                           <option key={ord.id} value={ord.id}>
-                            {AGENCY_MODE
-                              ? `${ord.title} — Paid Balance: ${formatUsd(ord.inEscrow)}`
-                              : `${ord.title} (by ${ord.sellerName}) — In Escrow: ${formatUsd(ord.inEscrow)}`}
+                            {`${ord.title} — Paid Balance: ${formatUsd(ord.inEscrow)}`}
                           </option>
                         ))}
                       </select>
@@ -2849,9 +2835,9 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                             : 'border-slate-200 text-slate-600'
                         }`}
                       >
-                        <div>{AGENCY_MODE ? 'Direct USD Checkout' : 'Instant USD Deposit'}</div>
+                        <div>Direct USD Checkout</div>
                         <div className="text-[11px] text-slate-500">
-                          {AGENCY_MODE ? 'Pay directly via secure checkout' : 'Auto-top-up & fund escrow'}
+                          Pay directly via secure checkout
                         </div>
                       </button>
                     </div>
@@ -2895,13 +2881,13 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               {escrowModalMode !== 'wallet_topup' && (
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    {AGENCY_MODE ? 'Payment Description / Milestone Title' : 'Deposit Description / Milestone Title'}
+                    Payment Description / Milestone Title
                   </label>
                   <input
                     type="text"
                     value={escrowDepositTitle}
                     onChange={e => setEscrowDepositTitle(e.target.value)}
-                    placeholder={AGENCY_MODE ? 'e.g. Payment for project milestone' : 'e.g. Escrow deposit for project milestone'}
+                    placeholder="e.g. Payment for project milestone"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:bg-white"
                   />
                 </div>
@@ -2967,10 +2953,10 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
                   {isSubmittingEscrow
                     ? 'Processing...'
                     : escrowModalMode === 'buyer_deposit'
-                      ? (AGENCY_MODE ? 'Submit Order Payment ($ USD)' : 'Fund Escrow ($ USD)')
+                      ? 'Submit Order Payment ($ USD)'
                       : escrowModalMode === 'seller_request'
                         ? 'Send Deposit Request'
-                        : (AGENCY_MODE ? 'Confirm Account Credit' : 'Confirm USD Deposit')}
+                        : 'Confirm Account Credit'}
                 </button>
               </div>
             </form>
@@ -3631,7 +3617,7 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               <div className="flex items-center gap-2">
                 <Info className="w-5 h-5 text-emerald-600" />
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {AGENCY_MODE ? 'Billing & Order Protection' : 'USD Escrow & Clearing Period'}
+                  Billing & Order Payment Details
                 </h3>
               </div>
               <button
@@ -3643,31 +3629,15 @@ export const PaymentsModule: React.FC<PaymentsModuleProps> = ({
               </button>
             </div>
             <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
-              {AGENCY_MODE ? (
-                <>
-                  <p>
-                    <strong className="text-slate-900">1. Secure USD Checkout:</strong> All service orders and custom quotes with {SITE_CONFIG.brandName} are processed securely in $ USD via PayPal or approved billing methods.
-                  </p>
-                  <p>
-                    <strong className="text-slate-900">2. Transparent Invoices:</strong> Official USD invoices and payment receipts are automatically issued inside your account for every order and milestone.
-                  </p>
-                  <p>
-                    <strong className="text-slate-900">3. Delivery Review & Support:</strong> Review submitted deliverables directly inside your order workspace and contact {SITE_CONFIG.emails.support} anytime you need assistance.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    <strong className="text-slate-900">1. Buyer Escrow Protection:</strong> Funds deposited into escrow are held securely in $ USD until deliverables are submitted and approved.
-                  </p>
-                  <p>
-                    <strong className="text-slate-900">2. Freelancer Escrow & Invoices:</strong> Once work is completed and the buyer approves delivery or pays the final invoice, funds are released to your USD User Account.
-                  </p>
-                  <p>
-                    <strong className="text-slate-900">3. {clearingDays}-Day Clearing Security:</strong> Standard escrow protection and security clearing period is {clearingDays} days, ensuring safe USD settlement for both buyers and freelancers.
-                  </p>
-                </>
-              )}
+              <p>
+                <strong className="text-slate-900">1. Secure online payments:</strong> All service orders and custom quotes with {SITE_CONFIG.brandName} are processed securely in $ USD via PayPal or approved billing methods. Payment is finalized when you approve the delivery or the review window ends.
+              </p>
+              <p>
+                <strong className="text-slate-900">2. Transparent Invoices:</strong> Official USD invoices and payment receipts are automatically issued inside your account for every order and milestone.
+              </p>
+              <p>
+                <strong className="text-slate-900">3. Delivery Review & Support:</strong> Review submitted deliverables directly inside your order workspace and contact {SITE_CONFIG.emails.support} anytime you need assistance.
+              </p>
             </div>
             <button
               type="button"

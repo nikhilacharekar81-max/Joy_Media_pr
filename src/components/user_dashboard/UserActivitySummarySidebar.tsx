@@ -57,15 +57,15 @@ export const UserActivitySummarySidebar: React.FC<UserActivitySummarySidebarProp
       ) : (
         <div className="space-y-3.5 text-sm">
           <div className="flex items-center justify-between text-slate-600">
-            <span>Gigs I posted</span>
+            <span>Services Published</span>
             <span className="font-bold text-slate-900">{totalOffers}</span>
           </div>
           <div className="flex items-center justify-between text-slate-600">
-            <span>Active Gigs</span>
+            <span>Active Services</span>
             <span className="font-bold text-slate-900">{activeOffersCount}</span>
           </div>
           <div className="flex items-center justify-between text-slate-600">
-            <span>Gigs sold</span>
+            <span>Services Completed</span>
             <span className="font-bold text-slate-900">{completedOrdersCount}</span>
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between">

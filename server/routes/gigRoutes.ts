@@ -64,6 +64,25 @@ export function parseAndValidateExtraDeliveryDays(rawDays: any): { valid: boolea
   return { valid: true, value: num };
 }
 
+async function ensureUniqueGigSlug(baseSlug: string, excludeGigId?: string): Promise<string> {
+  const cleanBase = baseSlug || 'custom-service';
+  const allGigs = await store.listGigs();
+  const usedSlugs = new Set(
+    allGigs
+      .filter(g => g.status !== 'deleted' && (!excludeGigId || g.id !== excludeGigId))
+      .map(g => (g.slug || '').toLowerCase())
+      .filter(Boolean)
+  );
+  if (!usedSlugs.has(cleanBase.toLowerCase())) {
+    return cleanBase;
+  }
+  let suffix = 2;
+  while (usedSlugs.has(`${cleanBase.toLowerCase()}-${suffix}`)) {
+    suffix++;
+  }
+  return `${cleanBase}-${suffix}`;
+}
+
 // Public gigs list
 gigRouter.get('/gigs', async (req: Request, res: Response) => {
   try {
@@ -180,6 +199,10 @@ gigRouter.post('/gigs', requireAuth, requireActiveStatus, async (req: Request, r
   }
 
   const initialStatus = activeSettings.marketplace.gigModerationRequired ? 'moderation' : 'active';
+  const rawBaseSlug = req.body.title
+    ? String(req.body.title).toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
+    : 'custom-service';
+  const uniqueSlug = await ensureUniqueGigSlug(rawBaseSlug || 'custom-service');
 
   const newGig: Gig = {
     id: 'gig_' + Date.now() + '_' + randomUUID().slice(0, 8),
@@ -189,7 +212,7 @@ gigRouter.post('/gigs', requireAuth, requireActiveStatus, async (req: Request, r
     freelancerAvatar: caller.avatar,
     freelancerLevel: 'Level 1 ★',
     title: String(req.body.title || 'Untitled Gig').trim().slice(0, 300),
-    slug: req.body.title ? String(req.body.title).toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '') : 'custom-gig',
+    slug: uniqueSlug,
     category,
     subcategory,
     description: String(req.body.description || '').trim(),
@@ -248,9 +271,9 @@ const handleGigUpdate = async (req: Request, res: Response) => {
     if (req.body.title !== undefined) {
       const newTitle = String(req.body.title).trim().slice(0, 300);
       updates.title = newTitle;
-      const candidateSlug = newTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '') || `gig-${g.id}`;
+      const candidateSlug = newTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '') || `service-${g.id}`;
       if (candidateSlug !== g.slug) {
-        updates.slug = candidateSlug;
+        updates.slug = await ensureUniqueGigSlug(candidateSlug, g.id);
       }
     }
     if (req.body.category !== undefined && typeof req.body.category === 'string') {
