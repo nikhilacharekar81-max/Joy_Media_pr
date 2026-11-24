@@ -4,7 +4,7 @@ import {
   FolderTree, Layers, Globe, Eye, X, Check, RefreshCw, FolderPlus,
   ArrowRight, FileText, ChevronDown, AlertTriangle
 } from 'lucide-react';
-import { PPH_CATEGORIES } from '../HeaderCategoriesNav';
+import { SERVICE_CATEGORIES } from '../HeaderCategoriesNav';
 
 interface SubcategoryItem {
   id: string;
@@ -29,7 +29,7 @@ interface AdminCategoriesModuleProps {
 export const AdminCategoriesModule: React.FC<AdminCategoriesModuleProps> = ({
   initialCategories
 }) => {
-  // Local state initialized with PeoplePerHour taxonomy or stored state
+  // Local state initialized with default category taxonomy or stored state
   const [categories, setCategories] = useState<CategoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('workperhour_categories');
@@ -41,7 +41,7 @@ export const AdminCategoriesModule: React.FC<AdminCategoriesModuleProps> = ({
       console.error("Error reading categories from localStorage", e);
     }
     if (initialCategories && initialCategories.length > 0) return initialCategories;
-    return PPH_CATEGORIES.map((cat, idx) => ({
+    return SERVICE_CATEGORIES.map((cat, idx) => ({
       id: `cat_${idx + 1}`,
       name: cat.name,
       slug: cat.slug,
@@ -242,7 +242,7 @@ export const AdminCategoriesModule: React.FC<AdminCategoriesModuleProps> = ({
             <h2 className="text-xl font-bold text-slate-900">Taxonomy, Categories & Slugs</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage the PeoplePerHour 2-tier marketplace taxonomy tree, configure canonical SEO slugs, and organize gig topics.
+            Manage the 2-tier service taxonomy tree, configure canonical SEO slugs, and organize service topics.
           </p>
         </div>
 

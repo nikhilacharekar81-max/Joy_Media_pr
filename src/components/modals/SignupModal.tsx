@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface SignupModalProps {
   isOpen: boolean;
@@ -45,8 +46,8 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 leading-tight">Register for WorkPerHour</h2>
-            <p className="text-xs text-slate-500">Create your client or freelancer account</p>
+            <h2 className="text-xl font-bold text-slate-900 leading-tight">Register for {SITE_CONFIG.brandName}</h2>
+            <p className="text-xs text-slate-500">Create your client account</p>
           </div>
           <button 
             onClick={onClose} 

@@ -4,6 +4,7 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /workstream/
 Disallow: /checkout/
-Disallow: /payouts/
+Disallow: /payments/
+Disallow: /wallet/
 
-Sitemap: https://workperhour.com/sitemap.xml
+Sitemap: https://joymediapr.com/sitemap.xml

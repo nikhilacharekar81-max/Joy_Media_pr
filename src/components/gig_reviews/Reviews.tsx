@@ -111,13 +111,13 @@ export const Reviews: React.FC<ReviewsProps> = ({
       {/* Header Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
-          <h2 className="text-[21px] font-bold text-fiverr-dark tracking-tight flex items-center gap-2">
+          <h2 className="text-[21px] font-bold text-agency-dark tracking-tight flex items-center gap-2">
             <span>Customer Reviews</span>
             <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
               {totalCount}
             </span>
           </h2>
-          <p className="text-xs text-fiverr-muted mt-1">
+          <p className="text-xs text-agency-muted mt-1">
             Real feedback from verified buyers.
           </p>
         </div>
@@ -132,14 +132,14 @@ export const Reviews: React.FC<ReviewsProps> = ({
           {/* Rating Summary Header */}
           <div className="flex items-center gap-6 pb-2">
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-black text-fiverr-dark font-mono">{avgRating.toFixed(1)}</span>
+              <span className="text-3xl font-black text-agency-dark font-mono">{avgRating.toFixed(1)}</span>
               <div>
                 <div className="flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <span className="text-xs text-fiverr-muted font-medium mt-0.5 block">
+                <span className="text-xs text-agency-muted font-medium mt-0.5 block">
                   Based on {totalCount} verified review{totalCount !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -163,7 +163,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
                       />
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-bold text-fiverr-dark">{rev.reviewerName || rev.buyerName || 'Verified Client'}</span>
+                          <span className="text-xs font-bold text-agency-dark">{rev.reviewerName || rev.buyerName || 'Verified Client'}</span>
                           <span className="inline-flex items-center gap-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">
                             <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
                             <span>Verified Purchase</span>
@@ -174,7 +174,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-fiverr-muted">{rev.createdAt || 'Recent'}</span>
+                        <span className="text-[10px] text-agency-muted">{rev.createdAt || 'Recent'}</span>
                       </div>
                     </div>
 
@@ -190,7 +190,7 @@ export const Reviews: React.FC<ReviewsProps> = ({
                   </p>
 
                   {rev.orderTitle && (
-                    <div className="text-[10px] text-fiverr-muted bg-slate-50 p-2 rounded-lg border border-slate-100 line-clamp-1">
+                    <div className="text-[10px] text-agency-muted bg-slate-50 p-2 rounded-lg border border-slate-100 line-clamp-1">
                       <span className="font-semibold text-slate-600">Service:</span> {rev.orderTitle}
                     </div>
                   )}

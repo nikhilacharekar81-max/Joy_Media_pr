@@ -12,7 +12,7 @@ export * from './ui';
 
 // Direct standalone components
 export { FreelancerProfileView } from './FreelancerProfileView';
-export { HeaderCategoriesNav, PPH_CATEGORIES } from './HeaderCategoriesNav';
+export { HeaderCategoriesNav, SERVICE_CATEGORIES } from './HeaderCategoriesNav';
 export { SettingsPage } from './SettingsPage';
 export { SiteFeeSettingsModule } from './SiteFeeSettingsModule';
 export { PaymentsModule } from './PaymentsModule';

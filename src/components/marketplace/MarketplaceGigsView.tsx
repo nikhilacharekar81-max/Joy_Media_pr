@@ -23,6 +23,7 @@ import { Gig, Project, Review } from '../../types';
 import { DEFAULT_AVATAR, DEFAULT_GIG_IMAGE, RATINGS_ENABLED } from '../../constants';
 import { Avatar, GigImage } from '../../components/ui';
 import { AgencyHomePage } from './AgencyHomePage';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface MarketplaceGigsViewProps {
   filteredGigs: Gig[];
@@ -59,15 +60,20 @@ interface MarketplaceGigsViewProps {
 
 type SortOption = 'recommended' | 'bestselling' | 'rating' | 'price_asc' | 'price_desc' | 'newest';
 
-function formatFiverrTitle(title: string): string {
+function formatServiceTitle(title: string): string {
   const trimmed = title.trim();
+  if (AGENCY_MODE) {
+    const stripped = trimmed.replace(/^i\s+will\s+/i, '').trim();
+    if (!stripped) return trimmed;
+    return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+  }
   if (trimmed.toLowerCase().startsWith('i will')) {
     return 'I will ' + trimmed.slice(6).trim();
   }
   return `I will ${trimmed.charAt(0).toLowerCase()}${trimmed.slice(1)}`;
 }
 
-function formatFiverrReviewCount(count: number): string {
+function formatReviewCount(count: number): string {
   if (count >= 1000) {
     return `${(count / 1000).toFixed(1)}k`;
   }
@@ -228,7 +234,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
             onClick={(e) => navigate('/', e)} 
             className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
           >
-            Fivepa
+            {SITE_CONFIG.brandName}
           </a>
             <span aria-hidden="true">·</span>
             <span className="text-slate-700 dark:text-slate-300 capitalize">
@@ -240,10 +246,12 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {currentCategory === 'All' ? 'Explore Freelance Services' : `${currentCategory} Services`}
+                {currentCategory === 'All' ? (AGENCY_MODE ? 'Explore Agency Services' : 'Explore Freelance Services') : `${currentCategory} Services`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Find top-rated talent, review verified portfolios, and hire securely with WorkPerHour USD Escrow protection.
+                {AGENCY_MODE
+                  ? `Explore fixed-price guest posting, press releases, UGC AI videos, web development, Shopify, and digital services from ${SITE_CONFIG.brandName} with secure online checkout.`
+                  : `Find top-rated talent, review verified portfolios, and hire securely with ${SITE_CONFIG.brandName}.`}
               </p>
             </div>
 
@@ -252,7 +260,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
-                placeholder="Search gigs..." 
+                placeholder={AGENCY_MODE ? 'Search services...' : 'Search gigs...'} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-400 shadow-xs"
@@ -287,7 +295,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
       </div>
 
       {/* ========================================================= */}
-      {/* FIVERR FILTER TOOLBAR                                     */}
+      {/* SERVICE FILTER TOOLBAR                                    */}
       {/* ========================================================= */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-4 mb-6 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -324,7 +332,8 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
               )}
             </div>
 
-            {/* Seller Details Filter */}
+            {/* Seller Details Filter (hidden in single-seller agency mode) */}
+            {!AGENCY_MODE && (
             <div className="relative">
               <button 
                 onClick={() => setActiveDropdown(activeDropdown === 'seller' ? null : 'seller')}
@@ -360,6 +369,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                 </div>
               )}
             </div>
+            )}
 
             {/* Budget Filter with Custom Range */}
             <div className="relative">
@@ -474,7 +484,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
             </div>
           </div>
 
-          {/* Right: Fiverr-style Toggles (Pro Services & Online Now) */}
+          {/* Right: Quick Filter Toggles (Online Now) */}
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-700">
             {/* Online Now Toggle */}
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -500,7 +510,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
       </div>
 
       {/* ========================================================= */}
-      {/* FIVERR META BAR: Count, Sort Dropdown & View Mode Switch    */}
+      {/* CATALOG META BAR: Count, Sort Dropdown & View Mode Switch */}
       {/* ========================================================= */}
       <div className="flex items-center justify-between gap-4 mb-5 text-xs">
         <div className="text-slate-500 font-medium">
@@ -573,7 +583,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
       </div>
 
       {/* ========================================================= */}
-      {/* FIVERR GIG GRID VIEW                                       */}
+      {/* SERVICE GRID VIEW                                         */}
       {/* ========================================================= */}
       {sortedAndFilteredGigs.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-lg mx-auto shadow-2xs space-y-4 my-8">
@@ -582,7 +592,9 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
           </div>
           <h3 className="text-lg font-bold text-slate-900">No Services Found</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-            Try adjusting your search query, budget parameters, or seller details to discover more freelance gigs.
+            {AGENCY_MODE
+              ? 'Try adjusting your search query, budget parameters, or delivery time to discover more services.'
+              : 'Try adjusting your search query, budget parameters, or seller details to discover more freelance gigs.'}
           </p>
           <div className="pt-2">
             <button
@@ -616,7 +628,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                 onClick={(e) => navigate(gigUrl, e)}
                 className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between group cursor-pointer relative"
               >
-                {/* 16:10 Fiverr Aspect Ratio Image Container */}
+                {/* 16:10 Card Aspect Ratio Image Container */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800 select-none">
                   <GigImage 
                     src={gig.image} 
@@ -625,7 +637,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                     className="w-full h-full group-hover:scale-105 transition-transform duration-300 object-cover" 
                   />
 
-                  {/* Top-Left Fiverr Badge: Choice */}
+                  {/* Top-Left Featured Badge: Choice */}
                   {gig.featured && (
                     <div className="absolute top-2.5 left-2.5 z-10">
                       <span className="bg-orange-500 text-white font-bold text-xs px-2 py-0.5 rounded-sm tracking-wide uppercase shadow-xs flex items-center gap-1">
@@ -680,33 +692,44 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                 {/* Card Content */}
                 <div className="p-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    {/* Seller Profile Header Row */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="relative">
-                        <Avatar 
-                          src={gig.freelancerAvatar} 
-                          name={gig.freelancerName} 
-                          size="xs"
-                        />
-                        {/* Green Online Dot */}
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900 absolute -bottom-0.5 -right-0.5 inline-block" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <a 
-                          href={sellerUrl}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(sellerUrl, e);
-                          }}
-                          className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:underline block truncate"
-                        >
-                          {gig.freelancerName}
-                        </a>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block truncate">
-                          {gig.freelancerLevel || 'Level 2 Seller'}
+                    {/* Agency / Seller Header Row */}
+                    {AGENCY_MODE ? (
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                          {SITE_CONFIG.brandName}
+                        </span>
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate">
+                          {gig.category}
                         </span>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="relative">
+                          <Avatar 
+                            src={gig.freelancerAvatar} 
+                            name={gig.freelancerName} 
+                            size="xs"
+                          />
+                          {/* Green Online Dot */}
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900 absolute -bottom-0.5 -right-0.5 inline-block" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <a 
+                            href={sellerUrl}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(sellerUrl, e);
+                            }}
+                            className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:underline block truncate"
+                          >
+                            {gig.freelancerName}
+                          </a>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block truncate">
+                            {gig.freelancerLevel || 'Level 2 Seller'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Gig Title: Exactly "I will ..." */}
                     <h3 className="text-sm sm:text-base leading-snug font-normal text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 min-h-[44px] mb-2.5">
@@ -718,7 +741,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                         }}
                         className="text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors block"
                       >
-                        {formatFiverrTitle(gig.title)}
+                        {formatServiceTitle(gig.title)}
                       </a>
                     </h3>
 
@@ -730,7 +753,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                           {(gig.rating || 5.0).toFixed(1)}
                         </span>
                         <span className="text-slate-400 font-normal">
-                          ({formatFiverrReviewCount(gig.reviewsCount || 1)})
+                          ({formatReviewCount(gig.reviewsCount || 1)})
                         </span>
                       </div>
                     )}
@@ -755,7 +778,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
         </div>
       ) : (
         /* ========================================================= */
-        /* FIVERR LISTICLE VIEW                                      */
+        /* SERVICE LIST VIEW                                         */
         /* ========================================================= */
         <div className="space-y-4">
           {sortedAndFilteredGigs.map(gig => {
@@ -792,27 +815,34 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                   </div>
 
                   <div className="space-y-1.5 flex-1 min-w-0 w-full">
-                    {/* Seller row */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Avatar 
-                        src={gig.freelancerAvatar} 
-                        name={gig.freelancerName} 
-                        size="xs"
-                      />
-                      <a 
-                        href={sellerUrl}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(sellerUrl, e);
-                        }}
-                        className="text-xs font-bold text-slate-800 hover:underline truncate"
-                      >
-                        {gig.freelancerName}
-                      </a>
-                      <span className="text-[11px] text-slate-400">
-                        • {gig.freelancerLevel || 'Top Rated'}
-                      </span>
-                    </div>
+                    {/* Agency / Seller row */}
+                    {AGENCY_MODE ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-slate-800 truncate">{SITE_CONFIG.brandName}</span>
+                        <span className="text-[11px] text-slate-400">• {gig.category}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Avatar 
+                          src={gig.freelancerAvatar} 
+                          name={gig.freelancerName} 
+                          size="xs"
+                        />
+                        <a 
+                          href={sellerUrl}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(sellerUrl, e);
+                          }}
+                          className="text-xs font-bold text-slate-800 hover:underline truncate"
+                        >
+                          {gig.freelancerName}
+                        </a>
+                        <span className="text-[11px] text-slate-400">
+                          • {gig.freelancerLevel || 'Top Rated'}
+                        </span>
+                      </div>
+                    )}
 
                     <h3 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2 sm:line-clamp-1">
                       <a
@@ -823,7 +853,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                         }}
                         className="text-slate-900 hover:text-emerald-600 transition-colors block"
                       >
-                        {formatFiverrTitle(gig.title)}
+                        {formatServiceTitle(gig.title)}
                       </a>
                     </h3>
 
@@ -833,7 +863,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
                           <div className="flex items-center gap-1 font-bold text-slate-900">
                             <Star className="w-3.5 h-3.5 fill-slate-900 text-slate-900" />
                             <span>{(gig.rating || 5.0).toFixed(1)}</span>
-                            <span className="text-slate-400 font-normal">({formatFiverrReviewCount(gig.reviewsCount || 1)})</span>
+                            <span className="text-slate-400 font-normal">({formatReviewCount(gig.reviewsCount || 1)})</span>
                           </div>
                           <span className="text-slate-300">•</span>
                         </>
@@ -871,7 +901,7 @@ export const MarketplaceGigsView: React.FC<MarketplaceGigsViewProps> = ({
       {/* ========================================================= */}
       {/* Featured Projects Section                                 */}
       {/* ========================================================= */}
-      {projects && projects.length > 0 && (
+      {!AGENCY_MODE && projects && projects.length > 0 && (
         <div className="mt-16 pt-12 border-t border-slate-200/80">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>

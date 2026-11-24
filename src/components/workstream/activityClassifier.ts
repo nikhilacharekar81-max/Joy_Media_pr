@@ -1,4 +1,5 @@
 import { WorkstreamMessage } from './types';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 export type EventCategory =
   | 'project'
@@ -70,7 +71,7 @@ export function formatEventTime(ts: string | undefined): string {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-/** Formats timestamp into relative time string matching Fiverr design (e.g. "2 hours ago", "1 hour ago", "Just now") */
+/** Formats timestamp into relative time string for activity feed (e.g. "2 hours ago", "1 hour ago", "Just now") */
 export function formatRelativeTime(ts: string | undefined): string {
   if (!ts) return '';
   const d = new Date(ts);
@@ -110,8 +111,10 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     return {
       category: 'invoice',
       categoryLabel: isCustom ? 'Custom Order Completed' : 'Invoice Paid',
-      badgeLabel: isCustom ? 'Custom Order Completed' : 'Paid & Released',
-      title: isCustom ? 'Custom Order Completed & Escrow Paid' : 'Invoice Paid & Escrow Released to Seller',
+      badgeLabel: isCustom ? 'Custom Order Completed' : (AGENCY_MODE ? 'Paid' : 'Paid & Released'),
+      title: AGENCY_MODE
+        ? (isCustom ? 'Custom Order Completed & Paid' : 'Invoice Paid & Order Completed')
+        : (isCustom ? 'Custom Order Completed & Escrow Paid' : 'Invoice Paid & Escrow Released to Seller'),
       description: cleanText,
       iconName: 'Receipt',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -128,7 +131,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       category: 'invoice',
       categoryLabel: isCustom ? 'Custom Order Invoice Declined' : 'Invoice Declined',
       badgeLabel: 'Declined',
-      title: isCustom ? 'Custom Order Invoice Declined by Buyer' : 'Invoice Declined by Buyer',
+      title: AGENCY_MODE
+        ? (isCustom ? 'Custom Order Invoice Declined by Client' : 'Invoice Declined by Client')
+        : (isCustom ? 'Custom Order Invoice Declined by Buyer' : 'Invoice Declined by Buyer'),
       description: cleanText,
       iconName: 'AlertTriangle',
       headerCls: 'bg-rose-50/90 border-b border-rose-100 text-rose-950',
@@ -145,7 +150,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       category: 'invoice',
       categoryLabel: isCustom ? 'Custom Order Invoice Cancelled' : 'Invoice Cancelled',
       badgeLabel: 'Cancelled',
-      title: isCustom ? 'Custom Order Invoice Cancelled by Seller' : 'Invoice Cancelled by Seller',
+      title: AGENCY_MODE
+        ? (isCustom ? 'Custom Order Invoice Cancelled by Agency' : 'Invoice Cancelled by Agency')
+        : (isCustom ? 'Custom Order Invoice Cancelled by Seller' : 'Invoice Cancelled by Seller'),
       description: cleanText,
       iconName: 'RotateCcw',
       headerCls: 'bg-slate-100 border-b border-slate-200 text-slate-900',
@@ -166,9 +173,11 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     const isCustom = /custom order/i.test(text) || meta.isCustomOrder;
     return {
       category: 'proposal',
-      categoryLabel: isCustom ? 'Custom Order Created' : 'Proposal Accepted',
-      badgeLabel: isCustom ? 'Custom Order Active' : 'Escrow Funded',
-      title: isCustom ? 'Custom Order Proposal Accepted & Escrow Funded' : 'Proposal Accepted & Escrow Funded',
+      categoryLabel: AGENCY_MODE ? 'Quote Accepted' : (isCustom ? 'Custom Order Created' : 'Proposal Accepted'),
+      badgeLabel: AGENCY_MODE ? 'Order Active' : (isCustom ? 'Custom Order Active' : 'Escrow Funded'),
+      title: AGENCY_MODE
+        ? (isCustom ? 'Custom Quote Accepted & Order Confirmed' : 'Quote Accepted & Order Confirmed')
+        : (isCustom ? 'Custom Order Proposal Accepted & Escrow Funded' : 'Proposal Accepted & Escrow Funded'),
       description: cleanText,
       iconName: 'FileSignature',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -189,9 +198,11 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     const isCustom = /custom order proposal/i.test(text) || meta.isCustomOrder;
     return {
       category: 'proposal',
-      categoryLabel: isCustom ? 'Custom Order Proposal' : 'Custom Proposal',
+      categoryLabel: AGENCY_MODE ? 'Custom Quote' : (isCustom ? 'Custom Order Proposal' : 'Custom Proposal'),
       badgeLabel: 'Under Review',
-      title: isCustom ? 'Custom Order Proposal Submitted for Review' : 'Proposal Submitted for Review',
+      title: AGENCY_MODE
+        ? 'Quote Submitted for Review'
+        : (isCustom ? 'Custom Order Proposal Submitted for Review' : 'Proposal Submitted for Review'),
       description: cleanText,
       iconName: 'FileSignature',
       headerCls: 'bg-emerald-50/70 border-b border-emerald-100/90 text-emerald-950',
@@ -210,9 +221,11 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     const isCustom = /custom order/i.test(text) || meta.isCustomOrder;
     return {
       category: 'proposal',
-      categoryLabel: isCustom ? 'Custom Order Proposal Declined' : 'Proposal Declined',
+      categoryLabel: AGENCY_MODE ? 'Quote Declined' : (isCustom ? 'Custom Order Proposal Declined' : 'Proposal Declined'),
       badgeLabel: 'Declined',
-      title: isCustom ? 'Custom Order Proposal Declined by Buyer' : 'Proposal Declined by Buyer',
+      title: AGENCY_MODE
+        ? 'Quote Declined by Client'
+        : (isCustom ? 'Custom Order Proposal Declined by Buyer' : 'Proposal Declined by Buyer'),
       description: cleanText,
       iconName: 'AlertTriangle',
       headerCls: 'bg-rose-50/90 border-b border-rose-100 text-rose-950',
@@ -232,9 +245,11 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     const isCustom = /custom order/i.test(text) || meta.isCustomOrder;
     return {
       category: 'proposal',
-      categoryLabel: isCustom ? 'Custom Order Proposal Cancelled' : 'Proposal Withdrawn',
+      categoryLabel: AGENCY_MODE ? 'Quote Withdrawn' : (isCustom ? 'Custom Order Proposal Cancelled' : 'Proposal Withdrawn'),
       badgeLabel: isCustom ? 'Cancelled' : 'Withdrawn',
-      title: isCustom ? 'Custom Order Proposal Cancelled by Seller' : 'Proposal Withdrawn by Freelancer',
+      title: AGENCY_MODE
+        ? 'Quote Withdrawn by Agency'
+        : (isCustom ? 'Custom Order Proposal Cancelled by Seller' : 'Proposal Withdrawn by Freelancer'),
       description: cleanText,
       iconName: 'RotateCcw',
       headerCls: 'bg-slate-100 border-b border-slate-200 text-slate-900',
@@ -248,9 +263,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   if (action === 'proposal_updated' || /proposal updated|bid amount revised/i.test(text)) {
     return {
       category: 'proposal',
-      categoryLabel: 'Proposal Revised',
+      categoryLabel: AGENCY_MODE ? 'Quote Revised' : 'Proposal Revised',
       badgeLabel: 'Updated Scope',
-      title: 'Proposal Scope or Bid Revised',
+      title: AGENCY_MODE ? 'Quote Scope or Amount Revised' : 'Proposal Scope or Bid Revised',
       description: cleanText,
       iconName: 'FileSignature',
       headerCls: 'bg-blue-50/90 border-b border-blue-100 text-blue-950',
@@ -269,9 +284,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'project',
-      categoryLabel: 'Project Published',
-      badgeLabel: 'Open for Proposals',
-      title: 'Project Published to Marketplace',
+      categoryLabel: AGENCY_MODE ? 'Request Submitted' : 'Project Published',
+      badgeLabel: AGENCY_MODE ? 'Awaiting Quote' : 'Open for Proposals',
+      title: AGENCY_MODE ? 'Custom Request Submitted' : 'Project Published to Marketplace',
       description: cleanText,
       iconName: 'Briefcase',
       headerCls: 'bg-teal-50/90 border-b border-teal-100 text-teal-950',
@@ -301,9 +316,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   if (action === 'project_reopened' || /project reopened/i.test(text)) {
     return {
       category: 'project',
-      categoryLabel: 'Project Reopened',
+      categoryLabel: AGENCY_MODE ? 'Request Reopened' : 'Project Reopened',
       badgeLabel: 'Reopened',
-      title: 'Project Reopened for Proposals',
+      title: AGENCY_MODE ? 'Custom Request Reopened' : 'Project Reopened for Proposals',
       description: cleanText,
       iconName: 'RotateCcw',
       headerCls: 'bg-teal-50/90 border-b border-teal-100 text-teal-950',
@@ -317,9 +332,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   if (action === 'project_closed' || /project closed/i.test(text)) {
     return {
       category: 'project',
-      categoryLabel: 'Project Closed',
+      categoryLabel: AGENCY_MODE ? 'Request Closed' : 'Project Closed',
       badgeLabel: 'Closed',
-      title: 'Project Closed to New Proposals',
+      title: AGENCY_MODE ? 'Custom Request Closed' : 'Project Closed to New Proposals',
       description: cleanText,
       iconName: 'Lock',
       headerCls: 'bg-slate-100 border-b border-slate-200 text-slate-900',
@@ -335,7 +350,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       category: 'project',
       categoryLabel: 'Project Cancelled',
       badgeLabel: 'Cancelled',
-      title: 'Project Cancelled by Buyer',
+      title: AGENCY_MODE ? 'Request Cancelled by Client' : 'Project Cancelled by Buyer',
       description: cleanText,
       iconName: 'AlertTriangle',
       headerCls: 'bg-rose-50/90 border-b border-rose-100 text-rose-950',
@@ -369,9 +384,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'order',
-      categoryLabel: 'Freelancer Hired',
-      badgeLabel: 'Contract Active',
-      title: 'Freelancer Hired & Project Contract Started',
+      categoryLabel: AGENCY_MODE ? 'Order Confirmed' : 'Freelancer Hired',
+      badgeLabel: 'Order Active',
+      title: AGENCY_MODE ? 'Order Confirmed & Started' : 'Freelancer Hired & Project Contract Started',
       description: cleanText,
       iconName: 'CheckCircle2',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -428,7 +443,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       category: 'order',
       categoryLabel: 'Work In Progress',
       badgeLabel: 'In Progress',
-      title: 'Work In Progress: Freelancer Started Task',
+      title: AGENCY_MODE ? 'Work In Progress: Team Started Task' : 'Work In Progress: Freelancer Started Task',
       description: cleanText,
       iconName: 'Clock',
       headerCls: 'bg-blue-50/90 border-b border-blue-100 text-blue-950',
@@ -451,8 +466,12 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     return {
       category: 'order',
       categoryLabel: isCustomOrder ? 'Custom Order Placed' : isInquiry ? 'Inquiry Opened' : 'Order Placed',
-      badgeLabel: isCustomOrder ? 'Custom Order • Escrow Funded' : isInquiry ? 'New Inquiry' : 'Escrow Protected',
-      title: isCustomOrder ? 'Custom Order Placed in Escrow' : isInquiry ? 'New Project Inquiry Initialized' : 'Order Placed in Escrow',
+      badgeLabel: AGENCY_MODE
+        ? (isCustomOrder ? 'Custom Order • Active' : isInquiry ? 'New Inquiry' : 'Order Active')
+        : (isCustomOrder ? 'Custom Order • Escrow Funded' : isInquiry ? 'New Inquiry' : 'Escrow Protected'),
+      title: AGENCY_MODE
+        ? (isCustomOrder ? 'Custom Order Confirmed' : isInquiry ? 'New Service Inquiry Started' : 'Service Order Confirmed')
+        : (isCustomOrder ? 'Custom Order Placed in Escrow' : isInquiry ? 'New Project Inquiry Initialized' : 'Order Placed in Escrow'),
       description: cleanText,
       iconName: 'Briefcase',
       headerCls: 'bg-blue-50/90 border-b border-blue-100 text-blue-950',
@@ -555,9 +574,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'escrow',
-      categoryLabel: 'Escrow Refund',
-      badgeLabel: 'Wallet Credited',
-      title: 'Escrow Funds Refunded to Buyer Wallet',
+      categoryLabel: AGENCY_MODE ? 'Order Refund' : 'Escrow Refund',
+      badgeLabel: AGENCY_MODE ? 'Refunded' : 'Wallet Credited',
+      title: AGENCY_MODE ? 'Order Payment Refunded to Client' : 'Escrow Funds Refunded to Buyer Wallet',
       description: cleanText,
       iconName: 'RotateCcw',
       headerCls: 'bg-rose-50/90 border-b border-rose-100 text-rose-950',
@@ -574,9 +593,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'escrow',
-      categoryLabel: 'Escrow Released',
-      badgeLabel: 'Funds Transferred',
-      title: 'Escrow Funds Released to Freelancer',
+      categoryLabel: AGENCY_MODE ? 'Order Completed' : 'Escrow Released',
+      badgeLabel: AGENCY_MODE ? 'Completed' : 'Funds Transferred',
+      title: AGENCY_MODE ? 'Order Approved & Completed' : 'Escrow Funds Released to Freelancer',
       description: cleanText,
       iconName: 'CheckCircle2',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -594,9 +613,11 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     const isTopUp = meta.isTopUp;
     return {
       category: 'escrow',
-      categoryLabel: isTopUp ? 'Escrow Top-Up' : 'Escrow Vault',
-      badgeLabel: 'Escrow Secured',
-      title: isTopUp ? 'Additional Escrow Deposit Funded' : 'Escrow Deposit Secured in Vault',
+      categoryLabel: AGENCY_MODE ? (isTopUp ? 'Payment Top-Up' : 'Payment Confirmed') : (isTopUp ? 'Escrow Top-Up' : 'Escrow Vault'),
+      badgeLabel: AGENCY_MODE ? 'Payment Confirmed' : 'Escrow Secured',
+      title: AGENCY_MODE
+        ? (isTopUp ? 'Additional Order Payment Confirmed' : 'Order Payment Confirmed')
+        : (isTopUp ? 'Additional Escrow Deposit Funded' : 'Escrow Deposit Secured in Vault'),
       description: cleanText,
       iconName: 'ShieldCheck',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -621,7 +642,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       badgeLabel: ver ? `Version #v${ver}` : 'Awaiting Review',
       title: isDraft
         ? `Draft Deliverable ${ver ? `#v${ver} ` : ''}Submitted for Review`
-        : `Work Delivered ${ver ? `#v${ver}` : ''} — Awaiting Buyer Approval`,
+        : `Work Delivered ${ver ? `#v${ver}` : ''} — Awaiting ${AGENCY_MODE ? 'Client' : 'Buyer'} Approval`,
       description: cleanText,
       iconName: 'Package',
       headerCls: 'bg-blue-50/90 border-b border-blue-100 text-blue-950',
@@ -640,7 +661,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       category: 'delivery',
       categoryLabel: 'Delivery Approved',
       badgeLabel: 'Accepted',
-      title: 'Deliverables Approved by Buyer',
+      title: AGENCY_MODE ? 'Deliverables Approved by Client' : 'Deliverables Approved by Buyer',
       description: cleanText,
       iconName: 'CheckCircle2',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -719,9 +740,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'review',
-      categoryLabel: 'Seller Public Response',
+      categoryLabel: AGENCY_MODE ? 'Agency Public Response' : 'Seller Public Response',
       badgeLabel: 'Public Response',
-      title: 'Public Response Posted by Freelancer',
+      title: AGENCY_MODE ? `Public Response Posted by ${SITE_CONFIG.brandName}` : 'Public Response Posted by Freelancer',
       description: cleanText,
       iconName: 'MessageSquare',
       headerCls: 'bg-amber-50/90 border-b border-amber-100 text-amber-950',
@@ -739,9 +760,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'dispute',
-      categoryLabel: 'Arbitration Case',
+      categoryLabel: AGENCY_MODE ? 'Support Review' : 'Arbitration Case',
       badgeLabel: 'Under Review',
-      title: 'Dispute Case Opened: Order Under Review',
+      title: AGENCY_MODE ? 'Support Case Opened: Order Under Review' : 'Dispute Case Opened: Order Under Review',
       description: cleanText,
       iconName: 'Scale',
       headerCls: 'bg-rose-50/90 border-b border-rose-100 text-rose-950',
@@ -758,9 +779,9 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   ) {
     return {
       category: 'dispute',
-      categoryLabel: 'Arbitration Resolved',
+      categoryLabel: AGENCY_MODE ? 'Support Resolved' : 'Arbitration Resolved',
       badgeLabel: 'Case Closed',
-      title: 'Dispute Resolved by Platform Administrator',
+      title: AGENCY_MODE ? `Support Case Resolved by ${SITE_CONFIG.brandName}` : 'Dispute Resolved by Platform Administrator',
       description: cleanText,
       iconName: 'CheckCircle2',
       headerCls: 'bg-emerald-50/90 border-b border-emerald-100 text-emerald-950',
@@ -859,8 +880,8 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     return {
       category: 'deadline',
       categoryLabel: 'Extension Requested',
-      badgeLabel: 'Awaiting Buyer Response',
-      title: 'Seller Requested Delivery Time Extension',
+      badgeLabel: AGENCY_MODE ? 'Awaiting Client Response' : 'Awaiting Buyer Response',
+      title: AGENCY_MODE ? `${SITE_CONFIG.brandName} Requested Delivery Time Extension` : 'Seller Requested Delivery Time Extension',
       description: cleanText,
       iconName: 'Clock',
       headerCls: 'bg-amber-50/90 border-b border-amber-100 text-amber-950',
@@ -902,7 +923,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
       categoryLabel: 'Missed Call',
       badgeLabel: 'Missed',
       title: 'Missed Video Meeting Call',
-      description: cleanText || 'A video call invitation was missed in this workstream.',
+      description: cleanText || (AGENCY_MODE ? 'A video call invitation was missed for this order.' : 'A video call invitation was missed in this workstream.'),
       iconName: 'Video',
       headerCls: 'bg-indigo-50/90 border-b border-indigo-100 text-indigo-950',
       badgeCls: 'bg-indigo-100 text-indigo-800 border-indigo-200',
@@ -921,8 +942,8 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
     return {
       category: 'meeting',
       categoryLabel: 'Video Meeting',
-      badgeLabel: 'Workstream Call',
-      title: 'Workstream Video Meeting Session',
+      badgeLabel: AGENCY_MODE ? 'Order Call' : 'Workstream Call',
+      title: AGENCY_MODE ? 'Order Video Meeting Session' : 'Workstream Video Meeting Session',
       description: cleanText,
       iconName: 'Video',
       headerCls: 'bg-indigo-50/90 border-b border-indigo-100 text-indigo-950',
@@ -1023,7 +1044,7 @@ export function classifyActivityEvent(msg: WorkstreamMessage): ClassifiedEvent {
   // 17. GENERIC ACTIVITY CARD (ZERO PLAIN TEXT STRINGS!)
   return {
     category: 'generic_activity',
-    categoryLabel: 'Workstream Activity',
+    categoryLabel: AGENCY_MODE ? 'Order Activity' : 'Workstream Activity',
     badgeLabel: 'Activity',
     title: cleanText.length > 60 ? `${cleanText.slice(0, 60)}...` : cleanText,
     description: cleanText,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Order, Message } from '../../types';
 import { fetchWithRetry } from '../../utils/fetchRetry';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 export interface UseWorkstreamEscrowProps {
   selectedOrder?: Order | null;
@@ -39,7 +40,10 @@ export function useWorkstreamEscrow({
       if (!releaseRes.ok) {
         const errData = await releaseRes.json().catch(() => ({}));
         console.warn('Backend escrow release failed:', errData.error);
-        setEscrowError(errData.error || 'Failed to release escrow funds.');
+        setEscrowError(
+          errData.error ||
+            (AGENCY_MODE ? 'Failed to finalize order approval.' : 'Failed to release escrow funds.')
+        );
         setIsReleasingEscrow(false);
         return false;
       }
@@ -69,8 +73,10 @@ export function useWorkstreamEscrow({
             id: `msg_escrow_${Date.now()}`,
             orderId: selectedOrder.id,
             senderId: 'system',
-            senderName: 'WorkSphere Escrow Vault',
-            text: `🎉 Escrow funds ($${selectedOrder.amount.toLocaleString()}) released to seller! Workstream marked as completed. Deliverables accepted.`,
+            senderName: SITE_CONFIG.brandName,
+            text: AGENCY_MODE
+              ? `Order finalized ($${selectedOrder.amount.toLocaleString()}). Deliverables accepted and order marked as completed.`
+              : `🎉 Escrow funds ($${selectedOrder.amount.toLocaleString()}) released to seller! Workstream marked as completed. Deliverables accepted.`,
             timestamp: new Date().toISOString(),
             type: 'system',
             metadata: {
@@ -90,7 +96,11 @@ export function useWorkstreamEscrow({
       return true;
     } catch (err) {
       console.error('Failed to call backend escrow release:', err);
-      setEscrowError('Network error releasing escrow funds. Please try again.');
+      setEscrowError(
+        AGENCY_MODE
+          ? 'Network error completing order approval. Please try again.'
+          : 'Network error releasing escrow funds. Please try again.'
+      );
       setIsReleasingEscrow(false);
       return false;
     }

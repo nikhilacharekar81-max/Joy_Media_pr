@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, CheckCircle2, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import { WorkstreamItem, WorkstreamOffer } from './types';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamReleaseModalProps {
   isOpen: boolean;
@@ -31,7 +32,11 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (hasHigherInvoice) {
-      setError(`Cannot release escrow directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the workstream.`);
+      setError(
+        AGENCY_MODE
+          ? `Cannot finalize order directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the order workspace.`
+          : `Cannot release escrow directly: Final invoice ${pendingInvoice.number} for $${pendingInvoice.amount.toLocaleString()} is pending. Please pay or decline the invoice in the workstream.`
+      );
       return;
     }
     setIsSubmitting(true);
@@ -42,7 +47,11 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
         onClose();
       }
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : String(err || 'Failed to release escrow funds'));
+      setError(
+        err instanceof Error
+          ? err.message
+          : String(err || (AGENCY_MODE ? 'Failed to finalize order approval' : 'Failed to release escrow funds'))
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +66,9 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-fiverr-dark">Release Escrow Funds</h3>
+              <h3 className="text-base font-bold text-agency-dark">
+                {AGENCY_MODE ? 'Approve Deliverables & Complete Order' : 'Release Escrow Funds'}
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Order #{order.id}</p>
             </div>
           </div>
@@ -74,14 +85,14 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold block">
-                Total Escrow Release
+                {AGENCY_MODE ? 'Order Total' : 'Total Escrow Release'}
               </span>
               <span className="text-xl font-bold font-mono text-emerald-600">
                 ${order.amount.toLocaleString()} USD
               </span>
             </div>
             <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold uppercase rounded-full">
-              Instant Payout
+              {AGENCY_MODE ? 'Final Approval' : 'Instant Payout'}
             </span>
           </div>
 
@@ -92,14 +103,24 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
                 <span>Final Invoice Pending (${pendingInvoice.amount.toLocaleString()})</span>
               </div>
               <p className="text-xs text-amber-800 leading-relaxed">
-                A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Releasing escrow directly is locked to avoid financial mismatch. Please click <strong>Pay Invoice</strong> on the invoice card in the workstream message stream to pay the invoice and release funds.
+                {AGENCY_MODE ? (
+                  <>
+                    A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Direct approval is locked to keep billing accurate. Please click <strong>Pay Invoice</strong> on the invoice card in the order chat to complete payment.
+                  </>
+                ) : (
+                  <>
+                    A final invoice ({pendingInvoice.number}) for <strong>${pendingInvoice.amount.toLocaleString()}</strong> is awaiting payment. Releasing escrow directly is locked to avoid financial mismatch. Please click <strong>Pay Invoice</strong> on the invoice card in the workstream message stream to pay the invoice and release funds.
+                  </>
+                )}
               </p>
             </div>
           ) : (
             <div className="p-3 bg-emerald-50/80 text-xs text-emerald-800 rounded-2xl border border-emerald-200 flex items-start gap-2.5 leading-relaxed">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                Releasing escrow accepts the deliverables, marks the Workstream as completed, and transfers the funds to the seller. Review submission is completely optional and handled separately.
+                {AGENCY_MODE
+                  ? `Approving deliverables marks this order with ${SITE_CONFIG.brandName} as completed. Leaving a review is optional and handled separately.`
+                  : 'Releasing escrow accepts the deliverables, marks the Workstream as completed, and transfers the funds to the seller. Review submission is completely optional and handled separately.'}
               </span>
             </div>
           )}
@@ -116,7 +137,7 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
@@ -126,7 +147,13 @@ export const WorkstreamReleaseModal: React.FC<WorkstreamReleaseModalProps> = ({
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{hasHigherInvoice ? 'Pay Invoice in Chat First' : isSubmitting ? 'Releasing...' : 'Confirm & Release Funds'}</span>
+              <span>
+                {hasHigherInvoice
+                  ? 'Pay Invoice in Chat First'
+                  : isSubmitting
+                    ? (AGENCY_MODE ? 'Completing...' : 'Releasing...')
+                    : (AGENCY_MODE ? 'Approve & Complete Order' : 'Confirm & Release Funds')}
+              </span>
             </button>
           </div>
         </form>

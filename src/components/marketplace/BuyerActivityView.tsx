@@ -15,6 +15,7 @@ import { getDeviceId } from '../../utils/deviceId';
 import { DEFAULT_AVATAR, DEFAULT_GIG_IMAGE, RATINGS_ENABLED } from '../../constants';
 import { getGigUrl } from '../../utils/slugify';
 import { formatActivityDate, toNumericRef, formatCurrency } from '../../utils/formatters';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface BuyerActivityViewProps {
   projects: Project[];
@@ -43,7 +44,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
   navigate,
   onOpenWorkstream
 }) => {
-  const [activeSection, setActiveSection] = useState<MainSectionTab>('projects');
+  const [activeSection, setActiveSection] = useState<MainSectionTab>(AGENCY_MODE ? 'gigs' : 'projects');
   const [projectSubTab, setProjectSubTab] = useState<ProjectSubTab>('all');
   const [gigSubTab, setGigSubTab] = useState<GigSubTab>('all');
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
@@ -149,9 +150,13 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-emerald-600">
             <Briefcase className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">My Buyer Activity</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {AGENCY_MODE ? 'My Orders & Requests' : 'My Buyer Activity'}
+          </h1>
           <p className="text-slate-500 max-w-md mx-auto text-sm">
-            Please log in to view and manage your posted projects, ordered gigs, and escrow workstreams.
+            {AGENCY_MODE
+              ? `Please sign in to view and manage your service orders, custom requests, and active workspaces with ${SITE_CONFIG.brandName}.`
+              : 'Please log in to view and manage your posted projects, ordered gigs, and escrow workstreams.'}
           </p>
           <button
             onClick={() => navigate('/login')}
@@ -211,12 +216,13 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
     (ord: Order) => {
       const linkedGig = ord.gigId ? gigs.find(g => g.id === ord.gigId) : undefined;
       const sellerUser = users.find(u => u.id === ord.sellerId) || (ord as any).seller;
-      const sellerName =
-        (ord as any).sellerName ||
-        sellerUser?.name ||
-        linkedGig?.freelancerName ||
-        ord.sellerUsername ||
-        'Freelancer';
+      const sellerName = AGENCY_MODE
+        ? SITE_CONFIG.brandName
+        : (ord as any).sellerName ||
+          sellerUser?.name ||
+          linkedGig?.freelancerName ||
+          ord.sellerUsername ||
+          'Freelancer';
       const sellerUsername =
         ord.sellerUsername ||
         sellerUser?.username ||
@@ -227,7 +233,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
         sellerUser?.avatar ||
         linkedGig?.freelancerAvatar ||
         DEFAULT_AVATAR;
-      const gigTitle = ord.serviceTitle || ord.title || linkedGig?.title || 'Gig Service Order';
+      const gigTitle = ord.serviceTitle || ord.title || linkedGig?.title || (AGENCY_MODE ? 'Service Order' : 'Gig Service Order');
       const gigImage =
         (ord as any).serviceImage ||
         linkedGig?.image ||
@@ -314,10 +320,10 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
       let amountLabel = 'Budget:';
       let amountValue = budgetVal;
       if (primaryFin && primaryFin.inEscrow > 0 && primaryOrder?.status !== 'cancelled') {
-        amountLabel = 'Escrow:';
+        amountLabel = AGENCY_MODE ? 'Paid:' : 'Escrow:';
         amountValue = primaryFin.inEscrow;
       } else if (primaryFin && primaryFin.releasedGross > 0) {
-        amountLabel = 'Released:';
+        amountLabel = AGENCY_MODE ? 'Completed:' : 'Released:';
         amountValue = primaryFin.releasedGross;
       }
 
@@ -326,10 +332,14 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
         title: proj.title,
         slug: proj.slug,
         description: proj.description,
-        counterpartyName: sellerInfo ? sellerInfo.sellerName : `${proj.proposalsCount || 0} Proposals`,
+        counterpartyName: sellerInfo
+          ? sellerInfo.sellerName
+          : `${proj.proposalsCount || 0} ${AGENCY_MODE ? 'Quotes' : 'Proposals'}`,
         counterpartyUsername: sellerInfo?.sellerUsername,
         counterpartyAvatar: sellerInfo ? sellerInfo.sellerAvatar : currentUser.avatar || DEFAULT_AVATAR,
-        dateLabel: primaryOrder ? 'Awarded:' : 'Posted:',
+        dateLabel: primaryOrder
+          ? (AGENCY_MODE ? 'Confirmed:' : 'Awarded:')
+          : (AGENCY_MODE ? 'Requested:' : 'Posted:'),
         dateValue: formatActivityDate(proj.createdAt),
         amountLabel,
         amountValue,
@@ -404,11 +414,11 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
       }
 
       if (fin.releasedGross > 0 && (st === 'completed' || fin.escrowStatus === 'released' || fin.inEscrow <= 0)) {
-        return { label: 'PAID / RELEASED', amount: fin.releasedGross };
+        return { label: AGENCY_MODE ? 'PAID' : 'PAID / RELEASED', amount: fin.releasedGross };
       }
 
       if (fin.inEscrow > 0) {
-        return { label: 'ESCROW', amount: fin.inEscrow };
+        return { label: AGENCY_MODE ? 'CONFIRMED' : 'ESCROW', amount: fin.inEscrow };
       }
 
       return { label: 'AWAITING PAYMENT', amount: 0 };
@@ -416,7 +426,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
     [resolveOrderFinancial]
   );
 
-  // Sidebar Statistics matching PeoplePerHour Buyer Activity Sidebar from user image exactly
+  // Sidebar Statistics for Client Activity Summary
   const summary = useMemo(() => {
     const projectsIPosted = myProjects.length;
     const projectsIAwarded = myWorkstreams.filter(o => o.projectId && myProjectIds.has(o.projectId)).length;
@@ -477,9 +487,9 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
   }, [myGigOrders, financialSnapshot?.paidToDate, resolveOrderFinancial]);
 
   const projectSubTabs: { id: ProjectSubTab; label: string }[] = [
-    { id: 'all', label: 'All projects' },
-    { id: 'open', label: 'Open for Proposals' },
-    { id: 'in_progress', label: 'Work in progress' },
+    { id: 'all', label: AGENCY_MODE ? 'All requests' : 'All projects' },
+    { id: 'open', label: AGENCY_MODE ? 'Awaiting Quote' : 'Open for Proposals' },
+    { id: 'in_progress', label: AGENCY_MODE ? 'In progress' : 'Work in progress' },
     { id: 'completed', label: 'Completed' },
     { id: 'pending', label: 'Pending' },
     { id: 'declined', label: 'Declined' },
@@ -541,10 +551,12 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight">
-                My Buyer Activity
+                {AGENCY_MODE ? 'My Orders & Requests' : 'My Buyer Activity'}
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                Manage your posted projects, ordered gigs, proposals, and ongoing escrow workstreams.
+                {AGENCY_MODE
+                  ? `Manage your service orders, custom requests, quotes, and deliverables with ${SITE_CONFIG.brandName}.`
+                  : 'Manage your posted projects, ordered gigs, proposals, and ongoing escrow workstreams.'}
               </p>
             </div>
 
@@ -554,7 +566,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>POST PROJECT</span>
+                <span>{AGENCY_MODE ? 'REQUEST CUSTOM QUOTE' : 'POST PROJECT'}</span>
               </button>
             ) : (
               <button
@@ -562,12 +574,12 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Order New Gig</span>
+                <span>{AGENCY_MODE ? 'Order New Service' : 'Order New Gig'}</span>
               </button>
             )}
           </div>
 
-          {/* Primary Connected Tabs: PROJECTS | GIGS */}
+          {/* Primary Connected Tabs */}
           <div className="grid grid-cols-2 mb-6 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80">
             <button
               type="button"
@@ -578,7 +590,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              PROJECTS
+              {AGENCY_MODE ? 'CUSTOM REQUESTS' : 'PROJECTS'}
             </button>
             <button
               type="button"
@@ -589,11 +601,11 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              GIGS ORDERED
+              {AGENCY_MODE ? 'SERVICE ORDERS' : 'GIGS ORDERED'}
             </button>
           </div>
 
-          {/* Sub-filter Navigation Bar (PeoplePerHour Style) */}
+          {/* Sub-filter Navigation Bar */}
           {activeSection === 'projects' ? (
             <div className="border-b border-slate-200 px-1 flex flex-wrap items-center gap-5 mb-2">
               {projectSubTabs.map(tab => {
@@ -641,10 +653,12 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
             filteredProjectItems.length === 0 ? (
               <div className="text-center py-16 text-slate-500 text-sm space-y-1.5 bg-white font-sans">
                 <p className="font-bold text-slate-900 text-base">
-                  No projects found under &ldquo;{projectSubTabs.find(t => t.id === projectSubTab)?.label || 'All'}&rdquo;.
+                  No {AGENCY_MODE ? 'custom requests' : 'projects'} found under &ldquo;{projectSubTabs.find(t => t.id === projectSubTab)?.label || 'All'}&rdquo;.
                 </p>
                 <p className="text-slate-500 text-sm">
-                  Projects you have posted will appear here with proposal counts and management controls.
+                  {AGENCY_MODE
+                    ? 'Custom requests you submit will appear here with quote updates and progress tracking.'
+                    : 'Projects you have posted will appear here with proposal counts and management controls.'}
                 </p>
               </div>
             ) : (
@@ -659,7 +673,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                       key={item.id}
                       className="py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors"
                     >
-                      {/* Left Side: Project Title + Metadata Row (PeoplePerHour Layout) */}
+                      {/* Left Side: Title + Metadata Row */}
                       <div className="space-y-2 flex-1 min-w-0">
                         <button
                           type="button"
@@ -671,10 +685,14 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-slate-500">
                           <span className={`font-semibold ${isCompleted ? 'text-emerald-600' : isInProgress ? 'text-blue-600' : 'text-slate-600'}`}>
-                            {isCompleted ? 'Completed' : isInProgress ? 'Awarded' : 'Open for Proposals'}
+                            {isCompleted
+                              ? 'Completed'
+                              : isInProgress
+                                ? (AGENCY_MODE ? 'Confirmed' : 'Awarded')
+                                : (AGENCY_MODE ? 'Awaiting Quote' : 'Open for Proposals')}
                           </span>
                           <span>
-                            Posted: <strong className="font-semibold text-slate-700">{item.dateValue}</strong>
+                            {AGENCY_MODE ? 'Requested:' : 'Posted:'} <strong className="font-semibold text-slate-700">{item.dateValue}</strong>
                           </span>
                           <span>
                             {item.amountLabel} <strong className="font-bold text-slate-900">{formatCurrency(item.amountValue)}</strong>
@@ -683,14 +701,14 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                         </div>
                       </div>
 
-                      {/* Right Side: Proposals Count / Action Button (PeoplePerHour Style) */}
+                      {/* Right Side: Count / Action Button */}
                       <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto shrink-0 sm:min-w-[170px] gap-2.5">
                         <div className="text-left sm:text-right leading-none">
                           <span className="block text-xl font-bold text-slate-900 tracking-tight">
                             {item.proposalsCount}
                           </span>
                           <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
-                            PROPOSALS ACCEPTED
+                            {AGENCY_MODE ? 'QUOTES RECEIVED' : 'PROPOSALS ACCEPTED'}
                           </span>
                         </div>
 
@@ -708,7 +726,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                             onClick={() => navigate(`/projects/${item.id}`)}
                             className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer whitespace-nowrap"
                           >
-                            POST SIMILAR
+                            {AGENCY_MODE ? 'VIEW REQUEST' : 'POST SIMILAR'}
                           </button>
                         )}
                       </div>
@@ -720,10 +738,12 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
           ) : filteredGigOrders.length === 0 ? (
             <div className="text-center py-16 text-slate-500 text-sm space-y-1.5 bg-white font-sans">
               <p className="font-bold text-slate-900 text-base">
-                No gigs found under &ldquo;{gigSubTabs.find(t => t.id === gigSubTab)?.label || 'All'}&rdquo;.
+                No {AGENCY_MODE ? 'service orders' : 'gigs'} found under &ldquo;{gigSubTabs.find(t => t.id === gigSubTab)?.label || 'All'}&rdquo;.
               </p>
               <p className="text-slate-500 text-sm">
-                Order a gig from the marketplace or switch filters above to view your active gig orders.
+                {AGENCY_MODE
+                  ? `Order a service from ${SITE_CONFIG.brandName} or switch filters above to view your active orders.`
+                  : 'Order a gig from the marketplace or switch filters above to view your active gig orders.'}
               </p>
             </div>
           ) : (
@@ -773,20 +793,34 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                         </div>
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-500 mt-2">
-                          <div
-                            onClick={() => navigate(`/${sellerUsername}`)}
-                            className="inline-flex items-center gap-2 text-slate-800 hover:text-emerald-600 font-semibold cursor-pointer"
-                          >
-                            <img
-                              src={sellerAvatar}
-                              alt={sellerName}
-                              className="w-5 h-5 rounded-full object-cover border border-slate-200 shrink-0"
-                              onError={e => {
-                                (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
-                              }}
-                            />
-                            <span>{sellerName}</span>
-                          </div>
+                          {AGENCY_MODE ? (
+                            <div className="inline-flex items-center gap-2 text-slate-800 font-semibold">
+                              <img
+                                src={sellerAvatar}
+                                alt={SITE_CONFIG.brandName}
+                                className="w-5 h-5 rounded-full object-cover border border-slate-200 shrink-0"
+                                onError={e => {
+                                  (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
+                                }}
+                              />
+                              <span>{SITE_CONFIG.brandName}</span>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => navigate(`/${sellerUsername}`)}
+                              className="inline-flex items-center gap-2 text-slate-800 hover:text-emerald-600 font-semibold cursor-pointer"
+                            >
+                              <img
+                                src={sellerAvatar}
+                                alt={sellerName}
+                                className="w-5 h-5 rounded-full object-cover border border-slate-200 shrink-0"
+                                onError={e => {
+                                  (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
+                                }}
+                              />
+                              <span>{sellerName}</span>
+                            </div>
+                          )}
 
                           <span>
                             Ordered:{' '}
@@ -863,7 +897,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                                 e.stopPropagation();
                                 setActiveDropdownId(prev => (prev === ord.id ? null : ord.id));
                               }}
-                              aria-label="Gig order actions"
+                              aria-label={AGENCY_MODE ? 'Order actions' : 'Gig order actions'}
                               className={`px-2.5 py-2 border-l flex items-center justify-center transition-colors cursor-pointer ${
                                 isDropdownOpen
                                   ? 'bg-emerald-600 text-white border-emerald-600'
@@ -895,19 +929,21 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
                                   }}
                                   className="w-full text-left px-4 py-2 hover:bg-slate-50 hover:text-emerald-600 text-slate-700 font-semibold transition-colors cursor-pointer block"
                                 >
-                                  View Gig Listing
+                                  {AGENCY_MODE ? 'View Service Details' : 'View Gig Listing'}
                                 </button>
                               )}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveDropdownId(null);
-                                  navigate(`/${sellerUsername}`);
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-slate-50 hover:text-emerald-600 text-slate-700 font-semibold transition-colors cursor-pointer block"
-                              >
-                                Freelancer Profile
-                              </button>
+                              {!AGENCY_MODE && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    navigate(`/${sellerUsername}`);
+                                  }}
+                                  className="w-full text-left px-4 py-2 hover:bg-slate-50 hover:text-emerald-600 text-slate-700 font-semibold transition-colors cursor-pointer block"
+                                >
+                                  Freelancer Profile
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -924,7 +960,7 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
           )}
         </div>
 
-        {/* Right Column: MY ACTIVITY SUMMARY (Matching PeoplePerHour image layout exactly) */}
+        {/* Right Column: MY ACTIVITY SUMMARY */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4 font-sans">
             <div className="flex items-center gap-2.5 pb-3.5 border-b border-slate-100">
@@ -937,23 +973,23 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
             {activeSection === 'projects' ? (
               <div className="space-y-3.5 text-sm">
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Projects I posted</span>
+                  <span>{AGENCY_MODE ? 'Requests submitted' : 'Projects I posted'}</span>
                   <span className="font-bold text-slate-900">{summary.projectsIPosted}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Projects I awarded</span>
+                  <span>{AGENCY_MODE ? 'Confirmed orders' : 'Projects I awarded'}</span>
                   <span className="font-bold text-slate-900">{summary.projectsIAwarded}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Projects in progress</span>
+                  <span>{AGENCY_MODE ? 'Orders in progress' : 'Projects in progress'}</span>
                   <span className="font-bold text-slate-900">{summary.projectsInProgress}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Pending Proposals</span>
+                  <span>{AGENCY_MODE ? 'Pending Quotes' : 'Pending Proposals'}</span>
                   <span className="font-bold text-slate-900">{summary.pendingProposals}</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700">Paid Out</span>
+                  <span className="font-semibold text-slate-700">{AGENCY_MODE ? 'Total Paid' : 'Paid Out'}</span>
                   <span className="font-bold text-emerald-600 text-base">
                     {formatCurrency(summary.paidOut)}
                   </span>
@@ -962,19 +998,19 @@ export const BuyerActivityView: React.FC<BuyerActivityViewProps> = ({
             ) : (
               <div className="space-y-3.5 text-sm">
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Gigs I ordered</span>
+                  <span>{AGENCY_MODE ? 'Services ordered' : 'Gigs I ordered'}</span>
                   <span className="font-bold text-slate-900">{gigSummary.orderedCount}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Active Gig Orders</span>
+                  <span>{AGENCY_MODE ? 'Active Service Orders' : 'Active Gig Orders'}</span>
                   <span className="font-bold text-slate-900">{gigSummary.activeCount}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Completed Gig Orders</span>
+                  <span>{AGENCY_MODE ? 'Completed Service Orders' : 'Completed Gig Orders'}</span>
                   <span className="font-bold text-slate-900">{gigSummary.completedCount}</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700">Total Escrow / Spent</span>
+                  <span className="font-semibold text-slate-700">{AGENCY_MODE ? 'Total Spent' : 'Total Escrow / Spent'}</span>
                   <span className="font-bold text-emerald-600 text-base">
                     {formatCurrency(gigSummary.totalSpent)}
                   </span>

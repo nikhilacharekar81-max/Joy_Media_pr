@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { IS_PRODUCTION as INIT_IS_PRODUCTION, resolveIsProduction } from '../../initEnv.js';
+import { SITE_CONFIG } from '../../../src/siteConfig.js';
 
 export interface GatewayConfig {
   enabled: boolean;
@@ -1281,7 +1282,7 @@ export class PaymentGatewayManager {
             'client_reference_id': params.checkoutId,
             'line_items[0][price_data][currency]': 'usd',
             'line_items[0][price_data][unit_amount]': String(Math.round(params.amount * 100)),
-            'line_items[0][price_data][product_data][name]': params.description || `FivePA ${params.purpose || 'Deposit'}`,
+            'line_items[0][price_data][product_data][name]': params.description || `${SITE_CONFIG.brandName} ${params.purpose === 'deposit' ? 'Account Credit' : 'Service Order'}`,
             'line_items[0][quantity]': '1',
             'metadata[userId]': params.userId,
             'metadata[checkoutId]': params.checkoutId
@@ -1312,7 +1313,7 @@ export class PaymentGatewayManager {
           throw new Error(`PayPal OAuth handshake failed (HTTP ${tokenRes.status}). Check PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET.`);
         }
         const tokenData: any = await tokenRes.json();
-        const itemDescription = (params.description || `FivePA ${params.purpose === 'deposit' ? 'Wallet Deposit' : 'Marketplace Order Payment'}`).slice(0, 120);
+        const itemDescription = (params.description || `${SITE_CONFIG.brandName} ${params.purpose === 'deposit' ? 'Account Credit' : 'Service Order Payment'}`).slice(0, 120);
         const orderRes = await fetch(`${paypalHost}/v2/checkout/orders`, {
           method: 'POST',
           headers: {
@@ -1333,7 +1334,7 @@ export class PaymentGatewayManager {
               }
             }],
             application_context: {
-              brand_name: 'FivePA',
+              brand_name: SITE_CONFIG.brandName,
               shipping_preference: 'NO_SHIPPING',
               user_action: 'PAY_NOW',
               return_url: `${baseAppUrl}/checkout/success?session_id=${encodeURIComponent(params.checkoutId)}`,

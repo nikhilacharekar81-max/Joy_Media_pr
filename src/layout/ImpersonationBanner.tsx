@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldAlert } from 'lucide-react';
 import type { UserAccount } from '../types';
 import { getAccountIdentityLabel } from '../types';
+import { SITE_CONFIG } from '../siteConfig';
 
 interface ImpersonationBannerProps {
   impersonatedUser: UserAccount | null;
@@ -15,7 +16,7 @@ export function ImpersonationBanner({ impersonatedUser, onStop }: ImpersonationB
     <div className="bg-indigo-600 text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold shadow-md sticky top-0 z-50">
       <div className="flex items-center gap-2">
         <ShieldAlert className="w-4 h-4 text-amber-300 animate-pulse" />
-        <span>SUPER ADMIN IMPERSONATION ACTIVE: You are viewing WorkPerHour as {impersonatedUser.name}{getAccountIdentityLabel(impersonatedUser.role) ? ` (${getAccountIdentityLabel(impersonatedUser.role)})` : ''}</span>
+        <span>SUPER ADMIN IMPERSONATION ACTIVE: You are viewing {SITE_CONFIG.brandName} as {impersonatedUser.name}{getAccountIdentityLabel(impersonatedUser.role) ? ` (${getAccountIdentityLabel(impersonatedUser.role)})` : ''}</span>
       </div>
       <button 
         onClick={onStop}

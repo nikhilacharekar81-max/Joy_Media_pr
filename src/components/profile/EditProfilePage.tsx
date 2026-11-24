@@ -49,7 +49,7 @@ export const EditProfilePage: React.FC<EditProfilePageProps> = ({
     id: 'user_1',
     name: 'Nikhil A',
     username: 'nikhil.a',
-    email: 'nikhil@workperhour.com',
+    email: 'hello@joymediapr.com',
     role: 'user',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop',
     title: 'SEO Expert & High DA Authority Guest Post Publisher',

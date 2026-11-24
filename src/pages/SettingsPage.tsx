@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserAccount } from '../types';
 import { Check, X, Shield, Lock, CreditCard, Bell, Eye, Calendar, Download, Sparkles } from 'lucide-react';
 import { fetchWithRetry } from '../utils/fetchRetry';
+import { SITE_CONFIG } from '../siteConfig';
 
 interface SettingsPageProps {
   currentUser: UserAccount | null;
@@ -21,11 +22,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   
   // Form values state
   const [personalUrl, setPersonalUrl] = useState(() => {
-    if (currentUser?.username) return `workperhour.com/${currentUser.username}`;
-    if (currentUser?.name) return `workperhour.com/${currentUser.name.toLowerCase().replace(/\s+/g, '.')}`;
-    return 'workperhour.com/member';
+    if (currentUser?.username) return `${SITE_CONFIG.domain}/${currentUser.username}`;
+    if (currentUser?.name) return `${SITE_CONFIG.domain}/${currentUser.name.toLowerCase().replace(/\s+/g, '.')}`;
+    return `${SITE_CONFIG.domain}/member`;
   });
-  const [email, setEmail] = useState(currentUser?.email || 'user@workperhour.com');
+  const [email, setEmail] = useState(currentUser?.email || `client@${SITE_CONFIG.domain}`);
   const [password, setPassword] = useState('*******************');
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [securityQuestion, setSecurityQuestion] = useState("Mother's birthplace");
@@ -469,7 +470,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentUser || { email, personalUrl }));
                       const downloadAnchor = document.createElement('a');
                       downloadAnchor.setAttribute("href", dataStr);
-                      downloadAnchor.setAttribute("download", "workperhour_user_data.json");
+                      downloadAnchor.setAttribute("download", "joymediapr_user_data.json");
                       document.body.appendChild(downloadAnchor);
                       downloadAnchor.click();
                       downloadAnchor.remove();

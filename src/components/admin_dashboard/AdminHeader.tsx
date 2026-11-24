@@ -14,15 +14,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ adminTab, onRefreshDat
           <ShieldAlert className="w-5 h-5 text-emerald-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-fiverr-dark tracking-tight">Super Admin Control Center</h1>
-          <p className="text-xs text-fiverr-muted">Manage 21 core platform modules, escrow protection, users, and disputes.</p>
+          <h1 className="text-2xl font-bold text-agency-dark tracking-tight">Super Admin Control Center</h1>
+          <p className="text-xs text-agency-muted">Manage 21 core platform modules, escrow protection, users, and disputes.</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         <button
           onClick={onRefreshData}
-          className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-fiverr-dark font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-agency-dark font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
           <span>Sync Database</span>

@@ -89,13 +89,13 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-fiverr-dark">Create a New Service Gig</h1>
-        <p className="text-sm text-fiverr-muted">Publish your freelance service and leverage automated tools to optimize conversion.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-agency-dark">Create a New Service Gig</h1>
+        <p className="text-sm text-agency-muted">Publish your freelance service and leverage automated tools to optimize conversion.</p>
       </div>
 
       <form onSubmit={handlePublishGig} className="space-y-6">
         <div>
-          <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Gig Title</label>
+          <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Gig Title</label>
           <input 
             type="text" 
             placeholder="I will build a high-performance web app..."
@@ -107,7 +107,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Category</label>
+          <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Category</label>
           <select 
             value={newGigCat}
             onChange={(e) => setNewGigCat(e.target.value)}
@@ -126,10 +126,10 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
 
         {/* Gig Cover Image Upload & Gallery */}
         <div className="pt-2 border-t border-slate-100">
-          <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">
             Gig Cover Image
           </label>
-          <p className="text-xs text-fiverr-muted mb-4">
+          <p className="text-xs text-agency-muted mb-4">
             Upload your own custom image, paste a picture URL, or select from curated cover presets.
           </p>
 
@@ -228,7 +228,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider">Description</label>
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider">Description</label>
             <span className="text-xs text-slate-400">Detailed deliverables and milestones</span>
           </div>
           <textarea 
@@ -243,7 +243,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Base Price ($)</label>
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Base Price ($)</label>
             <input 
               type="number" 
               min={5}
@@ -256,7 +256,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Delivery Time (Days)</label>
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Delivery Time (Days)</label>
             <input 
               type="number" 
               value={newGigDays}
@@ -270,10 +270,10 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
         {/* Optional Gig Extras Section */}
         <div className="pt-4 border-t border-slate-100 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-1">
               Configure Optional Gig Extras (Add-ons)
             </label>
-            <p className="text-xs text-fiverr-muted">Allow buyers to add extra fast delivery, source files, or commercial licenses to their order.</p>
+            <p className="text-xs text-agency-muted">Allow buyers to add extra fast delivery, source files, or commercial licenses to their order.</p>
           </div>
 
           {/* Existing configured extras */}
@@ -283,7 +283,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
                 <div key={ext.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
                   <span className="font-semibold text-slate-800">{ext.title}</span>
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-fiverr-dark">+${ext.price}</span>
+                    <span className="font-bold text-agency-dark">+${ext.price}</span>
                     <button 
                       type="button"
                       onClick={() => handleRemoveGigExtra(ext.id)}
@@ -307,7 +307,7 @@ export const CreateGigView: React.FC<CreateGigViewProps> = ({
               className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none"
             />
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs font-bold text-fiverr-muted">$</span>
+              <span className="text-xs font-bold text-agency-muted">$</span>
               <input 
                 type="number" 
                 placeholder="50" 

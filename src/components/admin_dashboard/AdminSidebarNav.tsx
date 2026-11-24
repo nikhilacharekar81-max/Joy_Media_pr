@@ -49,7 +49,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({ adminTab, onSe
               key={item.id}
               onClick={() => onSelectTab(item.id)}
               className={`w-full text-left px-3.5 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-3 transition-colors cursor-pointer ${
-                isActive ? 'bg-emerald-600 text-white shadow-sm' : 'hover:bg-slate-50 text-fiverr-dark'
+                isActive ? 'bg-emerald-600 text-white shadow-sm' : 'hover:bg-slate-50 text-agency-dark'
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />

@@ -595,7 +595,7 @@ if (process.env.NODE_ENV !== 'test' && !server.listening) {
   });
   server.listen(Number(PORT), '0.0.0.0', () => {
     const actualPort = (server.address() as any)?.port || PORT;
-    console.log(`WorkPerHour server running on http://0.0.0.0:${actualPort}`);
+    console.log(`Joy Media PR server running on http://0.0.0.0:${actualPort}`);
   });
 
   hydrationPromise = (async () => {

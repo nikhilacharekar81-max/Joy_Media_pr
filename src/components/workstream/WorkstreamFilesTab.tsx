@@ -71,7 +71,7 @@ export const WorkstreamFilesTab: React.FC<WorkstreamFilesTabProps> = ({
     <div className="p-6 space-y-6 overflow-y-auto h-full bg-slate-50/30">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-fiverr-dark uppercase tracking-tight">
+          <h3 className="text-sm font-bold text-agency-dark uppercase tracking-tight">
             Shared Project Assets & Files
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -100,7 +100,7 @@ export const WorkstreamFilesTab: React.FC<WorkstreamFilesTabProps> = ({
             <FolderOpen className="w-10 h-10 opacity-30 text-slate-500" />
           </div>
           <div>
-            <p className="font-bold text-fiverr-dark text-sm">No files uploaded yet</p>
+            <p className="font-bold text-agency-dark text-sm">No files uploaded yet</p>
             <p className="text-slate-400 mt-1 max-w-sm">
               Any deliverables, briefs, and attachments shared in this workstream will automatically be organized here.
             </p>
@@ -119,7 +119,7 @@ export const WorkstreamFilesTab: React.FC<WorkstreamFilesTabProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <div className="font-bold text-xs text-fiverr-dark truncate group-hover:text-emerald-700 transition">
+                  <div className="font-bold text-xs text-agency-dark truncate group-hover:text-emerald-700 transition">
                     {file.name}
                   </div>
                   {file.orderId && (

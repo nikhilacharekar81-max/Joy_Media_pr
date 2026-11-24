@@ -11,6 +11,7 @@ import {
 import { WorkstreamMessage, WorkstreamOffer, WorkstreamItem, isInquiryWorkstream } from './types';
 import { UserAccount } from '../../types';
 import { DEFAULT_AVATAR } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 import {
   classifyActivityEvent,
   matchesActivityFilter,
@@ -96,17 +97,17 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
   const [extensionError, setExtensionError] = useState<string | null>(null);
 
   const KIND_CFG = {
-    proposal: { label: 'Proposal', icon: <FileSignature className="w-4 h-4" />, accept: 'Accept & Fund Escrow' },
-    invoice: { label: 'Invoice', icon: <Receipt className="w-4 h-4" />, accept: 'Pay Invoice & Release Escrow' },
-    deposit: { label: 'Deposit Request', icon: <Lock className="w-4 h-4" />, accept: 'Fund Escrow Deposit' }
+    proposal: { label: AGENCY_MODE ? 'Quote' : 'Proposal', icon: <FileSignature className="w-4 h-4" />, accept: AGENCY_MODE ? 'Accept & Pay' : 'Accept & Fund Escrow' },
+    invoice: { label: 'Invoice', icon: <Receipt className="w-4 h-4" />, accept: AGENCY_MODE ? 'Pay & Complete Order' : 'Pay Invoice & Release Escrow' },
+    deposit: { label: 'Deposit Request', icon: <Lock className="w-4 h-4" />, accept: AGENCY_MODE ? 'Pay Deposit' : 'Fund Escrow Deposit' }
   } as const;
 
   const STATUS_CFG: Record<string, { label: string; cls: string }> = {
-    pending: { label: 'Awaiting buyer response', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+    pending: { label: AGENCY_MODE ? 'Awaiting client response' : 'Awaiting buyer response', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
     accepted: { label: 'Accepted', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-    paid: { label: 'Paid & Released', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    paid: { label: AGENCY_MODE ? 'Paid' : 'Paid & Released', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
     declined: { label: 'Rejected', cls: 'bg-rose-50 text-rose-800 border-rose-200' },
-    cancelled: { label: 'Cancelled by seller', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+    cancelled: { label: AGENCY_MODE ? 'Cancelled by agency' : 'Cancelled by seller', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
     expired: { label: 'Expired', cls: 'bg-slate-100 text-slate-500 border-slate-200' }
   };
 
@@ -225,7 +226,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
     }
   };
 
-  /** Renders the polished Fiverr-Style Interactive Offer Card (PRP-xxxx, INV-xxxx, DEP-xxxx) matching attached reference */
+  /** Renders the polished Interactive Offer Card (PRP-xxxx, INV-xxxx, DEP-xxxx) */
   const renderOfferCard = (msg: WorkstreamMessage, _isMe: boolean, keyStr: string) => {
     const offer = offers.find(o => o.id === msg.metadata?.offerId);
     if (!offer) {
@@ -265,9 +266,13 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
       ? (isCustomOrderStreamLocal
           ? (iAmBuyer ? 'Custom Order Invoice Received' : 'Custom Order Invoice Sent')
           : (iAmBuyer ? 'Invoice Received' : 'Invoice Sent'))
-      : (isCustomOrderStreamLocal
-          ? (iAmBuyer ? 'Custom Order Proposal Received' : 'Custom Order Proposal Sent')
-          : (iAmBuyer ? 'Proposal Received' : 'Proposal Sent'));
+      : AGENCY_MODE
+        ? (isCustomOrderStreamLocal
+            ? (iAmBuyer ? 'Custom Quote Received' : 'Custom Quote Sent')
+            : (iAmBuyer ? 'Quote Received' : 'Quote Sent'))
+        : (isCustomOrderStreamLocal
+            ? (iAmBuyer ? 'Custom Order Proposal Received' : 'Custom Order Proposal Sent')
+            : (iAmBuyer ? 'Proposal Received' : 'Proposal Sent'));
 
     const iconTileCls = isInvoice
       ? 'bg-blue-50 text-blue-500'
@@ -282,14 +287,23 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
     // Sender row:
     const sellerObj = usersList.find(u => u.id === sellerId) || (sellerId === partnerUser?.id ? partnerUser : undefined);
     const senderObj = sellerObj || (msg.senderId ? usersList.find(u => u.id === msg.senderId) : undefined) || partnerUser;
-    const senderName = senderObj?.name || msg.senderName || 'Alex Carter';
-    const senderAvatar = senderObj?.avatar || msg.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop';
-    const senderRole = 'Seller';
+    const senderName = AGENCY_MODE ? SITE_CONFIG.brandName : (senderObj?.name || msg.senderName || 'Team Member');
+    const senderAvatar = senderObj?.avatar || msg.senderAvatar || DEFAULT_AVATAR;
+    const senderRole = AGENCY_MODE ? 'Agency' : 'Seller';
 
-    // One-line message text matching reference image:
+    // One-line message text:
     let messageText = '';
     if (offer.status === 'pending') {
-      if (isCustomOrderStreamLocal) {
+      if (AGENCY_MODE) {
+        const docLabel = isInvoice ? 'invoice' : 'quote';
+        if (iAmBuyer) {
+          messageText = `${SITE_CONFIG.brandName} has sent you ${isInvoice ? 'an' : 'a'} ${docLabel} for your ${isCustomOrderStreamLocal ? 'Custom Order' : 'Service Order'}.`;
+        } else if (iAmSeller) {
+          messageText = `Your ${docLabel} has been sent to the client and is awaiting their response.`;
+        } else {
+          messageText = `${SITE_CONFIG.brandName} has sent ${isInvoice ? 'an' : 'a'} ${docLabel}.`;
+        }
+      } else if (isCustomOrderStreamLocal) {
         if (isInvoice) {
           if (iAmBuyer) {
             messageText = `${senderName} has sent you a Custom Order Invoice for this Custom Order.`;
@@ -317,7 +331,11 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
         }
       }
     } else if (offer.status === 'accepted' || offer.status === 'paid') {
-      if (isCustomOrderStreamLocal) {
+      if (AGENCY_MODE) {
+        messageText = isInvoice
+          ? 'The invoice has been paid and the order is completed.'
+          : 'The quote has been accepted and your order is confirmed.';
+      } else if (isCustomOrderStreamLocal) {
         if (isInvoice) {
           messageText = `The Custom Order Invoice has been accepted, payment was released, and the Custom Order is Completed.`;
         } else {
@@ -327,20 +345,28 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
         messageText = `The ${isInvoice ? 'invoice' : 'proposal'} has been accepted and processed.`;
       }
     } else if (offer.status === 'declined') {
-      messageText = `The ${isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal')} was rejected by the buyer.`;
+      messageText = AGENCY_MODE
+        ? `The ${isInvoice ? 'invoice' : 'quote'} was declined by the client.`
+        : `The ${isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal')} was rejected by the buyer.`;
     } else if (offer.status === 'cancelled') {
-      messageText = `The ${isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal')} was cancelled by the seller.`;
+      messageText = AGENCY_MODE
+        ? `The ${isInvoice ? 'invoice' : 'quote'} was cancelled by ${SITE_CONFIG.brandName}.`
+        : `The ${isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal')} was cancelled by the seller.`;
     } else {
-      messageText = `The ${isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal')} has expired.`;
+      messageText = `The ${AGENCY_MODE ? (isInvoice ? 'invoice' : 'quote') : (isCustomOrderStreamLocal ? (isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal') : (isInvoice ? 'invoice' : 'proposal'))} has expired.`;
     }
 
     const amountLabel = isInvoice
       ? (isCustomOrderStreamLocal ? 'Custom Order Invoice Amount' : 'Invoice Amount')
-      : (isCustomOrderStreamLocal ? 'Custom Order Proposal Amount' : 'Proposal Amount');
+      : AGENCY_MODE
+        ? (isCustomOrderStreamLocal ? 'Custom Quote Amount' : 'Quote Amount')
+        : (isCustomOrderStreamLocal ? 'Custom Order Proposal Amount' : 'Proposal Amount');
     const formattedAmount = `${sym}${Number(offer.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const detailsLinkText = isInvoice
       ? (isCustomOrderStreamLocal ? 'View Custom Order Invoice details' : 'View invoice details')
-      : (isCustomOrderStreamLocal ? 'View Custom Order Proposal details' : 'View proposal details');
+      : AGENCY_MODE
+        ? 'View quote details'
+        : (isCustomOrderStreamLocal ? 'View Custom Order Proposal details' : 'View proposal details');
 
     return (
       <div key={keyStr} className="flex justify-center my-4">
@@ -422,7 +448,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
               <div className="mt-3 p-2.5 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center gap-2 text-xs text-indigo-950">
                 <Clock className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                 <span>
-                  <strong>Auto-release:</strong> {new Date(offer.autoReleaseAt || offer.responseDeadline!).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} (7-day review period)
+                  <strong>{AGENCY_MODE ? 'Auto-acceptance:' : 'Auto-release:'}</strong> {new Date(offer.autoReleaseAt || offer.responseDeadline!).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} (7-day review period)
                 </span>
               </div>
             )}
@@ -450,7 +476,9 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                 )}
                 {isInvoice && hasAdditional && (
                   <div className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
-                    Escrow available: {sym}{activeEscrow.toLocaleString()} • Additional debit: +{sym}{(offer.amount - activeEscrow).toLocaleString()}
+                    {AGENCY_MODE
+                      ? `Order balance: ${sym}${activeEscrow.toLocaleString()} • Additional payment: +${sym}${(offer.amount - activeEscrow).toLocaleString()}`
+                      : `Escrow available: ${sym}${activeEscrow.toLocaleString()} • Additional debit: +${sym}${(offer.amount - activeEscrow).toLocaleString()}`}
                   </div>
                 )}
                 {offerFiles.length > 0 && (
@@ -555,11 +583,21 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                     <span>
                       {isInvoice
                         ? `Confirm Payment: ${isCustomOrderStreamLocal ? 'Custom Order Invoice' : 'Invoice'} ${offer.number || ''} (${sym}${offer.amount.toLocaleString()})`
-                        : `Confirm Accept & Pay: ${isCustomOrderStreamLocal ? 'Custom Order Proposal' : 'Proposal'} (${sym}${offer.amount.toLocaleString()})`}
+                        : `Confirm Accept & Pay: ${AGENCY_MODE ? 'Quote' : (isCustomOrderStreamLocal ? 'Custom Order Proposal' : 'Proposal')} (${sym}${offer.amount.toLocaleString()})`}
                     </span>
                   </div>
                   <p className="text-xs text-emerald-900 leading-relaxed font-mono tabular-nums">
-                    {isInvoice ? (
+                    {AGENCY_MODE ? (
+                      isInvoice ? (
+                        hasAdditional ? (
+                          <>Applies <strong>{sym}{activeEscrow.toLocaleString()}</strong> toward your order and charges <strong>{sym}{Number(offer.clientAdditionalTotal ?? (offer.amount - activeEscrow)).toLocaleString()}</strong> to complete payment.</>
+                        ) : (
+                          <>Confirms payment of <strong>{sym}{offer.amount.toLocaleString()}</strong> to complete this {isCustomOrderStreamLocal ? 'Custom Order' : 'order'}.</>
+                        )
+                      ) : (
+                        <>Confirms payment of <strong>{sym}{offer.amount.toLocaleString()}</strong> (total: <strong>{sym}{Number(offer.clientTotal ?? offer.amount).toLocaleString()}</strong> incl. fees) to start your order.</>
+                      )
+                    ) : isInvoice ? (
                       hasAdditional ? (
                         <>Releases <strong>{sym}{activeEscrow.toLocaleString()}</strong> from Escrow and debits <strong>{sym}{Number(offer.clientAdditionalTotal ?? (offer.amount - activeEscrow)).toLocaleString()}</strong> from your wallet.</>
                       ) : (
@@ -602,11 +640,13 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                   >
                     {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4 text-slate-600" />}
                     <span>
-                      {isCustomOrderStreamLocal
-                        ? `Cancel ${isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal'}`
-                        : order?.orderType === 'project'
-                          ? (isInvoice ? 'Cancel / Withdraw' : 'Cancel Proposal')
-                          : `Cancel ${isInvoice ? 'Invoice' : 'Proposal'}`}
+                      {AGENCY_MODE
+                        ? `Cancel ${isInvoice ? 'Invoice' : 'Quote'}`
+                        : isCustomOrderStreamLocal
+                          ? `Cancel ${isInvoice ? 'Custom Order Invoice' : 'Custom Order Proposal'}`
+                          : order?.orderType === 'project'
+                            ? (isInvoice ? 'Cancel / Withdraw' : 'Cancel Proposal')
+                            : `Cancel ${isInvoice ? 'Invoice' : 'Proposal'}`}
                     </span>
                   </button>
                 </div>
@@ -640,7 +680,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
     );
   };
 
-  /** Renders the complete, polished Fiverr-style Visual Card for system and activity events */
+  /** Renders the complete, polished Visual Card for system and activity events */
   const renderVisualActivityCard = (msg: WorkstreamMessage, uniqueKey: string) => {
     const meta = msg.metadata || {};
     const info: ClassifiedEvent = classifyActivityEvent(msg);
@@ -661,9 +701,14 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
     const existingReply = meta.reply || orderReview?.reply;
 
     const senderObj = usersList.find(u => u.id === msg.senderId) || (msg.senderId === partnerUser?.id ? partnerUser : undefined);
-    const senderName = msg.senderName || senderObj?.name || (msg.type === 'system' ? 'WorkPerHour System' : 'Collaborator');
-    const senderAvatar = msg.senderAvatar || senderObj?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop';
-    const senderRole = msg.senderId === sellerId ? 'Seller' : (msg.senderId === buyerId ? 'Buyer' : 'System');
+    const senderName =
+      AGENCY_MODE && msg.senderId === sellerId
+        ? SITE_CONFIG.brandName
+        : (msg.senderName || senderObj?.name || (msg.type === 'system' ? `${SITE_CONFIG.brandName} System` : 'Team'));
+    const senderAvatar = msg.senderAvatar || senderObj?.avatar || DEFAULT_AVATAR;
+    const senderRole = msg.senderId === sellerId
+      ? (AGENCY_MODE ? 'Agency' : 'Seller')
+      : (msg.senderId === buyerId ? (AGENCY_MODE ? 'Client' : 'Buyer') : 'System');
 
     const iconTileCls =
       info.accentColor === 'blue' ? 'bg-blue-50 text-blue-500' :
@@ -749,7 +794,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                 <div className="flex items-center justify-between flex-wrap gap-2 text-[11px] font-semibold">
                   <div className="flex items-center gap-1.5">
                     <Briefcase className="w-3.5 h-3.5 text-teal-600" />
-                    <span>Project: {order?.title || meta.title || 'Marketplace Project'}</span>
+                    <span>{AGENCY_MODE ? 'Request:' : 'Project:'} {order?.title || meta.title || (AGENCY_MODE ? 'Service Request' : 'Marketplace Project')}</span>
                   </div>
                   {order?.amount && (
                     <span className="font-mono tabular-nums font-bold text-teal-800">
@@ -768,7 +813,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
               <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center justify-between text-xs text-emerald-950">
                 <div className="flex items-center gap-2">
                   <FileSignature className="w-4 h-4 text-emerald-600" />
-                  <span>Bid Amount: <strong className="font-mono tabular-nums">${Number(meta.amount).toLocaleString()} USD</strong></span>
+                  <span>{AGENCY_MODE ? 'Quote Amount:' : 'Bid Amount:'} <strong className="font-mono tabular-nums">${Number(meta.amount).toLocaleString()} USD</strong></span>
                 </div>
                 {meta.deliveryDays && (
                   <span className="text-slate-500 text-[11px]">Delivery: {meta.deliveryDays} days</span>
@@ -782,7 +827,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-semibold flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                    <span>WorkPerHour Escrow Protection Active</span>
+                    <span>{AGENCY_MODE ? `${SITE_CONFIG.brandName} Order Protection Active` : `${SITE_CONFIG.brandName} Escrow Protection Active`}</span>
                   </span>
                   {order?.dueDate && (
                     <span className="text-slate-500 font-mono tabular-nums">Due: {order.dueDate}</span>
@@ -845,7 +890,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                         className="flex-1 py-2 px-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Accept & Release Escrow</span>
+                        <span>{AGENCY_MODE ? 'Approve & Complete Order' : 'Accept & Release Escrow'}</span>
                       </button>
                     )}
                     {onOpenRevisionModal && (
@@ -919,7 +964,9 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
                       <MessageSquare className="w-3 h-3 text-emerald-600" />
-                      Freelancer Response ({existingReply.sellerName || 'Seller'}):
+                      {AGENCY_MODE
+                        ? `Agency Response (${SITE_CONFIG.brandName}):`
+                        : `Freelancer Response (${existingReply.sellerName || 'Seller'}):`}
                     </span>
                     <p className="text-xs text-slate-700">{existingReply.text}</p>
                   </div>
@@ -929,7 +976,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                 {canSellerReplyToReview && (
                   <div className="pt-2 border-t border-amber-200 space-y-2">
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-amber-900">
-                      Post Public Freelancer Response
+                      {AGENCY_MODE ? 'Post Public Agency Response' : 'Post Public Freelancer Response'}
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -966,7 +1013,11 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
             {info.category === 'escrow' && (
               <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center gap-2.5 text-xs text-emerald-950">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-medium">Protected by WorkPerHour 14-Day Escrow Guarantee. Funds remain secure until work is verified.</span>
+                <span className="font-medium">
+                  {AGENCY_MODE
+                    ? `Protected by ${SITE_CONFIG.brandName} Service Guarantee. Your order remains tracked until work is verified.`
+                    : `Protected by ${SITE_CONFIG.brandName} 14-Day Escrow Guarantee. Funds remain secure until work is verified.`}
+                </span>
               </div>
             )}
 
@@ -976,7 +1027,11 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                 <Award className="w-5 h-5 text-amber-600 shrink-0" />
                 <div>
                   <span className="font-bold block">Appreciation Bonus Credited</span>
-                  <span>Buyer awarded freelancer an additional bonus tip for high-quality delivery.</span>
+                  <span>
+                    {AGENCY_MODE
+                      ? `Client awarded ${SITE_CONFIG.brandName} an appreciation bonus for high-quality delivery.`
+                      : 'Buyer awarded freelancer an additional bonus tip for high-quality delivery.'}
+                  </span>
                 </div>
               </div>
             )}
@@ -999,7 +1054,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                       <span>Delivery Extension Requested</span>
                     </div>
                     <div className="space-y-2 text-amber-800">
-                      <p>Seller requested <strong>{meta.days || 'additional'} days</strong>.</p>
+                      <p>{AGENCY_MODE ? SITE_CONFIG.brandName : 'Seller'} requested <strong>{meta.days || 'additional'} days</strong>.</p>
                       {meta.reason && <p className="italic bg-white/60 p-2.5 rounded-lg border border-amber-100">&ldquo;{meta.reason}&rdquo;</p>}
                     </div>
 
@@ -1091,7 +1146,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
               <div className="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-100 flex items-center justify-between gap-3 text-xs text-indigo-950">
                 <div className="flex items-center gap-2">
                   <Video className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span>Workstream Live Video Conference Channel</span>
+                  <span>{AGENCY_MODE ? 'Order Live Video Meeting Channel' : 'Workstream Live Video Conference Channel'}</span>
                 </div>
                 {onStartVideoCall && (
                   <button
@@ -1134,15 +1189,15 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
   const filterButtons: Array<{ id: ActivityFilter; label: string; count: number }> = [
     { id: 'all', label: 'All Activity', count: counts.all },
     { id: 'deliveries', label: 'Deliverables & Revisions', count: counts.deliveries },
-    { id: 'proposals_orders', label: 'Proposals & Orders', count: counts.proposals_orders },
-    { id: 'financial', label: 'Invoices & Escrow', count: counts.financial },
+    { id: 'proposals_orders', label: AGENCY_MODE ? 'Quotes & Orders' : 'Proposals & Orders', count: counts.proposals_orders },
+    { id: 'financial', label: AGENCY_MODE ? 'Invoices & Payments' : 'Invoices & Escrow', count: counts.financial },
     { id: 'system_audit', label: 'System & Audit', count: counts.system_audit },
     { id: 'chat_only', label: 'Chat Only', count: counts.chat_only }
   ];
 
   return (
     <div className="flex flex-col bg-slate-50/50">
-      {/* FIVERR-STYLE ACTIVITY FILTER BAR */}
+      {/* ACTIVITY FILTER BAR */}
       <div className="px-4 py-2 bg-white border-b border-slate-200/90 flex items-center justify-between gap-2 overflow-x-auto shrink-0 scrollbar-none">
         <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl">
           {filterButtons.map((btn) => (
@@ -1321,7 +1376,7 @@ export const WorkstreamActivityStream: React.FC<WorkstreamActivityStreamProps> =
                           {msg.metadata?.offPlatformWarning && (
                             <div className="p-2.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200 font-semibold flex items-center gap-2 text-xs">
                               <ShieldAlert className="w-4 h-4 shrink-0 text-amber-600" />
-                              <span>Safety Warning: Keep payments & contact on WorkPerHour to stay protected.</span>
+                              <span>Safety Warning: Keep payments & communication on {SITE_CONFIG.brandName} to stay protected.</span>
                             </div>
                           )}
                           <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>

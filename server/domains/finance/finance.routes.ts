@@ -21,6 +21,7 @@ import { financialTransactionService, financialRepository, checkOrRecordIdempote
 import { diagnosticService } from '../../services/diagnosticService.js';
 import { financeLedger, FinanceLedgerEngine } from './financeLedger.js';
 import { paymentGatewayManager } from './paymentGateways.js';
+import { SITE_CONFIG } from '../../../src/siteConfig.js';
 
 import {
   requireAuth,
@@ -908,7 +909,7 @@ router.post('/payments/gateway/checkout', requireAuth, rateLimit(20, 60_000), as
         (parsedBreakdown?.clientTotal ?? liveQuote.clientTotal).toFixed(2)
       );
       if (!resolvedDescription && orderRow.title) {
-        resolvedDescription = `FivePA Order: ${String(orderRow.title).slice(0, 90)}`;
+        resolvedDescription = `${SITE_CONFIG.brandName} Order: ${String(orderRow.title).slice(0, 90)}`;
       }
 
       if (amount !== undefined && amount !== null && amount !== '') {
@@ -2229,7 +2230,11 @@ router.post('/payments/escrow/release', requireAuth, requireFinancialActiveStatu
         [order.id]
       );
       if (!isAdmin && activeDispRes.rows.length > 0) {
-        const err: any = new Error('Cannot release escrow: Order has an active unresolved dispute.');
+        const err: any = new Error(
+          SITE_CONFIG.AGENCY_MODE
+            ? 'Cannot complete order: Order has an active unresolved support review.'
+            : 'Cannot release escrow: Order has an active unresolved dispute.'
+        );
         err.statusCode = 400;
         throw err;
       }
@@ -2248,8 +2253,10 @@ router.post('/payments/escrow/release', requireAuth, requireFinancialActiveStatu
           id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           orderId: order.id,
           senderId: 'system',
-          senderName: 'WorkSphere Review Desk',
-          text: `📝 Revision resolved by buyer.`,
+          senderName: `${SITE_CONFIG.brandName} Review Desk`,
+          text: SITE_CONFIG.AGENCY_MODE
+            ? '📝 Revision marked resolved by client.'
+            : '📝 Revision resolved by buyer.',
           timestamp: new Date().toISOString(),
           type: 'system',
           metadata: { action: 'revision_resolved' }
@@ -2260,7 +2267,11 @@ router.post('/payments/escrow/release', requireAuth, requireFinancialActiveStatu
       const escRes = await client.query('SELECT * FROM escrows WHERE order_id = $1 FOR UPDATE', [order.id]);
       const esc = escRes.rows[0];
       if (!esc || Number(esc.remaining) <= 0 || esc.status === 'released' || esc.status === 'refunded') {
-        const err: any = new Error('No refundable or releasable escrow funds remain for this order.');
+        const err: any = new Error(
+          SITE_CONFIG.AGENCY_MODE
+            ? 'No refundable or open payment balance remains for this order.'
+            : 'No refundable or releasable escrow funds remain for this order.'
+        );
         err.statusCode = 400;
         throw err;
       }
@@ -2274,7 +2285,9 @@ router.post('/payments/escrow/release', requireAuth, requireFinancialActiveStatu
       const pendingHigherInvoice = pendingInvoices.find(o => Number(o.amount) > Number(esc.remaining));
       if (pendingHigherInvoice) {
         const err: any = new Error(
-          `Cannot release escrow directly: A final invoice (${pendingHigherInvoice.number} for $${pendingHigherInvoice.amount}) is awaiting payment. Please pay or decline the invoice in the workstream.`
+          SITE_CONFIG.AGENCY_MODE
+            ? `Cannot finalize order directly: A final invoice (${pendingHigherInvoice.number} for $${pendingHigherInvoice.amount}) is awaiting payment. Please pay or decline the invoice in the order workspace.`
+            : `Cannot release escrow directly: A final invoice (${pendingHigherInvoice.number} for $${pendingHigherInvoice.amount}) is awaiting payment. Please pay or decline the invoice in the workstream.`
         );
         err.statusCode = 400;
         throw err;
@@ -2563,7 +2576,7 @@ router.get('/payments/invoices/:userId', requireAuth, async (req: Request, res: 
         sellerNet,
         tax: 0,
         total: o.feeBreakdown?.clientTotal ?? quote.clientTotal,
-        notes: `WorkPerHour 14-Day Escrow Protection Order #${o.id}. 100% Protected.`,
+        notes: `${SITE_CONFIG.brandName} Order #${o.id} — Secure Payment Receipt.`,
         relatedOrderId: o.id
       };
     }));
@@ -2591,7 +2604,7 @@ router.get('/payments/invoices/:userId', requireAuth, async (req: Request, res: 
         platformFee: 0,
         tax: 0,
         total: Number(r.amount),
-        notes: r.notes || 'Standard WorkPerHour Invoice',
+        notes: r.notes || `Standard ${SITE_CONFIG.brandName} Invoice`,
         relatedOrderId: r.relatedOrderId || undefined
       }));
     } catch {}
@@ -2792,7 +2805,7 @@ router.post('/payments/invoices', requireAuth, async (req: Request, res: Respons
       platformFee,
       tax: 0,
       total,
-      notes: notes || 'Standard WorkPerHour Invoice',
+      notes: notes || `Standard ${SITE_CONFIG.brandName} Invoice`,
       relatedOrderId: resolvedOrderId || undefined
     };
 

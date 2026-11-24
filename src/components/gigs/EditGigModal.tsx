@@ -44,23 +44,23 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
         )}
 
         <div>
-          <label className="block text-fiverr-dark font-bold uppercase mb-1">Gig Title</label>
+          <label className="block text-agency-dark font-bold uppercase mb-1">Gig Title</label>
           <input 
             type="text" 
             name="title"
             defaultValue={editingGig.title}
             required
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase mb-1">Category</label>
+            <label className="block text-agency-dark font-bold uppercase mb-1">Category</label>
             <select 
               name="category"
               defaultValue={editingGig.category}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
             >
               {categories.map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
@@ -68,19 +68,19 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase mb-1">Subcategory</label>
+            <label className="block text-agency-dark font-bold uppercase mb-1">Subcategory</label>
             <input 
               type="text" 
               name="subcategory"
               defaultValue={editingGig.subcategory || ''}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase mb-1">
+            <label className="block text-agency-dark font-bold uppercase mb-1">
               Starting Price ($ USD, ${minPrice}–${maxPrice.toLocaleString()})
             </label>
             <input 
@@ -91,11 +91,11 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
               step="0.01"
               defaultValue={editingGig.price}
               required
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase mb-1">Delivery Time (Days)</label>
+            <label className="block text-agency-dark font-bold uppercase mb-1">Delivery Time (Days)</label>
             <input 
               type="number" 
               name="deliveryDays"
@@ -104,24 +104,24 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
               step="1"
               defaultValue={editingGig.deliveryDays}
               required
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-fiverr-dark font-bold uppercase mb-1">Description</label>
+          <label className="block text-agency-dark font-bold uppercase mb-1">Description</label>
           <textarea 
             rows={4}
             name="description"
             defaultValue={editingGig.description}
             required
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:bg-white focus:border-emerald-500"
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:bg-white focus:border-emerald-500"
           />
         </div>
 
         <div className="pt-2">
-          <label className="flex items-center gap-2 cursor-pointer font-bold text-fiverr-dark">
+          <label className="flex items-center gap-2 cursor-pointer font-bold text-agency-dark">
             <input 
               type="checkbox" 
               name="featured"
@@ -147,7 +147,7 @@ export const EditGigModal: React.FC<EditGigModalProps> = ({
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 text-fiverr-dark font-bold rounded-xl hover:bg-slate-200 text-xs cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-slate-100 text-agency-dark font-bold rounded-xl hover:bg-slate-200 text-xs cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>

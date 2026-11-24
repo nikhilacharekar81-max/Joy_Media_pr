@@ -26,6 +26,7 @@ import {
 import type { Gig, Project, Review } from '../../types';
 import { Avatar, GigImage } from '../ui';
 import { RATINGS_ENABLED } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 import HERO_SHOWCASE_IMG from '../../assets/images/hero_editorial_pr_showcase_1794840970197.webp';
 import WHY_CHOOSE_US_IMG from '../../assets/images/why_choose_agency_studio_1794840972210.webp';
 import WEB_DEV_SHOWCASE_IMG from '../../assets/images/web_dev_shopify_showcase_1794840973193.webp';
@@ -288,22 +289,22 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
     {
       question: 'What services does your agency offer?',
       answer:
-        'Fivepa operates as a digital PR agency and specialized service marketplace. Our primary focus is connecting businesses with curated guest posting, press release distribution, and digital PR placements on established media websites. Alongside media services, we provide custom website development, Shopify store setup, ready-made website scripts, and digital products.'
+        `${SITE_CONFIG.brandName} is an independent digital PR, media placement, and growth agency. Our primary focus is delivering curated guest posting, press release distribution, and digital PR placements on established media websites. Alongside media services, we provide UGC AI videos, custom website development, Shopify store setup, ready-made website scripts, and digital products.`
     },
     {
       question: 'How can I explore guest posting opportunities?',
       answer:
-        'You can browse live guest posting and SEO link-building listings directly in our Featured Media Placements section or navigate to the Guest Posting category. Each listing displays the provider details, delivery timeframe, included scope, and transparent fixed pricing before you order.'
+        'You can browse live guest posting and SEO link-building listings directly in our Featured Media Placements section or navigate to the Guest Posting category. Each listing displays the delivery timeframe, included scope, and transparent fixed pricing before you order.'
     },
     {
       question: 'How do press release services work?',
       answer:
-        'Select a press release or digital PR service listing that matches your campaign goals, or submit a custom project brief. Once your order is funded in escrow, you can share your announcement draft, brand guidelines, and target URLs directly inside a private order Workstream.'
+        'Select a press release or digital PR service listing that matches your campaign goals, or submit a custom project brief. Once your order is confirmed, you can share your announcement draft, brand guidelines, and target URLs directly inside a private order workspace.'
     },
     {
       question: 'Can I order a custom website?',
       answer:
-        'Yes. You can either purchase a fixed-price web development package from our verified engineering specialists or click "Get a Custom Quote" to post a custom project specification with your exact tech stack, timeline, and budget range.'
+        'Yes. You can either purchase a fixed-price web development package from our engineering team or click "Get a Custom Quote" to submit a custom project specification with your exact tech stack, timeline, and budget range.'
     },
     {
       question: 'Do you offer Shopify store development?',
@@ -313,7 +314,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
     {
       question: 'How do I purchase a media placement?',
       answer:
-        'Click "View Placement" on any service listing to review the complete deliverable breakdown and optional add-ons. When you click to order, your payment is held securely in USD escrow and only released after the work is delivered and accepted.'
+        'Click "View Placement" on any service listing to review the complete deliverable breakdown and optional add-ons. Complete secure online checkout and track every update, invoice, and deliverable directly inside your private order workspace.'
     },
     {
       question: 'Can I request a custom service?',
@@ -347,7 +348,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                 <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 tracking-wide">
                   <span>Digital PR &amp; Media Placement Agency</span>
                   <span aria-hidden="true" className="text-slate-300">·</span>
-                  <span className="text-orange-600 font-semibold">Escrow-Protected Marketplace</span>
+                  <span className="text-orange-600 font-semibold">Direct Agency Fulfillment</span>
                 </div>
 
                 <h1
@@ -482,13 +483,13 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                   <div className="bg-slate-50/90 border border-slate-200/80 rounded-xl p-4 space-y-2.5">
                     <div className="flex items-center justify-between text-xs text-slate-500">
                       <span className="font-medium text-slate-600">Editorial Placement Workflow</span>
-                      <span className="font-mono font-semibold text-emerald-700">Escrow Protected</span>
+                      <span className="font-mono font-semibold text-emerald-700">Secure Payment</span>
                     </div>
                     <div className="text-sm font-bold text-slate-900 leading-snug">
                       Direct Media Outreach, Press Distribution &amp; Full-Stack Digital Execution
                     </div>
                     <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
-                      <span>Verified Marketplace Listings</span>
+                      <span>Curated Agency Services</span>
                       <span aria-hidden="true" className="text-slate-300">·</span>
                       <span>Real-Time Order Workstream</span>
                     </div>
@@ -562,7 +563,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
               <div>
                 <h2 className="text-sm font-bold text-slate-900">Easy Ordering Process</h2>
                 <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                  Escrow-protected checkout with real-time order workspace tracking.
+                  Secure online checkout with real-time order workspace tracking.
                 </p>
               </div>
             </div>
@@ -589,7 +590,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div className="max-w-2xl">
             <div className="text-xs font-semibold text-emerald-700 mb-2">
-              Agency Capabilities &amp; Marketplace Catalog
+              Agency Capabilities &amp; Service Catalog
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
               Everything You Need to Grow Your Digital Presence
@@ -715,7 +716,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
             <div>
               <div className="text-xs font-semibold text-emerald-700 mb-2">
-                Live Marketplace Inventory
+                Available Agency Services
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
                 Explore Media Opportunities
@@ -783,7 +784,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
           {featuredPlacements.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-12 text-center max-w-lg mx-auto space-y-4">
               <Newspaper className="w-8 h-8 text-slate-400 mx-auto" />
-              <h3 className="text-base font-bold text-slate-900">Loading Marketplace Placements</h3>
+              <h3 className="text-base font-bold text-slate-900">Loading Media Placements</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Explore our full catalog of media placements, guest posting opportunities, and digital services.
               </p>
@@ -838,18 +839,27 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                           <span>{serviceType}</span>
                           <span aria-hidden="true" className="text-slate-300">·</span>
                           <div className="inline-flex items-center gap-1.5">
-                            <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
-                            <a
-                              href={sellerUrl}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(sellerUrl, e);
-                              }}
-                              className="font-bold text-slate-800 hover:underline"
-                            >
-                              {gig.freelancerName}
-                            </a>
-                            <span className="text-slate-400">({gig.freelancerLevel || 'Verified Specialist'})</span>
+                            {AGENCY_MODE ? (
+                              <>
+                                <span className="font-bold text-slate-800">{SITE_CONFIG.brandName}</span>
+                                <span className="text-slate-400">(Agency Team)</span>
+                              </>
+                            ) : (
+                              <>
+                                <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
+                                <a
+                                  href={sellerUrl}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(sellerUrl, e);
+                                  }}
+                                  className="font-bold text-slate-800 hover:underline"
+                                >
+                                  {gig.freelancerName}
+                                </a>
+                                <span className="text-slate-400">({gig.freelancerLevel || 'Verified Specialist'})</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -995,22 +1005,35 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                     {/* Card Footer: Provider, Real Database Price & CTA */}
                     <div className="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
-                        <div className="min-w-0">
-                          <a
-                            href={sellerUrl}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(sellerUrl, e);
-                            }}
-                            className="text-xs font-bold text-slate-900 hover:underline block truncate"
-                          >
-                            {gig.freelancerName}
-                          </a>
-                          <span className="text-xs text-slate-500 block truncate">
-                            {gig.freelancerLevel || 'Verified Specialist'}
-                          </span>
-                        </div>
+                        {AGENCY_MODE ? (
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold text-slate-900 block truncate">
+                              {SITE_CONFIG.brandName}
+                            </span>
+                            <span className="text-xs text-slate-500 block truncate">
+                              Agency Team
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <Avatar src={gig.freelancerAvatar} name={gig.freelancerName} size="xs" />
+                            <div className="min-w-0">
+                              <a
+                                href={sellerUrl}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(sellerUrl, e);
+                                }}
+                                className="text-xs font-bold text-slate-900 hover:underline block truncate"
+                              >
+                                {gig.freelancerName}
+                              </a>
+                              <span className="text-xs text-slate-500 block truncate">
+                                {gig.freelancerLevel || 'Verified Specialist'}
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
@@ -1035,7 +1058,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
           {/* Section Bottom CTA */}
           <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs sm:text-sm text-slate-600">
-              Showing live listings from the marketplace database. Every order is backed by 100% USD escrow protection.
+              Showing live services from our catalog. Every order includes secure online payment and direct team support.
             </p>
             <a
               href="/gigs"
@@ -1058,13 +1081,13 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
           <div className="lg:col-span-6 flex flex-col justify-between space-y-8">
             <div className="space-y-4">
               <div className="text-xs font-semibold text-emerald-700">
-                Why Choose Fivepa
+                Why Choose {SITE_CONFIG.brandName}
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
                 Your Digital Growth Partner
               </h2>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                We combine the strategic focus of an international digital PR agency with the speed, pricing transparency, and escrow security of a structured online marketplace.
+                We combine the strategic focus of an international digital PR agency with transparent upfront pricing, secure online checkout, and dedicated delivery management.
               </p>
             </div>
 
@@ -1073,7 +1096,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                 {
                   num: '01.',
                   title: 'Multiple Digital Services Under One Roof',
-                  desc: 'Coordinate guest posts, press release distribution, custom web applications, and Shopify builds without juggling disconnected vendors.'
+                  desc: 'Coordinate guest posts, press release distribution, custom web applications, and Shopify builds with one accountable agency team.'
                 },
                 {
                   num: '02.',
@@ -1133,7 +1156,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
               {!studioImgFailed ? (
                 <img
                   src={WHY_CHOOSE_US_IMG}
-                  alt="Fivepa digital agency strategy and editorial team workspace"
+                  alt={`${SITE_CONFIG.brandName} digital agency strategy and editorial team workspace`}
                   referrerPolicy="no-referrer"
                   loading="lazy"
                   decoding="async"
@@ -1153,12 +1176,12 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                   Built for Global Brands, Startups &amp; SEO Agencies
                 </div>
                 <blockquote className="text-lg sm:text-xl font-serif italic text-slate-100 leading-snug">
-                  “Structured editorial placements, transparent deliverables, and milestone-protected execution inside a single collaborative workspace.”
+                  “Structured editorial placements, transparent deliverables, and milestone-tracked execution inside a single collaborative workspace.”
                 </blockquote>
                 <div className="pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-300">
-                  <span>100% USD Escrow Protection</span>
+                  <span>Secure Online Payments</span>
                   <span aria-hidden="true">·</span>
-                  <span>Direct Specialist Collaboration</span>
+                  <span>Direct Team Collaboration</span>
                   <span aria-hidden="true">·</span>
                   <span>Verified Deliverables</span>
                 </div>
@@ -1214,7 +1237,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                 step: '03',
                 title: 'Place Your Order',
                 description:
-                  'Complete the escrow-protected ordering process and communicate directly through the platform’s real-time Workstream workflow.',
+                  'Complete secure online checkout and collaborate directly with our team inside your real-time order workspace.',
                 actionLabel: 'Open Workstreams',
                 actionPath: '/workstream'
               }
@@ -1363,7 +1386,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                   </div>
                   <span className="font-mono text-xs text-slate-600 truncate">
-                    fivepa.agency / engineering-and-shopify
+                    {SITE_CONFIG.domain} / engineering-and-shopify
                   </span>
                   <span className="text-xs text-emerald-700 font-mono font-semibold">Production Ready</span>
                 </div>
@@ -1404,7 +1427,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
               Resources for Builders, Marketers &amp; Entrepreneurs
             </h2>
             <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-2xl">
-              Explore ready-made digital solutions, design systems, AI workflows, and technical implementations available in the marketplace.
+              Explore ready-made digital solutions, design systems, AI workflows, and technical implementations built by our team.
             </p>
           </div>
           <a
@@ -1479,15 +1502,15 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
             <div className="text-xs font-semibold text-emerald-700 mb-2">
-              {RATINGS_ENABLED && authenticReviews.length > 0 ? 'Verified Client Feedback & Order Protection' : 'Order Transparency & Buyer Protection'}
+              {RATINGS_ENABLED && authenticReviews.length > 0 ? 'Verified Client Feedback & Order Protection' : 'Order Transparency & Client Protection'}
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
               {RATINGS_ENABLED && authenticReviews.length > 0
-                ? 'Verified Marketplace Reviews & Escrow Standards'
-                : 'Built on Service Transparency, Escrow Security & Direct Support'}
+                ? 'Verified Client Reviews & Delivery Standards'
+                : 'Built on Service Transparency, Secure Payments & Direct Support'}
             </h2>
             <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
-              Every media placement, guest post, and development order follows a structured verification and escrow workflow designed to protect both buyers and specialists.
+              Every media placement, guest post, and development order follows a structured delivery and review workflow designed to keep your campaign transparent and on schedule.
             </p>
           </div>
 
@@ -1517,7 +1540,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                   </div>
                   <div className="pt-3 border-t border-slate-200/70 flex items-center justify-between text-xs text-slate-500">
                     <span className="font-bold text-slate-900">
-                      {rev.reviewerName || rev.buyerName || rev.userName || 'Verified Buyer'}
+                      {rev.reviewerName || rev.buyerName || rev.userName || 'Verified Client'}
                     </span>
                     <span>Verified Order</span>
                   </div>
@@ -1533,10 +1556,10 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">
-                Escrow-Protected Ordering Process
+                Secure &amp; Structured Ordering Process
               </h3>
               <p className="text-sm text-slate-600 leading-relaxed">
-                When you order a guest post, press release, or web development package, your payment is held safely in escrow. Funds are only released once deliverables are submitted and reviewed.
+                When you order a guest post, press release, or web development package, your payment is processed securely with itemized invoices and clear milestone tracking through final delivery.
               </p>
               <ul className="space-y-2 pt-2 text-xs text-slate-700">
                 <li className="flex items-center gap-2">
@@ -1609,7 +1632,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
             Everything You Need to Know Before Ordering
           </h2>
           <p className="text-sm text-slate-600 mt-2">
-            Clear answers about media placements, custom development, and how our escrow workflow operates.
+            Clear answers about media placements, custom development, and how our ordering and delivery workflow operates.
           </p>
         </div>
 
@@ -1654,7 +1677,7 @@ export const AgencyHomePage: React.FC<AgencyHomePageProps> = React.memo(({
         <div className="max-w-7xl mx-auto rounded-3xl bg-gradient-to-br from-emerald-50/50 via-white to-orange-50/50 text-slate-900 border border-orange-200/60 shadow-xs p-8 sm:p-14 lg:p-16">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="text-xs font-semibold text-orange-600">
-              Start Your Next Campaign With Fivepa
+              Start Your Next Campaign With {SITE_CONFIG.brandName}
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 text-balance">
               Ready to Put Your Brand in the Spotlight?

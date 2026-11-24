@@ -3,8 +3,9 @@ import { Star, Sparkles, Clock, RefreshCw, ShieldCheck, Lock, MessageSquare, Ale
 import { Gig, Review, UserAccount, Order } from '../../types';
 import { RelatedGigsSection } from './RelatedGigsSection';
 import { Reviews } from '../gig_reviews';
-import { PPH_CATEGORIES } from '../HeaderCategoriesNav';
+import { SERVICE_CATEGORIES } from '../HeaderCategoriesNav';
 import { DEFAULT_AVATAR, DEFAULT_GIG_IMAGE, RATINGS_ENABLED } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 const CATEGORY_SLUGS: Record<string, string> = {
   'All': 'all',
@@ -15,7 +16,7 @@ const CATEGORY_SLUGS: Record<string, string> = {
   'Mobile Apps': 'technology-programming'
 };
 
-PPH_CATEGORIES.forEach(cat => {
+SERVICE_CATEGORIES.forEach(cat => {
   CATEGORY_SLUGS[cat.name] = cat.slug;
   cat.subcategories.forEach(sub => {
     CATEGORY_SLUGS[sub.name] = sub.slug;
@@ -89,30 +90,30 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
 
   useEffect(() => {
     if (typeof document !== 'undefined' && displayTitle) {
-      document.title = `${displayTitle} | Work Per Hour`;
+      document.title = `${displayTitle} | ${SITE_CONFIG.brandName}`;
     }
   }, [displayTitle]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs text-fiverr-muted font-medium">
-        <a href="/gigs" onClick={(e) => navigate('/gigs', e)} className="hover:text-fiverr-dark">Home</a>
+      <div className="flex items-center gap-2 text-xs text-agency-muted font-medium">
+        <a href="/gigs" onClick={(e) => navigate('/gigs', e)} className="hover:text-agency-dark">Home</a>
         <span>/</span>
         <a 
           href={`/categories/${CATEGORY_SLUGS[currentGig.category] || 'technology-programming'}`} 
           onClick={(e) => navigate(`/categories/${CATEGORY_SLUGS[currentGig.category] || 'technology-programming'}`, e)} 
-          className="hover:text-fiverr-dark"
+          className="hover:text-agency-dark"
         >
           {currentGig.category}
         </a>
         <span>/</span>
-        <span className="text-fiverr-dark font-semibold truncate max-w-xs">{currentGig.subcategory || 'Services'}</span>
+        <span className="text-agency-dark font-semibold truncate max-w-xs">{currentGig.subcategory || 'Services'}</span>
       </div>
 
       {/* Title & Seller Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 text-fiverr-dark tracking-tight leading-tight mb-4">
+        <h1 className="text-3xl font-bold text-slate-900 text-agency-dark tracking-tight leading-tight mb-4">
           {displayTitle}
         </h1>
 
@@ -120,13 +121,17 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
           <div className="flex items-center gap-2.5">
             <img 
               src={currentGig.freelancerAvatar || DEFAULT_AVATAR} 
-              alt={currentGig.freelancerName} 
+              alt={AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName} 
               className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100" 
               onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
             />
             <div>
-              <span className="font-bold text-fiverr-dark block">{currentGig.freelancerName}</span>
-              <span className="text-fiverr-muted font-mono">@{currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}</span>
+              <span className="font-bold text-agency-dark block">
+                {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}
+              </span>
+              <span className="text-agency-muted font-mono">
+                {AGENCY_MODE ? SITE_CONFIG.domain : `@${currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}`}
+              </span>
             </div>
           </div>
 
@@ -134,7 +139,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
             <>
               <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
-              <div className="flex items-center gap-1 font-bold text-fiverr-dark">
+              <div className="flex items-center gap-1 font-bold text-agency-dark">
                 <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
                 <span>{currentGig.rating}</span>
                 <span className="text-slate-400 font-normal">({currentGig.reviewsCount.toLocaleString()} reviews)</span>
@@ -145,7 +150,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
           <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
           <span className="bg-orange-50 text-orange-700 border border-orange-200 font-bold px-2.5 py-1 rounded-md text-[11px]">
-            {currentGig.freelancerLevel || 'Top Rated Seller'}
+            {AGENCY_MODE ? 'Verified Agency Service' : (currentGig.freelancerLevel || 'Top Rated Seller')}
           </span>
 
           <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold px-2.5 py-1 rounded-md text-[11px]">
@@ -172,7 +177,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                   <p className="text-xs text-slate-300 max-w-md mx-auto">Custom puppet character rigging, professional voiceover, and dynamic motion graphics.</p>
                   
                   <div className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center gap-4 mt-6">
-                    <button onClick={() => setIsPuppetVideoPlaying(false)} className="px-3 py-1 bg-white text-fiverr-dark font-bold rounded-lg text-xs hover:bg-slate-100 cursor-pointer">Pause</button>
+                    <button onClick={() => setIsPuppetVideoPlaying(false)} className="px-3 py-1 bg-white text-agency-dark font-bold rounded-lg text-xs hover:bg-slate-100 cursor-pointer">Pause</button>
                     <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
                       <div className="w-3/5 h-full bg-emerald-500 animate-pulse"></div>
                     </div>
@@ -207,7 +212,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
-                    <span>Directed by {currentGig.freelancerName}</span>
+                    <span>Produced by {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}</span>
                     <span>Puppet Animation & Character Rigging</span>
                   </div>
                 </div>
@@ -217,37 +222,43 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
 
           {/* About This Offer */}
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-4">
-            <h2 className="text-xl font-bold text-fiverr-dark border-b border-slate-100 pb-3">About This Offer</h2>
-            <p className="text-base text-fiverr-dark leading-body whitespace-pre-line font-normal">
+            <h2 className="text-xl font-bold text-agency-dark border-b border-slate-100 pb-3">About This Offer</h2>
+            <p className="text-base text-agency-dark leading-body whitespace-pre-line font-normal">
               {currentGig.description}
             </p>
 
-            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs text-fiverr-dark">
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs text-agency-dark">
               <div>
-                <span className="font-bold text-fiverr-dark block mb-1">Service Category</span>
+                <span className="font-bold text-agency-dark block mb-1">Service Category</span>
                 <span>{currentGig.category}</span>
               </div>
               <div>
-                <span className="font-bold text-fiverr-dark block mb-1">Subcategory</span>
+                <span className="font-bold text-agency-dark block mb-1">Subcategory</span>
                 <span>{currentGig.subcategory || 'General'}</span>
               </div>
             </div>
           </div>
 
-          {/* About The Seller */}
+          {/* About The Agency / Seller */}
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-6">
-            <h2 className="text-xl font-bold text-fiverr-dark border-b border-slate-100 pb-3">About The Seller</h2>
+            <h2 className="text-xl font-bold text-agency-dark border-b border-slate-100 pb-3">
+              {AGENCY_MODE ? `About ${SITE_CONFIG.brandName}` : 'About The Seller'}
+            </h2>
             
             <div className="flex items-center gap-4">
               <img 
                 src={currentGig.freelancerAvatar || DEFAULT_AVATAR} 
-                alt={currentGig.freelancerName} 
+                alt={AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName} 
                 className="w-16 h-16 rounded-full object-cover ring-4 ring-slate-100" 
                 onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
               />
               <div>
-                <h3 className="text-base font-bold text-fiverr-dark">{currentGig.freelancerName}</h3>
-                <p className="text-xs text-fiverr-muted font-mono">@{currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}</p>
+                <h3 className="text-base font-bold text-agency-dark">
+                  {AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName}
+                </h3>
+                <p className="text-xs text-agency-muted font-mono">
+                  {AGENCY_MODE ? SITE_CONFIG.domain : `@${currentGig.freelancerUsername || safeSlugify(currentGig.freelancerName)}`}
+                </p>
                 {RATINGS_ENABLED && (
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
@@ -279,11 +290,11 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
             </div>
 
             <button 
-              onClick={() => handleContactSeller(currentGig.freelancerId, currentGig.freelancerName, currentGig.title, currentGig.id)}
-              className="w-full sm:w-auto px-6 py-2.5 border-2 border-slate-900 text-fiverr-dark font-bold rounded-xl text-xs hover:bg-slate-900 hover:text-white transition-colors flex items-center justify-center gap-2"
+              onClick={() => handleContactSeller(currentGig.freelancerId, AGENCY_MODE ? SITE_CONFIG.brandName : currentGig.freelancerName, currentGig.title, currentGig.id)}
+              className="w-full sm:w-auto px-6 py-2.5 border-2 border-slate-900 text-agency-dark font-bold rounded-xl text-xs hover:bg-slate-900 hover:text-white transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-4 h-4 text-emerald-600" />
-              <span>Contact Seller ({currentGig.freelancerName})</span>
+              <span>{AGENCY_MODE ? 'Contact Our Team' : `Contact Seller (${currentGig.freelancerName})`}</span>
             </button>
           </div>
 
@@ -309,21 +320,21 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                 <>
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div>
-                      <span className="text-xs font-normal text-fiverr-muted uppercase tracking-wider block">Service Base Price</span>
-                      <span className="text-[19px] font-bold text-fiverr-dark">${currentGig.price.toLocaleString()}</span>
+                      <span className="text-xs font-normal text-agency-muted uppercase tracking-wider block">Service Base Price</span>
+                      <span className="text-[19px] font-bold text-agency-dark">${currentGig.price.toLocaleString()}</span>
                     </div>
                     <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg">
                       USD ($)
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-fiverr-dark">
+                  <div className="flex items-center justify-between text-xs font-bold text-agency-dark">
                     <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-fiverr-muted" />
+                      <Clock className="w-4 h-4 text-agency-muted" />
                       <span>{currentGig.deliveryDays} Days Delivery</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <RefreshCw className="w-4 h-4 text-fiverr-muted" />
+                      <RefreshCw className="w-4 h-4 text-agency-muted" />
                       <span>Unlimited Revisions</span>
                     </div>
                   </div>
@@ -331,7 +342,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                   {/* Optional Gig Extras Section */}
                   {extrasList.length > 0 && (
                     <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <h4 className="text-xs font-bold text-fiverr-dark uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-agency-dark uppercase tracking-wider">
                         Upgrade Your Order with Extras:
                       </h4>
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -340,7 +351,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                           return (
                             <label 
                               key={extra.id} 
-                              className={`flex items-start gap-3 p-3 rounded-2xl border text-xs cursor-pointer transition-all ${isChecked ? 'bg-emerald-50/60 border-emerald-300 text-fiverr-dark font-semibold' : 'bg-slate-50 border-slate-200 text-fiverr-dark hover:bg-slate-100'}`}
+                              className={`flex items-start gap-3 p-3 rounded-2xl border text-xs cursor-pointer transition-all ${isChecked ? 'bg-emerald-50/60 border-emerald-300 text-agency-dark font-semibold' : 'bg-slate-50 border-slate-200 text-agency-dark hover:bg-slate-100'}`}
                             >
                               <input 
                                 type="checkbox"
@@ -356,7 +367,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                               />
                               <div className="flex-1 flex items-center justify-between gap-2">
                                 <span>{extra.title}</span>
-                                <span className="font-bold text-fiverr-dark shrink-0">+${extra.price.toLocaleString()}</span>
+                                <span className="font-bold text-agency-dark shrink-0">+${extra.price.toLocaleString()}</span>
                               </div>
                             </label>
                           );
@@ -372,7 +383,7 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                     return (
                       <>
                         {q && (
-                          <div className="pt-4 border-t border-slate-100 space-y-1.5 text-xs text-fiverr-muted">
+                          <div className="pt-4 border-t border-slate-100 space-y-1.5 text-xs text-agency-muted">
                             <div className="flex justify-between"><span>Order{selectedExtras.length > 0 ? ' + extras' : ''}</span><span>{money(q.gigPrice)}</span></div>
                             <div className="flex justify-between"><span>Service fee ({q.buyerFeePercent ?? q.config?.buyerFeePercent ?? 1}%)</span><span>{money(q.serviceFee)}</span></div>
                             {q.smallOrderFee > 0 && (
@@ -382,12 +393,12 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                         )}
                         <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                           <div>
-                            <span className="text-xs text-fiverr-muted block font-normal">{q ? 'Total you pay' : 'Order amount (fees added at checkout)'}</span>
+                            <span className="text-xs text-agency-muted block font-normal">{q ? 'Total you pay' : 'Order amount (fees added at checkout)'}</span>
                             {selectedExtras.length > 0 && (
                               <span className="text-xs text-emerald-600 font-bold block">Includes {selectedExtras.length} selected extra(s)</span>
                             )}
                           </div>
-                          <span className="text-[19px] font-bold text-fiverr-dark">{q ? money(q.clientTotal) : `$${totalUSD.toLocaleString()}`}</span>
+                          <span className="text-[19px] font-bold text-agency-dark">{q ? money(q.clientTotal) : `$${totalUSD.toLocaleString()}`}</span>
                         </div>
                       </>
                     );
@@ -395,7 +406,11 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
 
                   <div className="bg-emerald-50 border border-emerald-200/60 rounded-2xl p-3 flex items-start gap-2.5 text-[11px] text-emerald-900">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Escrow-Protected Payments. Funds are safely held until work is delivered and approved.</span>
+                    <span>
+                      {AGENCY_MODE
+                        ? 'Secure online payment with itemized invoicing, milestone updates, and direct agency support.'
+                        : 'Escrow-Protected Payments. Funds are safely held until work is delivered and approved.'}
+                    </span>
                   </div>
 
                   {orderFeedback && (
@@ -442,9 +457,11 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                     <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-center space-y-1">
                       <div className="flex items-center justify-center gap-2 text-amber-900 font-bold text-xs">
                         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>This gig has been paused and cannot be purchased</span>
+                        <span>{AGENCY_MODE ? 'This service is currently paused and cannot be ordered' : 'This gig has been paused and cannot be purchased'}</span>
                       </div>
-                      <p className="text-[11px] text-amber-700">The seller has temporarily paused orders for this service.</p>
+                      <p className="text-[11px] text-amber-700">
+                        {AGENCY_MODE ? 'Our team has temporarily paused orders for this service.' : 'The seller has temporarily paused orders for this service.'}
+                      </p>
                     </div>
                   ) : (
                     <button 
@@ -465,12 +482,12 @@ export const GigDetailView: React.FC<GigDetailViewProps> = ({
                       {isCreatingOrder ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Processing Escrow Order...</span>
+                          <span>{AGENCY_MODE ? 'Processing Order...' : 'Processing Escrow Order...'}</span>
                         </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4" />
-                          <span>Fund in Escrow & Order Now</span>
+                          <span>{AGENCY_MODE ? 'Continue to Secure Checkout' : 'Fund in Escrow & Order Now'}</span>
                         </>
                       )}
                     </button>

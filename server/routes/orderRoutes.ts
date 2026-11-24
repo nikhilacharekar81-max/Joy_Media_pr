@@ -17,6 +17,7 @@ import { checkOrRecordIdempotency, recordIdempotencyResult } from '../domains/fi
 import { postgresStore } from '../db/postgresStore.js';
 import { financialRepository, financialTransactionService } from '../domains/finance/financial.service.js';
 import { recordOutboxEvent } from '../services/outboxService.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 import {
   requireAuth,
   requireActiveStatus,
@@ -359,14 +360,14 @@ router.get('/orders/:id/invoice', requireAuth, async (req: Request, res: Respons
       autoReleaseAt,
       buyer: {
         id: order.buyerId,
-        name: buyer?.name || (order as any).buyerUsername || 'Buyer',
-        email: buyer?.email || 'buyer@fivepa.com',
+        name: buyer?.name || (order as any).buyerUsername || (SITE_CONFIG.AGENCY_MODE ? 'Client' : 'Buyer'),
+        email: buyer?.email || SITE_CONFIG.emails.hello,
         country: (buyer as any)?.country || 'Global'
       },
       seller: {
         id: order.sellerId,
-        name: seller?.name || (order as any).sellerUsername || 'Seller',
-        email: seller?.email || 'seller@fivepa.com',
+        name: SITE_CONFIG.AGENCY_MODE ? SITE_CONFIG.brandName : (seller?.name || (order as any).sellerUsername || 'Seller'),
+        email: SITE_CONFIG.AGENCY_MODE ? SITE_CONFIG.emails.support : (seller?.email || SITE_CONFIG.emails.support),
         country: (seller as any)?.country || 'Global'
       },
       items: [
@@ -393,7 +394,9 @@ router.get('/orders/:id/invoice', requireAuth, async (req: Request, res: Respons
       platformCommission,
       sellerNet,
       currency: 'USD',
-      notes: 'FivePA Escrow-Protected Transaction. Funds held safely in escrow until client approval.'
+      notes: SITE_CONFIG.AGENCY_MODE
+        ? `${SITE_CONFIG.brandName} Official Invoice. Payment confirmed for agency services.`
+        : `${SITE_CONFIG.brandName} Protected Transaction. Funds held safely until client approval.`
     };
 
     res.json(invoice);
@@ -1755,7 +1758,7 @@ const handleOpenDispute = async (req: Request, res: Response) => {
       id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       orderId: order.id,
       senderId: 'system',
-      senderName: 'WorkSphere Dispute Resolution Desk',
+      senderName: `${SITE_CONFIG.brandName} Support Desk`,
       text: `🚨 Dispute opened by ${newDispute.raisedBy}: "${reason}". Order placed under review.`,
       timestamp: new Date().toISOString(),
       type: 'system',

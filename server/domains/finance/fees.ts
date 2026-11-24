@@ -1,4 +1,4 @@
-// Authoritative Single Source of Truth for WorkPerHour / FivePA Fee Policy & Calculations.
+// Authoritative Single Source of Truth for Fee Policy & Calculations.
 // Canonical Defaults:
 // - 20% Freelancer Commission
 // - 1% Buyer Service Fee
@@ -95,7 +95,7 @@ export function validateFeeConfig(cfg: FeeConfig): void {
 }
 
 /**
- * FivePA Fee Rules:
+ * Fee Rules:
  *  1. Freelancer commission: platform keeps commissionPercent (20%) of the gig price; freelancer gets the rest (80%).
  *  2. Client service fee: buyerFeePercent (1%) of the gig price, charged on top.
  *  3. Small-order fee: flat smallOrderFee ($1.00) on top when the gig price is strictly under smallOrderThreshold ($200).
@@ -133,7 +133,7 @@ export function calculateOrderFees(gigPrice: number, cfg: FeeConfig = DEFAULT_FE
 }
 
 /**
- * Resolves the effective fee policy for an order, checking order snapshot first, then site settings, then default FivePA config.
+ * Resolves the effective fee policy for an order, checking order snapshot first, then site settings, then default config.
  */
 export function resolveEffectiveFeePolicy(orderSnapshot?: any, fallbackConfig: FeeConfig = DEFAULT_FEE_CONFIG): FeeConfig {
   if (!orderSnapshot) return { ...fallbackConfig };

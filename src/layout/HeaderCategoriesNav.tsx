@@ -7,7 +7,7 @@ export interface CategoryHeaderNav {
   subcategories: { name: string; slug: string }[];
 }
 
-export const PPH_CATEGORIES: CategoryHeaderNav[] = [
+export const SERVICE_CATEGORIES: CategoryHeaderNav[] = [
   {
     name: 'UGC AI Videos',
     slug: 'ugc-ai-videos',
@@ -173,11 +173,11 @@ export const HeaderCategoriesNav: React.FC<HeaderCategoriesNavProps> = ({
     <nav className="relative z-40 bg-white/90 border-b border-slate-200/80 backdrop-blur-xs shadow-2xs text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-1 overflow-x-auto lg:overflow-visible py-2 scrollbar-none">
-          {PPH_CATEGORIES.map((cat, idx) => {
+          {SERVICE_CATEGORIES.map((cat, idx) => {
             const hasDropdown = !DISABLED_DROPDOWN_CATEGORIES.has(cat.name) && cat.subcategories.length > 0;
             const isOpen = hasDropdown && activeCategory === cat.slug;
             const isCurrent = currentCategory?.toLowerCase() === cat.name.toLowerCase();
-            const isRightAligned = idx >= PPH_CATEGORIES.length - 3;
+            const isRightAligned = idx >= SERVICE_CATEGORIES.length - 3;
 
             return (
               <div 

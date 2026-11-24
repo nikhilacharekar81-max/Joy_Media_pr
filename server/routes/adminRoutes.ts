@@ -13,6 +13,7 @@ import { postgresStore, isPostgresEnabled } from '../db/postgresStore.js';
 import { financialRepository, financialTransactionService } from '../domains/finance/financial.service.js';
 import { siteSettings } from '../../src/server/siteSettings.js';
 import { paymentGatewayManager } from '../../src/server/paymentGateways.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 import {
   requireAuth,
   requireRole,
@@ -771,7 +772,7 @@ router.post('/admin/tickets/:id/reply', requireAdmin, async (req: Request, res: 
     const t = await store.getSupportTicketById(req.params.id);
     if (!t) return res.status(404).json({ error: 'Ticket not found' });
     t.messages.push({
-      sender: 'WorkPerHour Support Staff',
+      sender: `${SITE_CONFIG.brandName} Support`,
       text: req.body.text,
       timestamp: new Date().toISOString()
     });

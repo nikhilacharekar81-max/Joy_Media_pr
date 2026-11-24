@@ -25,7 +25,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { UserAccount, Gig, isStaffRole } from '../../types';
-import { PPH_CATEGORIES } from '../HeaderCategoriesNav';
+import { SERVICE_CATEGORIES } from '../HeaderCategoriesNav';
 import { getGigUrl } from '../../utils/slugify';
 import { DEFAULT_AVATAR, DEFAULT_GIG_IMAGE, RATINGS_ENABLED } from '../../constants';
 
@@ -398,7 +398,7 @@ export const FreelancerSearchView: React.FC<FreelancerSearchViewProps> = ({
                     className="w-full bg-transparent text-slate-800 text-xs font-bold py-2 px-2 focus:outline-none cursor-pointer"
                   >
                     <option value="All">All Categories</option>
-                    {PPH_CATEGORIES.map(cat => (
+                    {SERVICE_CATEGORIES.map(cat => (
                       <option key={cat.slug} value={cat.name}>{cat.name}</option>
                     ))}
                   </select>
@@ -625,7 +625,7 @@ export const FreelancerSearchView: React.FC<FreelancerSearchViewProps> = ({
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
                 >
                   <option value="All">All Categories</option>
-                  {PPH_CATEGORIES.map(cat => (
+                  {SERVICE_CATEGORIES.map(cat => (
                     <option key={cat.slug} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
@@ -644,7 +644,7 @@ export const FreelancerSearchView: React.FC<FreelancerSearchViewProps> = ({
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
                   >
                     <option value="All">All Subcategories</option>
-                    {PPH_CATEGORIES.find(c => c.name === selectedCategory)?.subcategories.map(sub => (
+                    {SERVICE_CATEGORIES.find(c => c.name === selectedCategory)?.subcategories.map(sub => (
                       <option key={sub.slug} value={sub.name}>{sub.name}</option>
                     ))}
                   </select>
@@ -1242,7 +1242,7 @@ export const FreelancerSearchView: React.FC<FreelancerSearchViewProps> = ({
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-medium"
               >
                 <option value="All">All Categories</option>
-                {PPH_CATEGORIES.map(c => <option key={c.slug} value={c.name}>{c.name}</option>)}
+                {SERVICE_CATEGORIES.map(c => <option key={c.slug} value={c.name}>{c.name}</option>)}
               </select>
             </div>
 

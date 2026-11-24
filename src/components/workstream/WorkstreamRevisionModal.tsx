@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
 import { WorkstreamItem } from './types';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamRevisionModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export const WorkstreamRevisionModal: React.FC<WorkstreamRevisionModalProps> = (
               <RotateCcw className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-fiverr-dark">Request Revisions</h3>
+              <h3 className="text-base font-bold text-agency-dark">Request Revisions</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Order #{order.id}</p>
             </div>
           </div>
@@ -61,7 +62,7 @@ export const WorkstreamRevisionModal: React.FC<WorkstreamRevisionModalProps> = (
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-xs mb-1.5">
+            <label className="block text-agency-dark font-bold uppercase tracking-wider text-xs mb-1.5">
               Specific Changes & Adjustments Needed
             </label>
             <textarea
@@ -70,13 +71,17 @@ export const WorkstreamRevisionModal: React.FC<WorkstreamRevisionModalProps> = (
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Clearly describe what needs adjusting according to agreed scope..."
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white resize-none leading-relaxed"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:bg-white resize-none leading-relaxed"
             />
           </div>
 
           <div className="p-3 bg-purple-50/70 text-xs text-purple-800 rounded-2xl border border-purple-200 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
-            <span>Escrow remains safely held while the freelancer makes the requested updates.</span>
+            <span>
+              {AGENCY_MODE
+                ? `Your order stays active while ${SITE_CONFIG.brandName} makes the requested updates.`
+                : 'Escrow remains safely held while the freelancer makes the requested updates.'}
+            </span>
           </div>
 
           {error && (
@@ -91,7 +96,7 @@ export const WorkstreamRevisionModal: React.FC<WorkstreamRevisionModalProps> = (
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs transition cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>

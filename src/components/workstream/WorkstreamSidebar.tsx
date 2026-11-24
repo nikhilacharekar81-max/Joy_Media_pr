@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, FolderKanban, Users, Shield, Star, Inbox, MessageSquare, Clock, CheckCircle2, Archive, PackageCheck } from 'lucide-react';
 import { UserAccount, Project, isStaffRole } from '../../types';
 import { WorkstreamFilter, WorkstreamItem, WORKSTREAM_TAB_STATUSES } from './types';
+import { AGENCY_MODE } from '../../siteConfig';
 
 interface WorkstreamSidebarProps {
   currentTab: WorkstreamFilter;
@@ -46,13 +47,13 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
   };
 
   const filterTabs: Array<{ id: WorkstreamFilter; label: string; icon: React.ReactNode; count: number }> = [
-    { id: 'all', label: 'All Workstreams', icon: <Inbox className="w-3.5 h-3.5" />, count: filterCounts.all },
+    { id: 'all', label: AGENCY_MODE ? 'All Orders' : 'All Workstreams', icon: <Inbox className="w-3.5 h-3.5" />, count: filterCounts.all },
     { id: 'inbox', label: 'Active Inbox', icon: <MessageSquare className="w-3.5 h-3.5" />, count: filterCounts.inbox },
     { id: 'in_progress', label: 'Work in Progress', icon: <Clock className="w-3.5 h-3.5 text-blue-500" />, count: filterCounts.in_progress },
     { id: 'delivered', label: 'Delivered', icon: <PackageCheck className="w-3.5 h-3.5 text-amber-500" />, count: filterCounts.delivered },
     { id: 'completed', label: 'Completed', icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />, count: filterCounts.completed },
     { id: 'starred', label: 'Starred', icon: <Star className="w-3.5 h-3.5 text-yellow-500" />, count: filterCounts.starred },
-    { id: 'escrow', label: 'With Escrow', icon: <Shield className="w-3.5 h-3.5 text-emerald-500" />, count: filterCounts.escrow },
+    { id: 'escrow', label: AGENCY_MODE ? 'Active Paid Orders' : 'With Escrow', icon: <Shield className="w-3.5 h-3.5 text-emerald-500" />, count: filterCounts.escrow },
     { id: 'archived', label: 'Archived', icon: <Archive className="w-3.5 h-3.5 text-slate-400" />, count: filterCounts.archived }
   ];
 
@@ -79,7 +80,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
       {/* WORKSTREAM FILTERS */}
       <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-2 mb-3">
-          Workstream Filters
+          {AGENCY_MODE ? 'Order Filters' : 'Workstream Filters'}
         </h3>
         {filterTabs.map(tab => {
           const isActive = currentTab === tab.id;
@@ -90,7 +91,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                 isActive 
                   ? 'bg-slate-900 text-white font-bold shadow-xs' 
-                  : 'text-fiverr-dark hover:bg-slate-100'
+                  : 'text-agency-dark hover:bg-slate-100'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -100,7 +101,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
               <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-full ${
                 isActive 
                   ? 'bg-slate-800 text-slate-200' 
-                  : 'bg-slate-100 text-fiverr-muted'
+                  : 'bg-slate-100 text-agency-muted'
               }`}>
                 {tab.count}
               </span>
@@ -115,7 +116,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
           <div className="flex items-center justify-between px-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <FolderKanban className="w-3.5 h-3.5 text-slate-400" />
-              <span>Projects</span>
+              <span>{AGENCY_MODE ? 'Custom Requests' : 'Projects'}</span>
             </h3>
             <span className="text-xs font-bold text-slate-400 font-mono">{projects.length}</span>
           </div>
@@ -126,7 +127,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
                 <button
                   key={p.id}
                   onClick={() => onProjectSelect(isSelected ? '' : p.id)}
-                  className={`w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 text-fiverr-dark flex items-center justify-between cursor-pointer font-medium border transition-colors ${
+                  className={`w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 text-agency-dark flex items-center justify-between cursor-pointer font-medium border transition-colors ${
                     isSelected 
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' 
                       : 'border-transparent'
@@ -149,14 +150,15 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
       )}
 
       {/* MY PEOPLE / COLLABORATORS SECTION */}
+      {(!AGENCY_MODE || isStaffRole(currentUser?.role)) && (
       <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-slate-400" />
-            <span>My People</span>
+            <span>{AGENCY_MODE ? 'Clients' : 'My People'}</span>
           </h3>
           <span className="text-xs font-bold text-emerald-600 font-mono">
-            {filteredPeople.length} Contact{filteredPeople.length === 1 ? '' : 's'}
+            {filteredPeople.length} {AGENCY_MODE ? `Client${filteredPeople.length === 1 ? '' : 's'}` : `Contact${filteredPeople.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
@@ -164,10 +166,10 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search contacts..."
+            placeholder={AGENCY_MODE ? 'Search clients...' : 'Search contacts...'}
             value={peopleSearch}
             onChange={(e) => onPeopleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500"
           />
         </div>
 
@@ -201,7 +203,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
                       onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'; }}
                     />
                     <div className="truncate">
-                      <div className="text-xs font-bold text-fiverr-dark truncate">
+                      <div className="text-xs font-bold text-agency-dark truncate">
                         {person.name}
                       </div>
                       {isStaffRole(person.role) && (
@@ -212,7 +214,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
                     </div>
                   </div>
                   <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                    isSelected ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-fiverr-dark'
+                    isSelected ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-agency-dark'
                   }`}>
                     {relatedOrdersCount}
                   </span>
@@ -222,6 +224,7 @@ export const WorkstreamSidebar: React.FC<WorkstreamSidebarProps> = ({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

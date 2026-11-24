@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { AGENCY_MODE } from '../../siteConfig';
 
 export interface WorkstreamHeaderProps {
   title?: string;
@@ -28,7 +29,7 @@ export const WorkstreamHeader: React.FC<WorkstreamHeaderProps> = ({
         {reviewWindowRemaining && !isCancellationPending && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-amber-800 text-xs font-medium shrink-0">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
-            <span>{isBuyer ? 'Buyer Review Window: ' : 'Review Window: '}</span>
+            <span>{isBuyer ? (AGENCY_MODE ? 'Client Review Window: ' : 'Buyer Review Window: ') : 'Review Window: '}</span>
             <strong className="font-mono font-bold text-amber-900">{reviewWindowRemaining}</strong>
           </div>
         )}

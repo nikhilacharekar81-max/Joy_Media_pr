@@ -22,6 +22,7 @@ import { financialTransactionService } from '../services/financialService.js';
 import { registerAuditLog } from '../services/orderService.js';
 import { diagnosticService } from '../services/diagnosticService.js';
 import type { Gig } from '../../src/types.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 export const gigRouter = Router();
 
@@ -105,25 +106,36 @@ gigRouter.get('/gigs/:id', async (req: Request, res: Response) => {
 gigRouter.get('/my/gigs', requireAuth, async (req: Request, res: Response) => {
   try {
     const authUserId = (req as any).authenticatedUserId;
+    const caller = (req as any).authenticatedUser;
+    if (SITE_CONFIG.AGENCY_MODE) {
+      if (!isStaffUser(caller)) {
+        return res.json([]);
+      }
+      const allGigs = await store.listGigs();
+      return res.json(allGigs.filter(g => g.status !== 'deleted'));
+    }
     const myGigs = await store.listGigsForFreelancer(authUserId);
     res.json(myGigs);
   } catch (err) {
     console.error('[GET /my/gigs] Error:', err);
-    res.status(500).json({ error: 'Failed to fetch user gigs' });
+    res.status(500).json({ error: 'Failed to fetch services' });
   }
 });
 
 // Create Gig
 gigRouter.post('/gigs', requireAuth, requireActiveStatus, async (req: Request, res: Response) => {
   const caller = (req as any).authenticatedUser;
+  if (SITE_CONFIG.AGENCY_MODE && !isStaffUser(caller)) {
+    return res.status(403).json({ error: 'Forbidden: Only agency staff can create services.' });
+  }
   if (caller.status === 'restricted') return res.status(403).json({ error: 'Restricted: You cannot post new services while your account is restricted.' });
 
   const activeSettings = siteSettings.getSettings();
 
   const gigPrice = Number(req.body.price);
-  if (!Number.isFinite(gigPrice) || gigPrice <= 0) return res.status(400).json({ error: 'Gig price must be a valid positive number.' });
+  if (!Number.isFinite(gigPrice) || gigPrice <= 0) return res.status(400).json({ error: 'Service price must be a valid positive number.' });
   if (Math.abs(Math.round(gigPrice * 100) - gigPrice * 100) > 1e-6) {
-    return res.status(400).json({ error: 'Gig price can have at most 2 decimal places.' });
+    return res.status(400).json({ error: 'Service price can have at most 2 decimal places.' });
   }
   const rawMinGig = Number(activeSettings.marketplace.minimumGigPrice ?? 5);
   const minGigPrice = Number.isFinite(rawMinGig) ? Math.min(10000, Math.max(0, rawMinGig)) : 5;
@@ -133,10 +145,10 @@ gigRouter.post('/gigs', requireAuth, requireActiveStatus, async (req: Request, r
       ? Math.min(10000, Math.max(minGigPrice, rawMaxGig))
       : 10000;
   if (gigPrice < minGigPrice) {
-    return res.status(400).json({ error: `Gig price ($${gigPrice}) cannot be lower than the platform minimum of $${minGigPrice}.` });
+    return res.status(400).json({ error: `Service price ($${gigPrice}) cannot be lower than the minimum of $${minGigPrice}.` });
   }
   if (gigPrice > maxGigPrice) {
-    return res.status(400).json({ error: `Gig price ($${gigPrice}) cannot exceed the platform maximum of $${maxGigPrice}.` });
+    return res.status(400).json({ error: `Service price ($${gigPrice}) cannot exceed the maximum of $${maxGigPrice}.` });
   }
 
   // Packages have been removed from the platform in favor of single gig price + extras.
@@ -209,15 +221,18 @@ gigRouter.post('/gigs', requireAuth, requireActiveStatus, async (req: Request, r
 const handleGigUpdate = async (req: Request, res: Response) => {
   const caller = (req as any).authenticatedUser;
   try {
+    if (SITE_CONFIG.AGENCY_MODE && !isStaffUser(caller)) {
+      return res.status(403).json({ error: 'Forbidden: Only agency staff can edit services.' });
+    }
     const g = await store.getGig(req.params.id);
-    if (!g) return res.status(404).json({ error: 'Gig/Service not found' });
+    if (!g) return res.status(404).json({ error: 'Service not found' });
 
-    if (g.freelancerId !== caller.id) {
-      return res.status(403).json({ error: 'Forbidden: You can only edit your own gigs.' });
+    if (!SITE_CONFIG.AGENCY_MODE && g.freelancerId !== caller.id) {
+      return res.status(403).json({ error: 'Forbidden: You can only edit your own services.' });
     }
 
     if (g.status === 'deleted') {
-      return res.status(400).json({ error: 'Deleted gigs cannot be edited or restored.' });
+      return res.status(400).json({ error: 'Deleted services cannot be edited or restored.' });
     }
 
     const updates: Record<string, any> = {};
@@ -250,16 +265,16 @@ const handleGigUpdate = async (req: Request, res: Response) => {
     if (req.body.price !== undefined) {
       const newPrice = Number(req.body.price);
       if (!Number.isFinite(newPrice) || newPrice <= 0) {
-        return res.status(400).json({ error: 'Gig price must be a valid positive number.' });
+        return res.status(400).json({ error: 'Service price must be a valid positive number.' });
       }
       if (Math.abs(Math.round(newPrice * 100) - newPrice * 100) > 1e-6) {
-        return res.status(400).json({ error: 'Gig price can have at most 2 decimal places.' });
+        return res.status(400).json({ error: 'Service price can have at most 2 decimal places.' });
       }
       if (newPrice < minGigPrice) {
-        return res.status(400).json({ error: `Gig price ($${newPrice}) cannot be lower than the platform minimum of $${minGigPrice}.` });
+        return res.status(400).json({ error: `Service price ($${newPrice}) cannot be lower than the minimum of $${minGigPrice}.` });
       }
       if (newPrice > maxGigPrice) {
-        return res.status(400).json({ error: `Gig price ($${newPrice}) cannot exceed the platform maximum of $${maxGigPrice}.` });
+        return res.status(400).json({ error: `Service price ($${newPrice}) cannot exceed the maximum of $${maxGigPrice}.` });
       }
       updates.price = Math.round(newPrice * 100) / 100;
     }
@@ -299,12 +314,12 @@ const handleGigUpdate = async (req: Request, res: Response) => {
     if (req.body.status !== undefined) {
       const requestedStatus = String(req.body.status).toLowerCase().trim();
       if (!['active', 'paused', 'deleted'].includes(requestedStatus)) {
-        return res.status(400).json({ error: 'Invalid status. Sellers can only set status to active, paused, or deleted.' });
+        return res.status(400).json({ error: 'Invalid status. Allowed values: active, paused, or deleted.' });
       }
 
       if (requestedStatus === 'active') {
         if (g.moderationStatus === 'rejected' || g.moderationStatus === 'flagged') {
-          return res.status(400).json({ error: 'This gig has been rejected or flagged by moderators and cannot be activated until reviewed and approved by an administrator.' });
+          return res.status(400).json({ error: 'This service has been rejected or flagged and cannot be activated until approved by an administrator.' });
         }
 
         if (activeSettings.marketplace?.gigModerationRequired && g.moderationStatus !== 'approved') {
@@ -325,10 +340,11 @@ const handleGigUpdate = async (req: Request, res: Response) => {
       }
     }
 
-    const updatedGig = await store.updateGig(g.id, updates, caller.id);
+    const expectedOwnerId = SITE_CONFIG.AGENCY_MODE && isStaffUser(caller) ? undefined : caller.id;
+    const updatedGig = await store.updateGig(g.id, updates, expectedOwnerId);
 
     if (!updatedGig) {
-      return res.status(404).json({ error: 'Gig not found or cannot be updated.' });
+      return res.status(404).json({ error: 'Service not found or cannot be updated.' });
     }
 
     await registerAuditLog({
@@ -355,11 +371,14 @@ gigRouter.put('/gigs/:id', requireAuth, requireActiveStatus, handleGigUpdate);
 gigRouter.delete('/gigs/:id', requireAuth, requireActiveStatus, async (req: Request, res: Response) => {
   const caller = (req as any).authenticatedUser;
   try {
+    if (SITE_CONFIG.AGENCY_MODE && !isStaffUser(caller)) {
+      return res.status(403).json({ error: 'Forbidden: Only agency staff can delete services.' });
+    }
     const g = await store.getGig(req.params.id);
-    if (!g) return res.status(404).json({ error: 'Gig/Service not found' });
+    if (!g) return res.status(404).json({ error: 'Service not found' });
 
-    if (g.freelancerId !== caller.id) {
-      return res.status(403).json({ error: 'Forbidden: You can only delete your own gigs.' });
+    if (!SITE_CONFIG.AGENCY_MODE && g.freelancerId !== caller.id) {
+      return res.status(403).json({ error: 'Forbidden: You can only delete your own services.' });
     }
 
     await store.deleteGig(req.params.id);
@@ -369,28 +388,31 @@ gigRouter.delete('/gigs/:id', requireAuth, requireActiveStatus, async (req: Requ
       actor: caller.name,
       role: caller.role,
       action: 'GIG_DELETED',
-      target: `Gig "${g.title}"`,
-      details: `Soft-deleted freelancer gig #${g.id} by ${g.freelancerName} (status set to "deleted")`,
+      target: `Service "${g.title}"`,
+      details: `Soft-deleted service #${g.id} (status set to "deleted")`,
       timestamp: new Date().toLocaleString()
     });
 
     res.json({ success: true, id: g.id });
   } catch (err) {
     console.error('[DeleteGig] Error:', err);
-    res.status(500).json({ error: 'Failed to delete gig' });
+    res.status(500).json({ error: 'Failed to delete service' });
   }
 });
 
-// Feature / Unfeature Gig (Seller)
+// Feature / Unfeature Service (Staff / Owner)
 gigRouter.patch('/gigs/:id/feature', requireAuth, requireActiveStatus, async (req: Request, res: Response) => {
   const caller = (req as any).authenticatedUser;
   try {
+    if (SITE_CONFIG.AGENCY_MODE && !isStaffUser(caller)) {
+      return res.status(403).json({ error: 'Forbidden: Only agency staff can feature services.' });
+    }
     const gig = await store.getGig(req.params.id);
     if (!gig || gig.status === 'deleted') {
-      return res.status(404).json({ error: 'Gig not found' });
+      return res.status(404).json({ error: 'Service not found' });
     }
-    if (gig.freelancerId !== caller.id) {
-      return res.status(403).json({ error: 'Forbidden: You can only feature or unfeature your own gigs.' });
+    if (!SITE_CONFIG.AGENCY_MODE && gig.freelancerId !== caller.id) {
+      return res.status(403).json({ error: 'Forbidden: You can only feature or unfeature your own services.' });
     }
 
     const desiredFeatured = typeof req.body?.featured === 'boolean'
@@ -398,10 +420,17 @@ gigRouter.patch('/gigs/:id/feature', requireAuth, requireActiveStatus, async (re
       : !Boolean(gig.featured);
 
     if (!desiredFeatured) {
-      await postgresStore.getPool().query(
-        'UPDATE gigs SET featured = FALSE, is_featured = FALSE, featured_until = NULL, updated_at = NOW() WHERE id = $1 AND freelancer_id = $2',
-        [gig.id, caller.id]
-      );
+      if (SITE_CONFIG.AGENCY_MODE && isStaffUser(caller)) {
+        await postgresStore.getPool().query(
+          'UPDATE gigs SET featured = FALSE, is_featured = FALSE, featured_until = NULL, updated_at = NOW() WHERE id = $1',
+          [gig.id]
+        );
+      } else {
+        await postgresStore.getPool().query(
+          'UPDATE gigs SET featured = FALSE, is_featured = FALSE, featured_until = NULL, updated_at = NOW() WHERE id = $1 AND freelancer_id = $2',
+          [gig.id, caller.id]
+        );
+      }
       const updatedGig = await store.getGig(gig.id);
       return res.json({
         success: true,
@@ -433,12 +462,19 @@ gigRouter.patch('/gigs/:id/feature', requireAuth, requireActiveStatus, async (re
     ) as string | undefined;
     const trimmedOpId = callerOpId && String(callerOpId).trim() ? String(callerOpId).trim() : undefined;
 
-    if (fee === 0) {
+    if (fee === 0 || (SITE_CONFIG.AGENCY_MODE && isStaffUser(caller))) {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await postgresStore.getPool().query(
-        'UPDATE gigs SET featured = TRUE, is_featured = TRUE, featured_until = $1, updated_at = NOW() WHERE id = $2 AND freelancer_id = $3',
-        [expiresAt, gig.id, caller.id]
-      );
+      if (SITE_CONFIG.AGENCY_MODE && isStaffUser(caller)) {
+        await postgresStore.getPool().query(
+          'UPDATE gigs SET featured = TRUE, is_featured = TRUE, featured_until = $1, updated_at = NOW() WHERE id = $2',
+          [expiresAt, gig.id]
+        );
+      } else {
+        await postgresStore.getPool().query(
+          'UPDATE gigs SET featured = TRUE, is_featured = TRUE, featured_until = $1, updated_at = NOW() WHERE id = $2 AND freelancer_id = $3',
+          [expiresAt, gig.id, caller.id]
+        );
+      }
       const updatedGig = await store.getGig(gig.id);
       return res.json({
         success: true,

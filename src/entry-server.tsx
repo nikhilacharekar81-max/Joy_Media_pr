@@ -7,6 +7,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import App from './App.tsx';
 import { slugify } from './utils/slugify.js';
+import { SITE_CONFIG } from './siteConfig.js';
 
 function escapeHtml(text: string): string {
   if (typeof text !== 'string') return '';
@@ -28,7 +29,7 @@ export function render(url: string, initialData?: any) {
   const notFound = initialData?.notFound;
   const isPrivate = initialData?.isPrivate;
 
-  const baseUrl = 'https://workperhour.com';
+  const baseUrl = SITE_CONFIG.baseUrl;
   const canonical = `${baseUrl}${url.split('?')[0]}`;
 
   // Robots
@@ -38,19 +39,21 @@ export function render(url: string, initialData?: any) {
     headTags.push('<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />');
   }
 
+  headTags.push(`<meta property="og:site_name" content="${SITE_CONFIG.brandName}" />`);
+
   // Title & Description
   if (notFound) {
-    headTags.push('<title>Page Not Found | Work Per Hour</title>');
+    headTags.push(`<title>Page Not Found | ${SITE_CONFIG.brandName}</title>`);
     headTags.push('<meta name="description" content="The requested page could not be found." />');
   } else if (isPrivate || pageType === 'private') {
-    headTags.push('<title>Work Per Hour | Platform</title>');
-    headTags.push('<meta name="description" content="Secure Work Per Hour member area." />');
+    headTags.push(`<title>Client Area | ${SITE_CONFIG.brandName}</title>`);
+    headTags.push(`<meta name="description" content="Secure ${SITE_CONFIG.brandName} client area." />`);
   } else if (gig) {
     const strippedGigTitle = (gig.title || '').trim().replace(/^i\s+will\s+/i, '').trim();
     const cleanTitle = strippedGigTitle
       ? strippedGigTitle.charAt(0).toUpperCase() + strippedGigTitle.slice(1)
       : (gig.title || '');
-    const title = `${escapeHtml(cleanTitle)} | Work Per Hour`;
+    const title = `${escapeHtml(cleanTitle)} | ${SITE_CONFIG.brandName}`;
     headTags.push(`<title>${title}</title>`);
     headTags.push(`<meta name="description" content="${escapeHtml((gig.description || '').slice(0, 160))}" />`);
     
@@ -60,7 +63,7 @@ export function render(url: string, initialData?: any) {
       "@type": "Service",
       "name": cleanTitle,
       "description": gig.description,
-      "provider": { "@type": "Person", "name": gig.freelancerName },
+      "provider": { "@type": "Organization", "name": SITE_CONFIG.brandName },
       "offers": { "@type": "Offer", "price": gig.price, "priceCurrency": "USD" }
     };
     if (gig.reviewsCount > 0 && gig.rating) {
@@ -68,11 +71,11 @@ export function render(url: string, initialData?: any) {
     }
     headTags.push(`<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`);
   } else if (profileUser) {
-    headTags.push(`<title>${escapeHtml(profileUser.name)} - ${escapeHtml(profileUser.title)} | Work Per Hour</title>`);
+    headTags.push(`<title>${escapeHtml(profileUser.name)} - ${escapeHtml(profileUser.title)} | ${SITE_CONFIG.brandName}</title>`);
     headTags.push(`<meta name="description" content="${escapeHtml((profileUser.bio || '').slice(0, 160))}" />`);
   } else if (pageType === 'gigs') {
-    headTags.push('<title>Freelance Services & Gigs | Work Per Hour</title>');
-    headTags.push('<meta name="description" content="Browse and hire top freelance talent." />');
+    headTags.push(`<title>Our Services | ${SITE_CONFIG.brandName}</title>`);
+    headTags.push(`<meta name="description" content="Explore guest posting, press releases, UGC AI videos, custom web development, Shopify solutions, and digital products by ${SITE_CONFIG.brandName}." />`);
     if (initialData?.gigs) {
       const itemList = {
         "@context": "https://schema.org",
@@ -84,22 +87,22 @@ export function render(url: string, initialData?: any) {
       headTags.push(`<script type="application/ld+json">${JSON.stringify(itemList).replace(/</g, '\\u003c')}</script>`);
     }
   } else if (pageType === 'projects') {
-    headTags.push('<title>Browse Freelance Projects & Jobs | Work Per Hour</title>');
-    headTags.push('<meta name="description" content="Find freelance projects and jobs." />');
+    headTags.push(`<title>Custom Requests | ${SITE_CONFIG.brandName}</title>`);
+    headTags.push(`<meta name="description" content="Submit and manage custom project briefs with ${SITE_CONFIG.brandName}." />`);
   } else if (pageType === 'freelancers') {
-    headTags.push('<title>Top Freelancers & Experts | Work Per Hour</title>');
-    headTags.push('<meta name="description" content="Discover and hire verified freelance professionals." />');
+    headTags.push(`<title>Our Team | ${SITE_CONFIG.brandName}</title>`);
+    headTags.push(`<meta name="description" content="Meet the digital PR and growth specialists at ${SITE_CONFIG.brandName}." />`);
   } else if (pageType === 'legal') {
     const docTitle = initialData?.legalType === 'privacy'
       ? 'Privacy Policy'
       : initialData?.legalType === 'refund-policy'
-      ? 'Refund & Escrow Policy'
+      ? 'Refund Policy'
       : 'Terms of Service';
-    headTags.push(`<title>${docTitle} | Work Per Hour</title>`);
-    headTags.push(`<meta name="description" content="${docTitle} and escrow guidelines for Work Per Hour marketplace." />`);
+    headTags.push(`<title>${docTitle} | ${SITE_CONFIG.brandName}</title>`);
+    headTags.push(`<meta name="description" content="Terms, privacy and refund information for ${SITE_CONFIG.brandName}." />`);
   } else {
-    headTags.push('<title>Fivepa — Digital PR, Media Placement &amp; Growth Agency</title>');
-    headTags.push('<meta name="description" content="Discover premium guest posting and press release opportunities on established media websites, custom web development, and Shopify solutions." />');
+    headTags.push(`<title>${SITE_CONFIG.brandName} | ${escapeHtml(SITE_CONFIG.tagline)}</title>`);
+    headTags.push(`<meta name="description" content="${SITE_CONFIG.brandName} delivers guest posting, press releases, UGC AI videos, custom web development, Shopify solutions, and digital products." />`);
   }
 
   headTags.push(`<link rel="canonical" href="${canonical}" />`);

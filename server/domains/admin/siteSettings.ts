@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { DEFAULT_FEE_CONFIG, calculateOrderFees, type FeeConfig } from '../../../src/shared/fees.js';
+import { SITE_CONFIG } from '../../../src/siteConfig.js';
 
 export interface WebsiteSettings {
   siteName: string;
@@ -133,13 +134,13 @@ export interface SiteSettingsState {
 // Sensible Out-of-the-Box Defaults
 export const DEFAULT_SITE_SETTINGS: SiteSettingsState = {
   website: {
-    siteName: 'WorkPerHour',
-    siteTagline: 'Hire Top Freelancers & Discover Quality Services',
-    supportEmail: 'support@workperhour.com',
+    siteName: SITE_CONFIG.brandName,
+    siteTagline: SITE_CONFIG.tagline,
+    supportEmail: SITE_CONFIG.emails.support,
     contactPhone: '+1 (800) 555-WORK',
-    helpdeskUrl: 'https://support.workperhour.com',
+    helpdeskUrl: `${SITE_CONFIG.baseUrl}/support`,
     maintenanceMode: false,
-    copyrightText: '© 2026 WorkPerHour Inc. All rights reserved.'
+    copyrightText: SITE_CONFIG.copyright
   },
   commission: {
     commissionPercent: DEFAULT_FEE_CONFIG.commissionPercent, // 20% platform take rate
@@ -155,7 +156,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsState = {
     membershipsEnabled: true,
     freelancerPlans: [
       { id: 'plan_free', name: 'Standard Freelancer', priceMonthly: 0, bidsPerMonth: 0, commissionDiscountPercent: 0, featuredBadge: false, enabled: true },
-      { id: 'plan_pro', name: 'WorkPerHour Pro Talent', priceMonthly: 29, bidsPerMonth: 0, commissionDiscountPercent: 2, featuredBadge: true, enabled: true }
+      { id: 'plan_pro', name: `${SITE_CONFIG.brandName} Pro`, priceMonthly: 29, bidsPerMonth: 0, commissionDiscountPercent: 2, featuredBadge: true, enabled: true }
     ],
     buyerPlans: [
       { id: 'buyer_free', name: 'Standard Client', priceMonthly: 0, jobPostsPerMonth: 0, zeroBuyerFee: false, enabled: true },
@@ -209,8 +210,8 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsState = {
     minPasswordLength: 6
   },
   integrations: {
-    emailSenderName: 'WorkPerHour Notifications',
-    emailSenderAddress: 'notifications@workperhour.com',
+    emailSenderName: `${SITE_CONFIG.brandName} Notifications`,
+    emailSenderAddress: SITE_CONFIG.emails.notifications,
     sendWelcomeEmail: true,
     sendOrderStatusEmails: true,
     sendPayoutStatusEmails: true,

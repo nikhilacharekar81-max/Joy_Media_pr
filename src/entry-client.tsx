@@ -34,7 +34,7 @@ class RootErrorBoundary extends React.Component<
       /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk/i.test(msg);
     if (isChunkError && typeof window !== 'undefined') {
       try {
-        const key = 'fivepa_chunk_reload_ts';
+        const key = 'agency_chunk_reload_ts';
         const lastReload = Number(sessionStorage.getItem(key) || '0');
         if (Date.now() - lastReload > 10_000) {
           sessionStorage.setItem(key, String(Date.now()));
@@ -80,7 +80,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', (event) => {
     event.preventDefault();
     try {
-      const key = 'fivepa_chunk_reload_ts';
+      const key = 'agency_chunk_reload_ts';
       const lastReload = Number(sessionStorage.getItem(key) || '0');
       if (Date.now() - lastReload > 10_000) {
         sessionStorage.setItem(key, String(Date.now()));

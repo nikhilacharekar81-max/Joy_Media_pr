@@ -2,7 +2,7 @@ import { financeLedger, FinanceLedgerEngine, EscrowRecord, UserWallet, LedgerJou
 import { financialTransactionService, financialRepository } from './financial.service.js';
 
 /**
- * Finance Service Layer for WorkPerHour.
+ * Finance Service Layer.
  * Fee policy configuration and pure fee quotes remain synchronous;
  * all financial persistence and state mutations execute exclusively against PostgreSQL.
  */

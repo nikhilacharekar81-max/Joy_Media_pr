@@ -4,12 +4,13 @@ import {
   LogOut, Mail, Menu, Pencil, PlusCircle, Search, Settings, Sparkles, User, Users, Wallet,
   Volume2, VolumeX, X
 } from 'lucide-react';
-import { PPH_CATEGORIES } from '../components/HeaderCategoriesNav';
+import { SERVICE_CATEGORIES } from '../components/HeaderCategoriesNav';
 import { slugify } from '../utils/slugify';
 import type { Order, UserAccount } from '../types';
 import { isStaffRole } from '../types';
 import { clearAuthToken, getAuthToken } from '../utils/authToken';
 import { DEFAULT_AVATAR, getUserInitialsAvatar } from '../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../siteConfig';
 
 export interface HeaderProps {
   navigate: (to: string, e?: React.MouseEvent) => void;
@@ -173,10 +174,10 @@ export function Header({
         fetchNotifs(true);
       }
     };
-    window.addEventListener('fivepa:notification', handleRealtimeNotification as EventListener);
+    window.addEventListener('agency:notification', handleRealtimeNotification as EventListener);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('fivepa:notification', handleRealtimeNotification as EventListener);
+      window.removeEventListener('agency:notification', handleRealtimeNotification as EventListener);
     };
   }, [currentUser?.id, sessionReady]);
 
@@ -260,7 +261,7 @@ export function Header({
             onClick={(e) => navigate('/', e)}
             className="text-xl font-extrabold tracking-tight text-slate-900 hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0"
           >
-            Five<span className="text-emerald-600">pa</span><span className="text-orange-500">.</span>
+            {SITE_CONFIG.brandWordmark}
           </a>
         </div>
 
@@ -380,9 +381,11 @@ export function Header({
                 {orders.length === 0 ? (
                   <div className="p-6 text-center text-slate-400 space-y-2.5">
                     <Mail className="w-8 h-8 mx-auto text-slate-300" />
-                    <p className="text-xs font-bold text-slate-700">No workstreams yet</p>
+                    <p className="text-xs font-bold text-slate-700">{AGENCY_MODE ? 'No active orders yet' : 'No workstreams yet'}</p>
                     <p className="text-[11px] text-slate-500">
-                      Explore gigs, post a project, or switch demo user to open an escrow workstream.
+                      {AGENCY_MODE
+                        ? 'Browse our services or request a custom quote to get started.'
+                        : 'Explore gigs, post a project, or switch demo user to open an escrow workstream.'}
                     </p>
                     <div className="flex items-center justify-center gap-2 pt-1">
                       <button
@@ -393,20 +396,22 @@ export function Header({
                         }}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
                       >
-                        Explore Gigs
+                        {AGENCY_MODE ? 'Explore Services' : 'Explore Gigs'}
                       </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          setIsWorkstreamsDropdownOpen(false);
-                          if (onOpenSwitchUser) onOpenSwitchUser();
-                          else navigate('/switch-user', e);
-                        }}
-                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
-                      >
-                        <Users className="w-3 h-3" />
-                        <span>Switch User</span>
-                      </button>
+                      {!AGENCY_MODE && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            setIsWorkstreamsDropdownOpen(false);
+                            if (onOpenSwitchUser) onOpenSwitchUser();
+                            else navigate('/switch-user', e);
+                          }}
+                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1"
+                        >
+                          <Users className="w-3 h-3" />
+                          <span>Switch User</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -643,37 +648,41 @@ export function Header({
                           <span className="text-xs text-slate-400 uppercase">{currentUser.role}</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`text-[10px] font-bold uppercase ${currentUser.isAvailableNow ? 'text-emerald-700' : 'text-slate-500'}`}>
-                          {currentUser.isAvailableNow ? 'Online' : 'Away'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); toggleAvailableNow(); }}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            currentUser.isAvailableNow ? 'bg-emerald-500' : 'bg-slate-300'
-                          }`}
-                          role="switch"
-                          aria-checked={currentUser.isAvailableNow}
-                          title="Toggle availability status"
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                              currentUser.isAvailableNow ? 'translate-x-4' : 'translate-x-0'
+                      {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`text-[10px] font-bold uppercase ${currentUser.isAvailableNow ? 'text-emerald-700' : 'text-slate-500'}`}>
+                            {currentUser.isAvailableNow ? 'Online' : 'Away'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); toggleAvailableNow(); }}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              currentUser.isAvailableNow ? 'bg-emerald-500' : 'bg-slate-300'
                             }`}
-                          />
-                        </button>
-                      </div>
+                            role="switch"
+                            aria-checked={currentUser.isAvailableNow}
+                            title="Toggle availability status"
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                currentUser.isAvailableNow ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={(e) => { setIsUserDropdownOpen(false); navigate('/create-gig', e); }}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
-                    >
-                      <PlusCircle className="w-4 h-4 text-emerald-600" />
-                      <span>Post Gig</span>
-                    </button>
+                    {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
+                      <button
+                        type="button"
+                        onClick={(e) => { setIsUserDropdownOpen(false); navigate('/create-gig', e); }}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
+                      >
+                        <PlusCircle className="w-4 h-4 text-emerald-600" />
+                        <span>{AGENCY_MODE ? 'Add Service' : 'Post Gig'}</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -718,17 +727,19 @@ export function Header({
                       className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
                     >
                       <Briefcase className="w-4 h-4 text-indigo-600" />
-                      <span>Buyer Activity</span>
+                      <span>{AGENCY_MODE ? 'My Requests' : 'Buyer Activity'}</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={(e) => { setIsUserDropdownOpen(false); navigate('/freelance-activity', e); }}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
-                    >
-                      <Briefcase className="w-4 h-4 text-emerald-600" />
-                      <span>Freelancer Activity</span>
-                    </button>
+                    {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
+                      <button
+                        type="button"
+                        onClick={(e) => { setIsUserDropdownOpen(false); navigate('/freelance-activity', e); }}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-900 font-semibold flex items-center gap-2.5 transition cursor-pointer"
+                      >
+                        <Briefcase className="w-4 h-4 text-emerald-600" />
+                        <span>{AGENCY_MODE ? 'Agency Activity' : 'Freelancer Activity'}</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -785,7 +796,7 @@ export function Header({
                 ) : (
                   <div className="space-y-1.5">
                     <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                      <span className="font-bold text-slate-900 block">Welcome to Fivepa</span>
+                      <span className="font-bold text-slate-900 block">Welcome to {SITE_CONFIG.brandName}</span>
                       <span className="text-xs text-slate-500">Sign in or create an account</span>
                     </div>
                     <button
@@ -893,7 +904,7 @@ export function Header({
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">Categories</p>
               <div className="grid grid-cols-2 gap-1.5">
-                {PPH_CATEGORIES.slice(0, 6).map((cat) => (
+                {SERVICE_CATEGORIES.slice(0, 6).map((cat) => (
                   <button
                     key={cat.slug}
                     onClick={(e) => {
@@ -933,17 +944,19 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      Buyer Activity
+                      {AGENCY_MODE ? 'My Requests' : 'Buyer Activity'}
                     </button>
-                    <button
-                      onClick={(e) => {
-                        setIsMobileMenuOpen(false);
-                        navigate('/freelance-activity', e);
-                      }}
-                      className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
-                    >
-                      Freelancer Activity
-                    </button>
+                    {(!AGENCY_MODE || isStaffRole(currentUser.role)) && (
+                      <button
+                        onClick={(e) => {
+                          setIsMobileMenuOpen(false);
+                          navigate('/freelance-activity', e);
+                        }}
+                        className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
+                      >
+                        {AGENCY_MODE ? 'Agency Activity' : 'Freelancer Activity'}
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         setIsMobileMenuOpen(false);
@@ -951,7 +964,7 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      Dashboard
+                      {AGENCY_MODE ? 'My Orders' : 'Dashboard'}
                     </button>
                     <button
                       onClick={(e) => {
@@ -960,7 +973,7 @@ export function Header({
                       }}
                       className="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                     >
-                      Workstreams ({orders.length})
+                      {AGENCY_MODE ? `Order Updates (${orders.length})` : `Workstreams (${orders.length})`}
                     </button>
                   </div>
                   <button

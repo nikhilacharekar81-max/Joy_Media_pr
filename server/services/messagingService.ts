@@ -10,6 +10,7 @@ import { broadcastMessage } from '../websocket.js';
 import { notifyOrderParties } from './notificationService.js';
 import { isStaffUser } from '../middleware/auth.js';
 import { diagnosticService } from './diagnosticService.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 export const messageIndex = new Map<string, Message[]>();
 
@@ -137,7 +138,7 @@ export async function emitSystemEvent(
     id: 'msg_' + randomUUID(),
     orderId,
     senderId: 'system',
-    senderName: 'WorkSphere System',
+    senderName: SITE_CONFIG.brandName,
     text,
     timestamp: new Date().toISOString(),
     type: 'system',

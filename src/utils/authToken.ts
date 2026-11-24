@@ -1,4 +1,6 @@
-// Single source of truth for the Fivepa session token in the browser.
+import { AGENCY_MODE } from '../siteConfig';
+
+// Single source of truth for the session token in the browser.
 // Every component/hook reads, writes and clears the token through these helpers.
 const TOKEN_KEY = 'workperhour_token';
 // Legacy key written by older builds. Still read (so existing sessions survive) and always cleared.
@@ -52,8 +54,9 @@ export function isTokenStructurallyValid(token: string | null): boolean {
 
 const inFlightDemoSessions = new Map<string, Promise<{ token: string; user: any } | null>>();
 
-/** Dev/test only: asks the server for a real signed session for a non-privileged demo user. */
+/** Disabled in AGENCY_MODE; returns null without calling /api/auth/demo-session. */
 export async function requestDemoSession(userId: string): Promise<{ token: string; user: any } | null> {
+  if (AGENCY_MODE) return null;
   const existing = inFlightDemoSessions.get(userId);
   if (existing) return existing;
 

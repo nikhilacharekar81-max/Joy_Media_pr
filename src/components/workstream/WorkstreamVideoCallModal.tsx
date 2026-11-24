@@ -7,6 +7,7 @@ import {
 import { WorkstreamItem } from './types';
 import { UserAccount } from '../../types';
 import { DEFAULT_AVATAR } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamVideoCallModalProps {
   isOpen: boolean;
@@ -207,7 +208,9 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
               onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
             />
             <div className="overflow-hidden">
-              <h5 className="text-xs font-bold truncate">{partner?.name || 'Project Collaborator'}</h5>
+              <h5 className="text-xs font-bold truncate">
+                {AGENCY_MODE && currentUser?.id === order.buyerId ? SITE_CONFIG.brandName : (partner?.name || 'Project Collaborator')}
+              </h5>
               <p className="text-[10px] text-slate-400 truncate"></p>
             </div>
           </div>
@@ -250,7 +253,7 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white tracking-tight">WorkPerHour Meeting Room</h3>
+                <h3 className="text-base font-bold text-white tracking-tight">{SITE_CONFIG.brandName} Meeting Room</h3>
                 <span className="px-2.5 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold rounded-full flex items-center gap-1">
                   <Lock className="w-3 h-3 text-emerald-400" />
                   <span></span>
@@ -300,11 +303,13 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
           <div className="flex items-center gap-2.5 text-emerald-300">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="font-medium">
-              "Use our secure meeting rooms to ensure all project requirements are logged and protected under our Escrow Guarantee."
+              {AGENCY_MODE
+                ? `Use our secure meeting rooms so all project requirements are logged directly in your ${SITE_CONFIG.brandName} order workspace.`
+                : '"Use our secure meeting rooms to ensure all project requirements are logged and protected under our Escrow Guarantee."'}
             </span>
           </div>
           <span className="px-2.5 py-1 bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 rounded-lg text-[10px] font-bold tracking-wide uppercase shrink-0">
-            Escrow Protection Active
+            {AGENCY_MODE ? 'Secure Meeting Active' : 'Escrow Protection Active'}
           </span>
         </div>
 
@@ -380,7 +385,7 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
                       <div className="w-24 h-24 rounded-full bg-slate-800 border-2 border-emerald-500/60 flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-500/10">
                         <img 
                           src={partner?.avatar || DEFAULT_AVATAR} 
-                          alt={partner?.name || 'Partner'} 
+                          alt={AGENCY_MODE && currentUser?.id === order.buyerId ? SITE_CONFIG.brandName : (partner?.name || 'Partner')} 
                           className="w-full h-full object-cover"
                           onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_AVATAR; }}
                         />
@@ -388,7 +393,9 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
                       <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full" />
                     </div>
                     <div className="text-center">
-                      <h4 className="text-sm font-bold text-white">{partner?.name || 'Project Collaborator'}</h4>
+                      <h4 className="text-sm font-bold text-white">
+                        {AGENCY_MODE && currentUser?.id === order.buyerId ? SITE_CONFIG.brandName : (partner?.name || 'Project Collaborator')}
+                      </h4>
                       <p className="text-[11px] text-emerald-400 font-medium flex items-center justify-center gap-1 mt-0.5">
                         <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
                         <span>Connected</span>
@@ -398,7 +405,7 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
 
                   <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-xl border border-slate-700/80 text-white text-xs font-semibold flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{partner?.name || 'Collaborator'}</span>
+                    <span>{AGENCY_MODE && currentUser?.id === order.buyerId ? SITE_CONFIG.brandName : (partner?.name || 'Collaborator')}</span>
                   </div>
                 </div>
               </div>
@@ -456,7 +463,9 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
               </div>
 
               <p className="text-xs text-slate-400 leading-relaxed">
-                Log key agreements discussed during this meeting. Anything submitted here is recorded directly into the Workstream thread and protected under <strong className="text-slate-200 font-semibold">Escrow Guarantee</strong>.
+                {AGENCY_MODE
+                  ? 'Log key agreements discussed during this meeting. Anything submitted here is recorded directly into the order thread for clear tracking.'
+                  : <>Log key agreements discussed during this meeting. Anything submitted here is recorded directly into the Workstream thread and protected under <strong className="text-slate-200 font-semibold">Escrow Guarantee</strong>.</>}
               </p>
 
               {/* LOGGED NOTES STREAM */}
@@ -494,7 +503,7 @@ export const WorkstreamVideoCallModal: React.FC<WorkstreamVideoCallModalProps> =
                 className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Log to Workstream</span>
+                <span>{AGENCY_MODE ? 'Log to Order' : 'Log to Workstream'}</span>
               </button>
             </form>
           </div>

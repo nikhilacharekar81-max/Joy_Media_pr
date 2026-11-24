@@ -23,6 +23,7 @@ import { hasPaidInvoiceOrReleasedEscrow } from '../services/workstreamService.js
 import { createNotification } from '../services/notificationService.js';
 import { recordMessage } from '../services/messagingService.js';
 import { broadcastMessage } from '../websocket.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 const router = Router();
 
@@ -221,7 +222,7 @@ export const handleSubmitReview = async (req: Request, res: Response) => {
       id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       orderId: order.id,
       senderId: 'system',
-      senderName: 'WorkSphere Reviews',
+      senderName: `${SITE_CONFIG.brandName} Reviews`,
       text: `⭐ Review submitted by ${caller.name} (${newReview.rating}/5 stars): "${newReview.comment}"`,
       timestamp: new Date().toISOString(),
       type: 'system',
@@ -336,7 +337,11 @@ router.post('/reviews/:id/reply', requireAuth, async (req: Request, res: Respons
     const isBuyer = review.reviewerId === caller.id;
 
     if (!isAdmin && !isSeller && !isBuyer) {
-      return res.status(403).json({ error: 'Forbidden: Only the reviewed seller, the reviewer (buyer), or an admin can reply to this review.' });
+      return res.status(403).json({
+        error: SITE_CONFIG.AGENCY_MODE
+          ? 'Forbidden: Only the client or agency team can reply to this review.'
+          : 'Forbidden: Only the reviewed seller, the reviewer (buyer), or an admin can reply to this review.'
+      });
     }
 
     const { text, asRole } = req.body;
@@ -378,8 +383,12 @@ router.post('/reviews/:id/reply', requireAuth, async (req: Request, res: Respons
           id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           orderId: order.id,
           senderId: 'system',
-          senderName: 'WorkSphere Reviews',
-          text: `💬 Public response posted by ${isBuyerReply ? 'buyer' : 'seller'} ${caller.name}: "${replyObj.text}"`,
+          senderName: `${SITE_CONFIG.brandName} Reviews`,
+          text: `💬 Public response posted by ${
+            SITE_CONFIG.AGENCY_MODE
+              ? (isBuyerReply ? 'client' : 'our team')
+              : (isBuyerReply ? 'buyer' : 'seller')
+          } ${caller.name}: "${replyObj.text}"`,
           timestamp: new Date().toISOString(),
           type: 'system',
           metadata: { action: 'review_reply_submitted', reply: replyObj }

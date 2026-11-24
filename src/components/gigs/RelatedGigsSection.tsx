@@ -55,7 +55,7 @@ export const RelatedGigsSection: React.FC<RelatedGigsSectionProps> = ({
     }
   };
 
-  const formatFiverrTitle = (t: string) => {
+  const formatServiceTitle = (t: string) => {
     const stripped = (t || '').trim().replace(/^i\s+will\s+/i, '').trim();
     if (!stripped) return t || '';
     return stripped.charAt(0).toUpperCase() + stripped.slice(1);
@@ -102,7 +102,7 @@ export const RelatedGigsSection: React.FC<RelatedGigsSectionProps> = ({
                 </div>
 
                 <h4 className="text-sm sm:text-base leading-snug font-normal text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 min-h-[44px]">
-                  {formatFiverrTitle(gig.title)}
+                  {formatServiceTitle(gig.title)}
                 </h4>
 
                 {RATINGS_ENABLED && (

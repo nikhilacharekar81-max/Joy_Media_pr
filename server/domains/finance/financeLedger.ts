@@ -6,7 +6,7 @@ import { DEFAULT_FEE_CONFIG, calculateOrderFees, percentOfCents, validateFeeConf
 import { postgresStore } from '../../db/postgresStore.js';
 import { financialTransactionService } from './financial.service.js';
 
-// Authoritative Double-Entry Ledger & Financial Engine for WorkPerHour
+// Authoritative Double-Entry Ledger & Financial Engine
 
 export interface ChartOfAccount {
   code: string;

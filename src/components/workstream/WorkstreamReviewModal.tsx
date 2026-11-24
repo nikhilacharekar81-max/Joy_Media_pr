@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { WorkstreamItem } from './types';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamReviewModalProps {
   isOpen: boolean;
@@ -79,8 +80,12 @@ export const WorkstreamReviewModal: React.FC<WorkstreamReviewModalProps> = ({
             <Star className="w-6 h-6 fill-amber-400 text-amber-400" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-fiverr-dark">
-              {existingReview ? 'Update Your Review' : isSeller ? `Review Buyer${partnerName ? ` (${partnerName})` : ''}` : `Review Freelancer${partnerName ? ` (${partnerName})` : ''}`}
+            <h3 className="text-base font-bold text-agency-dark">
+              {existingReview
+                ? 'Update Your Review'
+                : AGENCY_MODE
+                  ? (isSeller ? `Review Client${partnerName ? ` (${partnerName})` : ''}` : `Review ${SITE_CONFIG.brandName}`)
+                  : (isSeller ? `Review Buyer${partnerName ? ` (${partnerName})` : ''}` : `Review Freelancer${partnerName ? ` (${partnerName})` : ''}`)}
             </h3>
             <p className="text-xs text-slate-400">Order #{order.id} • {order.title}</p>
           </div>
@@ -120,16 +125,22 @@ export const WorkstreamReviewModal: React.FC<WorkstreamReviewModalProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-fiverr-dark block">
-              {isSeller ? 'Share your experience working with this buyer' : 'Share your experience working with this seller'}
+            <label className="text-xs font-bold text-agency-dark block">
+              {AGENCY_MODE
+                ? (isSeller ? 'Share your experience working with this client' : `Share your experience working with ${SITE_CONFIG.brandName}`)
+                : (isSeller ? 'Share your experience working with this buyer' : 'Share your experience working with this seller')}
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder={isSeller ? 'Was the buyer clear with requirements, responsive, and fair?' : 'How was the quality of work, communication, and adherence to deadlines?'}
+              placeholder={
+                AGENCY_MODE
+                  ? (isSeller ? 'Was the client clear with requirements and responsive?' : 'How was the quality of work, communication, and adherence to deadlines?')
+                  : (isSeller ? 'Was the buyer clear with requirements, responsive, and fair?' : 'How was the quality of work, communication, and adherence to deadlines?')
+              }
               rows={4}
               disabled={isSubmitting}
-              className="w-full rounded-2xl border border-slate-200 p-3.5 text-xs text-fiverr-dark focus:outline-none focus:border-emerald-600 transition resize-none"
+              className="w-full rounded-2xl border border-slate-200 p-3.5 text-xs text-agency-dark focus:outline-none focus:border-emerald-600 transition resize-none"
             />
           </div>
 

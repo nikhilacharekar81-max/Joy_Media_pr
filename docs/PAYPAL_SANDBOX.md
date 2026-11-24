@@ -1,6 +1,6 @@
 # PayPal Sandbox Setup & 50-Run Verification Guide
 
-This guide explains how to configure, test, and verify the **FivePA / WorkPerHour** PayPal integration across Wallet Top-Ups, Gig Orders, Project Proposals, WorkStream Deposits, and WorkStream Invoices.
+This guide explains how to configure, test, and verify the **Joy Media PR** PayPal integration across Wallet Top-Ups, Gig Orders, Project Proposals, WorkStream Deposits, and WorkStream Invoices.
 
 ---
 
@@ -14,7 +14,7 @@ This guide explains how to configure, test, and verify the **FivePA / WorkPerHou
      - **Personal (Buyer) Account** (e.g., `sb-buyer@personal.example.com`) — used to log into the PayPal checkout popup/redirect and approve payments.
    - Click the three dots (`...`) → **View/Edit Account** on the Personal account to see its Sandbox email and password, or create additional buyer test accounts with varying balances.
 4. Go to **Apps & Credentials** (under **Sandbox**):
-   - Click **Create App**, name it `FivePA Sandbox`, and associate it with your Sandbox Business account.
+   - Click **Create App**, name it `Joy Media PR Sandbox`, and associate it with your Sandbox Business account.
    - Copy the **Client ID** (`PAYPAL_CLIENT_ID`) and **Secret** (`PAYPAL_CLIENT_SECRET`).
 
 ---
@@ -38,7 +38,7 @@ PayPal's servers need a public HTTPS URL to deliver signed webhook events (`PAYM
    ```
 
 ### Register the Webhook in PayPal Developer Dashboard
-1. Open your `FivePA Sandbox` app in **Apps & Credentials**.
+1. Open your `Joy Media PR Sandbox` app in **Apps & Credentials**.
 2. Scroll down to **SandBox Webhooks** and click **Add Webhook**.
 3. Enter your **Webhook URL**:
    ```text
@@ -109,7 +109,7 @@ Before running manual browser tests, verify your credentials and webhook state m
 | **3** | **Project Proposal Acceptance via PayPal** | On a Project page, click **Accept & Hire** on a `$100.00` freelancer proposal when wallet is empty. | Redirects to PayPal Sandbox for `$102.00` (`$100` + `$1` 1% fee + `$1` small-order fee), captures on return, accepts proposal, funds escrow, and shows **Open WorkStream** button. |
 | **4** | **WorkStream Proposal / Deposit / Invoice Payment** | Inside `/workstream/:id`, click **Accept & Fund** on a seller's Custom Proposal, Deposit Request, or Invoice. | Redirects to PayPal Sandbox for the exact shortfall, captures on return, marks the offer/invoice `accepted`/`paid`, and updates the WorkStream live. |
 | **5** | **Success Page Refresh & Back-Button (5x Reload)** | On `/checkout/success?session_id=...&token=...`, press `F5` / Cmd+R 5 times in a row. | Returns `alreadyProcessed: true` with HTTP 200. Wallet is credited **exactly once**; no duplicate order or ledger entry is created. |
-| **6** | **Buyer Cancels on PayPal Approval Screen** | Click **Cancel and return to FivePA** on the PayPal Sandbox login/approval screen. | Redirects to `/checkout/cancel?session_id=...`. Marks session `cancelled`. Wallet balance is unchanged (`$0.00` delta) and no ledger entry is written. |
+| **6** | **Buyer Cancels on PayPal Approval Screen** | Click **Cancel and return to Joy Media PR** on the PayPal Sandbox login/approval screen. | Redirects to `/checkout/cancel?session_id=...`. Marks session `cancelled`. Wallet balance is unchanged (`$0.00` delta) and no ledger entry is written. |
 | **7** | **Webhook Arrives Before Return Page Loads** | Approve payment on PayPal, wait 5 seconds before following redirect (or trigger `PAYMENT.CAPTURE.COMPLETED` first), then load `/checkout/success`. | Webhook credits wallet and marks session `completed`. Subsequent `POST /api/payments/paypal/capture` sees `status === 'completed'`, skips re-capture, and runs any pending order continuation once. |
 | **8** | **Duplicate Webhook Replay from PayPal Dashboard** | In PayPal Developer Dashboard → **Webhook Events**, click **Resend** on a delivered `PAYMENT.CAPTURE.COMPLETED` event 3 times. | Server responds `200 OK` (`duplicate: true`) on each replay. `payment_webhook_events` records the event ID once; wallet balance does not change. |
 | **9** | **Amount or Currency Tampering Rejection** | Send a webhook where `resource.amount.currency_code` is `EUR` or `value` is `5.00` for a `$25.00 USD` session. | Server logs the mismatch, returns HTTP `400`, leaves checkout session uncredited, and writes zero ledger entries. |

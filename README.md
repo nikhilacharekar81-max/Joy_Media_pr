@@ -1,6 +1,6 @@
-# FivePA / WorkPerHour
+# Joy Media PR
 
-A full-stack freelance marketplace with escrow payment protection, real-time WorkStream collaboration, Gigs, and Projects.
+Digital PR, media placement, and growth agency web application offering guest posting, press releases, UGC AI videos, custom web development, Shopify solutions, and digital products with client order tracking and online payments.
 
 ## Run Locally
 

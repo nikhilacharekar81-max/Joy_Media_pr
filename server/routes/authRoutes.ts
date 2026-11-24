@@ -41,6 +41,7 @@ import {
 import { handlePayoutRequest } from '../services/payoutService.js';
 import { ensureWallet } from '../services/orderService.js';
 import { siteSettings } from '../domains/admin/siteSettings.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 export const authRouter = Router();
 
@@ -96,13 +97,13 @@ authRouter.post('/signup', rateLimit(20, 3_600_000), async (req: Request, res: R
       mobile: trimmedMobile || undefined,
       role: 'user',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop',
-      title: 'Freelancer / Member',
+      title: SITE_CONFIG.AGENCY_MODE ? 'Client' : 'Freelancer / Member',
       rating: 0,
       reviewsCount: 0,
       hourlyRate: 50,
       earned: 0,
       completedJobs: 0,
-      bio: 'New member on WorkPerHour.',
+      bio: `New client on ${SITE_CONFIG.brandName}.`,
       skills: ['General'],
       status: 'active',
       verified: false,
@@ -173,9 +174,9 @@ authRouter.post('/signup', rateLimit(20, 3_600_000), async (req: Request, res: R
       id: 'email_' + Date.now() + '_' + randomUUID().slice(0, 8),
       userId: newUserId,
       userEmail: normalizedEmail,
-      subject: 'Verify Your WorkPerHour Account',
-      snippet: 'Welcome to WorkPerHour! Verification code dispatched.',
-      body: 'Welcome to WorkPerHour! Please enter the verification code sent to your registered contact channel to verify your account.',
+      subject: `Verify Your ${SITE_CONFIG.brandName} Account`,
+      snippet: `Welcome to ${SITE_CONFIG.brandName}! Verification code dispatched.`,
+      body: `Welcome to ${SITE_CONFIG.brandName}! Please enter the verification code sent to your registered contact channel to verify your account.`,
       date: new Date().toLocaleDateString(),
       read: false,
       type: 'GENERAL'
@@ -352,7 +353,7 @@ authRouter.post('/resend-email-code', rateLimit(10, 3_600_000), async (req: Requ
     id: 'email_' + Date.now() + '_' + randomUUID().slice(0, 8),
     userId: user.id,
     userEmail: normalizedEmail,
-    subject: 'Your New WorkPerHour Verification Code',
+    subject: `Your New ${SITE_CONFIG.brandName} Verification Code`,
     snippet: 'A new verification code was dispatched.',
     body: 'A new verification code was requested for your account. Please enter the code sent to your registered contact channel.',
     date: new Date().toLocaleDateString(),
@@ -506,9 +507,9 @@ authRouter.get('/me', async (req: Request, res: Response) => {
   return res.json({ success: true, user: safeUser(u) });
 });
 
-// 6. Demo Session (dev/test only)
+// 6. Demo Session (disabled in agency/production mode; test-only)
 authRouter.post('/demo-session', async (req: Request, res: Response) => {
-  if (IS_PRODUCTION && !isTestEnv) return res.status(404).json({ error: 'Not found.' });
+  if ((SITE_CONFIG.AGENCY_MODE || IS_PRODUCTION) && !isTestEnv) return res.status(404).json({ error: 'Not found.' });
   const { userId } = req.body || {};
   const user = await store.getUser(userId);
   if (!user) return res.status(404).json({ error: 'Demo user not found.' });
@@ -847,7 +848,7 @@ authRouter.post('/withdrawal/request-code', requireAuth, requireFinancialActiveS
     userEmail: caller.email,
     subject: 'Withdrawal Email Verification Requested',
     snippet: 'Withdrawal verification code dispatched.',
-    body: 'You requested a withdrawal from your WorkPerHour wallet. Please use the verification code sent to your registered contact channel to complete the transaction.',
+    body: `You requested a withdrawal from your ${SITE_CONFIG.brandName} account. Please use the verification code sent to your registered contact channel to complete the transaction.`,
     date: new Date().toLocaleDateString(),
     read: false,
     type: 'GENERAL'

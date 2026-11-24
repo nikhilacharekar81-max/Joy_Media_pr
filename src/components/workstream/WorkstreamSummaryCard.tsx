@@ -6,6 +6,7 @@ import {
 import { WorkstreamItem } from './types';
 import { UserAccount } from '../../types';
 import { DEFAULT_AVATAR } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamSummaryCardProps {
   order: WorkstreamItem;
@@ -39,8 +40,10 @@ export const WorkstreamSummaryCard: React.FC<WorkstreamSummaryCardProps> = ({
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900">Escrow Vault</h4>
-            <p className="text-[15px] leading-[23px] text-slate-500">WorkPerHour Protection</p>
+            <h4 className="text-sm font-bold text-slate-900">{AGENCY_MODE ? 'Order Payment' : 'Escrow Vault'}</h4>
+            <p className="text-[15px] leading-[23px] text-slate-500">
+              {AGENCY_MODE ? `${SITE_CONFIG.brandName} Secure Billing` : `${SITE_CONFIG.brandName} Protection`}
+            </p>
           </div>
         </div>
         
@@ -57,12 +60,20 @@ export const WorkstreamSummaryCard: React.FC<WorkstreamSummaryCardProps> = ({
       {/* Collaborator */}
       {partner && (
         <div className="pt-6 border-t border-slate-100 flex items-center gap-3">
-          <img src={partner.avatar || DEFAULT_AVATAR} alt={partner.name} className="w-10 h-10 rounded-full object-cover" />
+          <img
+            src={partner.avatar || DEFAULT_AVATAR}
+            alt={AGENCY_MODE && isBuyer ? SITE_CONFIG.brandName : partner.name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
           <div>
-            <h4 className="text-sm font-bold text-slate-900">{partner.name}</h4>
-            <p className="text-xs text-slate-500">{isBuyer ? 'Freelancer' : 'Client'}</p>
+            <h4 className="text-sm font-bold text-slate-900">
+              {AGENCY_MODE && isBuyer ? SITE_CONFIG.brandName : partner.name}
+            </h4>
+            <p className="text-xs text-slate-500">
+              {isBuyer ? (AGENCY_MODE ? 'Our Team' : 'Freelancer') : 'Client'}
+            </p>
           </div>
-          {onViewPartnerProfile && (
+          {onViewPartnerProfile && !(AGENCY_MODE && isBuyer) && (
             <button 
               onClick={() => onViewPartnerProfile(partner)} 
               className="ml-auto text-slate-400 hover:text-emerald-600"

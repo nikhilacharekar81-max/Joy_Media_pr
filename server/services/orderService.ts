@@ -28,6 +28,7 @@ import {
 import { siteSettings } from '../../src/server/siteSettings.js';
 import { workspaceService } from '../../src/server/workspaceService.js';
 import { emitSystemEvent, recordMessage, registerMessage } from './messagingService.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 import { createNotification, sendOrderEmail, notifyUserEmail } from './notificationService.js';
 import { recalculateUserRating } from './reviewService.js';
 import { broadcastMessage } from '../websocket.js';
@@ -426,7 +427,15 @@ export async function fundOrderEscrowWithEvent(params: { orderId: string; orderT
 
 export async function topUpOrderEscrowWithEvent(params: { orderId: string; orderTitle: string; amount: number; buyerId: string; sellerId: string; actor: string; skipMinimum?: boolean; idempotencyKey?: string }, externalClient?: any) {
   const res = await financialTransactionService.topUpEscrow(params, externalClient);
-  await emitSystemEvent(params.orderId, 'escrow_funded', `🔒 Additional $${params.amount.toLocaleString()} funded into escrow for "${params.orderTitle}".`, { amount: params.amount, isTopUp: true }, externalClient);
+  await emitSystemEvent(
+    params.orderId,
+    'escrow_funded',
+    SITE_CONFIG.AGENCY_MODE
+      ? `🔒 Additional $${params.amount.toLocaleString()} payment confirmed for "${params.orderTitle}".`
+      : `🔒 Additional $${params.amount.toLocaleString()} funded into escrow for "${params.orderTitle}".`,
+    { amount: params.amount, isTopUp: true },
+    externalClient
+  );
   return res;
 }
 
@@ -471,18 +480,32 @@ export async function releaseOrderFunds(
   await syncUserBalances([order.buyerId, order.sellerId].filter(Boolean), externalClient);
 
   if (approvedByBuyer) {
-    await emitSystemEvent(order.id, 'deliverable_approved', `✅ Deliverables approved by buyer.`, {
-      freelancerNet: result.freelancerNet,
-      acceptedVersion: order.acceptedVersion
-    }, externalClient);
+    await emitSystemEvent(
+      order.id,
+      'deliverable_approved',
+      SITE_CONFIG.AGENCY_MODE ? `✅ Deliverables approved by client.` : `✅ Deliverables approved by buyer.`,
+      {
+        freelancerNet: result.freelancerNet,
+        acceptedVersion: order.acceptedVersion
+      },
+      externalClient
+    );
   }
 
-  await emitSystemEvent(order.id, 'escrow_released', `🎉 Escrow funds ($${order.amount.toLocaleString()}) released to seller! Workstream marked as completed.`, {
-    amount: order.amount,
-    freelancerNet: result.freelancerNet,
-    platformFee: result.platformFee,
-    orderCompleted: true
-  }, externalClient);
+  await emitSystemEvent(
+    order.id,
+    'escrow_released',
+    SITE_CONFIG.AGENCY_MODE
+      ? `🎉 Order payment ($${order.amount.toLocaleString()}) finalized. Order marked as completed.`
+      : `🎉 Escrow funds ($${order.amount.toLocaleString()}) released to seller! Workstream marked as completed.`,
+    {
+      amount: order.amount,
+      freelancerNet: result.freelancerNet,
+      platformFee: result.platformFee,
+      orderCompleted: true
+    },
+    externalClient
+  );
 
   await emitSystemEvent(order.id, 'order_completed', `✅ Order completed.`, {}, externalClient);
   return result;
@@ -536,10 +559,18 @@ export async function refundOrderFunds(
     ]
   );
 
-  await emitSystemEvent(order.id, 'escrow_refunded', `💸 Escrow refunded ($${result.refunded.toLocaleString()}) to buyer wallet. Reason: ${reason}`, {
-    refunded: result.refunded,
-    orderCancelled: order.status === 'cancelled'
-  }, externalClient);
+  await emitSystemEvent(
+    order.id,
+    'escrow_refunded',
+    SITE_CONFIG.AGENCY_MODE
+      ? `💸 Refund of $${result.refunded.toLocaleString()} credited to client account. Reason: ${reason}`
+      : `💸 Escrow refunded ($${result.refunded.toLocaleString()}) to buyer wallet. Reason: ${reason}`,
+    {
+      refunded: result.refunded,
+      orderCancelled: order.status === 'cancelled'
+    },
+    externalClient
+  );
 
   return result;
 }
@@ -559,16 +590,32 @@ export async function splitOrderFunds(order: Order, refundAmount: number, actor:
     ['completed', order.completedAt, order.id]
   );
 
-  await emitSystemEvent(order.id, 'escrow_refunded', `💸 Partial refund of $${refundAmount.toLocaleString()} returned to buyer wallet. Reason: ${reason}`, {
-    refunded: refundAmount,
-    splitResolution: true
-  }, externalClient);
-  await emitSystemEvent(order.id, 'escrow_released', `🎉 Remaining escrow funds ($${result.release.freelancerNet.toLocaleString()}) released to seller. Workstream marked as completed.`, {
-    freelancerNet: result.release.freelancerNet,
-    platformFee: result.release.platformFee,
-    orderCompleted: true,
-    splitResolution: true
-  }, externalClient);
+  await emitSystemEvent(
+    order.id,
+    'escrow_refunded',
+    SITE_CONFIG.AGENCY_MODE
+      ? `💸 Partial refund of $${refundAmount.toLocaleString()} returned to client account. Reason: ${reason}`
+      : `💸 Partial refund of $${refundAmount.toLocaleString()} returned to buyer wallet. Reason: ${reason}`,
+    {
+      refunded: refundAmount,
+      splitResolution: true
+    },
+    externalClient
+  );
+  await emitSystemEvent(
+    order.id,
+    'escrow_released',
+    SITE_CONFIG.AGENCY_MODE
+      ? `🎉 Remaining order balance ($${result.release.freelancerNet.toLocaleString()}) finalized. Order marked as completed.`
+      : `🎉 Remaining escrow funds ($${result.release.freelancerNet.toLocaleString()}) released to seller. Workstream marked as completed.`,
+    {
+      freelancerNet: result.release.freelancerNet,
+      platformFee: result.release.platformFee,
+      orderCompleted: true,
+      splitResolution: true
+    },
+    externalClient
+  );
   await emitSystemEvent(order.id, 'order_completed', `✅ Order completed via dispute resolution.`, {}, externalClient);
 
   return result;
@@ -577,11 +624,21 @@ export async function splitOrderFunds(order: Order, refundAmount: number, actor:
 export function validateOrderReleasePreconditions(order: Order, isAdmin = false, isInvoiceApproval = false): { status: number; error: string } | null {
   if (order.status === 'completed') {
     diagnosticService.log('security', 'orderService', 'validateOrderReleasePreconditions', 'server/services/orderService.ts', 'release_preconditions', 'INTERCEPTED', { orderId: order.id, status: order.status }, 'Order is already completed');
-    return { status: 400, error: 'Order is already completed and payment has already been released.' };
+    return {
+      status: 400,
+      error: SITE_CONFIG.AGENCY_MODE
+        ? 'Order is already completed and finalized.'
+        : 'Order is already completed and payment has already been released.'
+    };
   }
   if (order.status === 'cancelled') {
     diagnosticService.log('security', 'orderService', 'validateOrderReleasePreconditions', 'server/services/orderService.ts', 'release_preconditions', 'INTERCEPTED', { orderId: order.id, status: order.status }, 'Order is cancelled; funds already refunded');
-    return { status: 400, error: 'Order is cancelled; funds have been returned to the buyer.' };
+    return {
+      status: 400,
+      error: SITE_CONFIG.AGENCY_MODE
+        ? 'Order is cancelled; funds have been returned to the client.'
+        : 'Order is cancelled; funds have been returned to the buyer.'
+    };
   }
   if (order.cancellationRequest && order.cancellationRequest.status === 'pending') {
     diagnosticService.log('security', 'orderService', 'validateOrderReleasePreconditions', 'server/services/orderService.ts', 'release_preconditions', 'INTERCEPTED', { orderId: order.id, cancellationRequest: order.cancellationRequest }, 'Cannot release payment while cancellation request is pending');
@@ -601,13 +658,23 @@ export function validateOrderReleasePreconditions(order: Order, isAdmin = false,
   }
   if (!isAdmin && !isInvoiceApproval && order.status !== 'delivered') {
     diagnosticService.log('security', 'orderService', 'validateOrderReleasePreconditions', 'server/services/orderService.ts', 'release_preconditions', 'INTERCEPTED', { orderId: order.id, status: order.status }, 'Payment release attempted before work was delivered');
-    return { status: 400, error: 'Payment can only be released after the freelancer has submitted deliverables.' };
+    return {
+      status: 400,
+      error: SITE_CONFIG.AGENCY_MODE
+        ? 'Order can only be finalized after deliverables have been submitted.'
+        : 'Payment can only be released after the freelancer has submitted deliverables.'
+    };
   }
   if (!isAdmin && !isInvoiceApproval && Array.isArray(order.revisions)) {
     const activeRev = order.revisions.some(r => r.status === 'requested');
     if (activeRev) {
       diagnosticService.log('security', 'orderService', 'validateOrderReleasePreconditions', 'server/services/orderService.ts', 'release_preconditions', 'INTERCEPTED', { orderId: order.id, revisions: order.revisions }, 'Payment release attempted while revision is pending');
-      return { status: 400, error: 'Cannot release payment while a revision is in progress. The freelancer must deliver the revised work first.' };
+      return {
+        status: 400,
+        error: SITE_CONFIG.AGENCY_MODE
+          ? 'Cannot finalize order while a revision is in progress. Updated deliverables must be submitted first.'
+          : 'Cannot release payment while a revision is in progress. The freelancer must deliver the revised work first.'
+      };
     }
   }
   return null;
@@ -1111,8 +1178,10 @@ export async function processAutoAcceptOrders(customNow?: number): Promise<Array
             id: `msg_${randomUUID()}`,
             orderId: freshOrder.id,
             senderId: 'system',
-            senderName: 'WorkPerHour System',
-            text: `🎉 Deliverables automatically accepted: Buyer review window (${freshDays} days) closed without revisions or dispute. Escrow funds released to seller.`,
+            senderName: SITE_CONFIG.brandName,
+            text: SITE_CONFIG.AGENCY_MODE
+              ? `🎉 Deliverables automatically accepted: Review window (${freshDays} days) closed without revisions or open issues. Order marked as completed.`
+              : `🎉 Deliverables automatically accepted: Buyer review window (${freshDays} days) closed without revisions or dispute. Escrow funds released to seller.`,
             timestamp: new Date(now).toISOString(),
             type: 'system',
             metadata: {
@@ -1220,7 +1289,9 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
           userId: buyerId,
           type: 'order',
           title: `Invoice received for "${order.title}"`,
-          message: `Your project invoice #${row.number || row.id} has been submitted. Funds will automatically release on ${formattedDeadline} unless a revision or dispute is requested.`,
+          message: SITE_CONFIG.AGENCY_MODE
+            ? `Your invoice #${row.number || row.id} has been submitted. It will be automatically finalized on ${formattedDeadline} unless a revision or support review is requested.`
+            : `Your project invoice #${row.number || row.id} has been submitted. Funds will automatically release on ${formattedDeadline} unless a revision or dispute is requested.`,
           link: `/workstream/${order.id}`,
           metadata: { orderId: order.id, offerId: row.id, reminderType: 'initial' }
         });
@@ -1228,7 +1299,9 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
         notifyUserEmail({
           userId: buyerId,
           subject: `Action needed: Review invoice for "${order.title}"`,
-          body: `Your project invoice #${row.number || row.id} has been submitted. Please review deliverables before funds auto-release on ${formattedDeadline}.`,
+          body: SITE_CONFIG.AGENCY_MODE
+            ? `Your invoice #${row.number || row.id} has been submitted. Please review deliverables before automatic acceptance on ${formattedDeadline}.`
+            : `Your project invoice #${row.number || row.id} has been submitted. Please review deliverables before funds auto-release on ${formattedDeadline}.`,
           path: `/workstream/${order.id}`
         });
       }
@@ -1244,7 +1317,9 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
           userId: buyerId,
           type: 'order',
           title: `Reminder: Invoice review for "${order.title}"`,
-          message: `Your project invoice #${row.number || row.id} is awaiting review. Funds will automatically release on ${formattedDeadline} unless a revision or dispute is requested.`,
+          message: SITE_CONFIG.AGENCY_MODE
+            ? `Your invoice #${row.number || row.id} is awaiting review. It will be automatically finalized on ${formattedDeadline} unless a revision or support review is requested.`
+            : `Your project invoice #${row.number || row.id} is awaiting review. Funds will automatically release on ${formattedDeadline} unless a revision or dispute is requested.`,
           link: `/workstream/${order.id}`,
           metadata: { orderId: order.id, offerId: row.id, reminderType: 'day3' }
         });
@@ -1254,7 +1329,9 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
           notifyUserEmail({
             user: buyerUser,
             subject: `Action needed: Review invoice for "${order.title}"`,
-            body: `Your project invoice #${row.number || row.id} has been open for 3 days. Please review deliverables before funds auto-release on ${formattedDeadline}.`,
+            body: SITE_CONFIG.AGENCY_MODE
+              ? `Your invoice #${row.number || row.id} has been open for 3 days. Please review deliverables before automatic acceptance on ${formattedDeadline}.`
+              : `Your project invoice #${row.number || row.id} has been open for 3 days. Please review deliverables before funds auto-release on ${formattedDeadline}.`,
             path: `/workstream/${order.id}`
           });
         }
@@ -1271,7 +1348,9 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
           userId: buyerId,
           type: 'order',
           title: `Final reminder: Invoice review for "${order.title}"`,
-          message: `Your project invoice #${row.number || row.id} will auto-release tomorrow on ${formattedDeadline}. Review your work now to approve or request revisions.`,
+          message: SITE_CONFIG.AGENCY_MODE
+            ? `Your invoice #${row.number || row.id} will be automatically finalized tomorrow on ${formattedDeadline}. Review your deliverables now to approve or request revisions.`
+            : `Your project invoice #${row.number || row.id} will auto-release tomorrow on ${formattedDeadline}. Review your work now to approve or request revisions.`,
           link: `/workstream/${order.id}`,
           metadata: { orderId: order.id, offerId: row.id, reminderType: 'day6' }
         });
@@ -1280,8 +1359,12 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
         if (buyerUser) {
           notifyUserEmail({
             user: buyerUser,
-            subject: `Final reminder: Invoice auto-release approaching for "${order.title}"`,
-            body: `Your project invoice #${row.number || row.id} will auto-release on ${formattedDeadline}.`,
+            subject: SITE_CONFIG.AGENCY_MODE
+              ? `Final reminder: Invoice acceptance approaching for "${order.title}"`
+              : `Final reminder: Invoice auto-release approaching for "${order.title}"`,
+            body: SITE_CONFIG.AGENCY_MODE
+              ? `Your invoice #${row.number || row.id} will be automatically finalized on ${formattedDeadline}.`
+              : `Your project invoice #${row.number || row.id} will auto-release on ${formattedDeadline}.`,
             path: `/workstream/${order.id}`
           });
         }
@@ -1297,8 +1380,12 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
         await createNotification({
           userId: buyerId,
           type: 'order',
-          title: `24 hours remaining: Invoice auto-release for "${order.title}"`,
-          message: `Escrow funds for invoice #${row.number || row.id} will automatically release in 24 hours (${formattedDeadline}) if no action is taken.`,
+          title: SITE_CONFIG.AGENCY_MODE
+            ? `24 hours remaining: Invoice acceptance for "${order.title}"`
+            : `24 hours remaining: Invoice auto-release for "${order.title}"`,
+          message: SITE_CONFIG.AGENCY_MODE
+            ? `Invoice #${row.number || row.id} will be automatically finalized in 24 hours (${formattedDeadline}) if no action is taken.`
+            : `Escrow funds for invoice #${row.number || row.id} will automatically release in 24 hours (${formattedDeadline}) if no action is taken.`,
           link: `/workstream/${order.id}`,
           metadata: { orderId: order.id, offerId: row.id, reminderType: 'hours24' }
         });
@@ -1307,8 +1394,12 @@ export async function processProjectInvoiceReminders(customNow?: number): Promis
         if (buyerUser) {
           notifyUserEmail({
             user: buyerUser,
-            subject: `24 hours remaining: Invoice auto-release for "${order.title}"`,
-            body: `Escrow funds for invoice #${row.number || row.id} will automatically release in 24 hours (${formattedDeadline}).`,
+            subject: SITE_CONFIG.AGENCY_MODE
+              ? `24 hours remaining: Invoice acceptance for "${order.title}"`
+              : `24 hours remaining: Invoice auto-release for "${order.title}"`,
+            body: SITE_CONFIG.AGENCY_MODE
+              ? `Invoice #${row.number || row.id} will be automatically finalized in 24 hours (${formattedDeadline}).`
+              : `Escrow funds for invoice #${row.number || row.id} will automatically release in 24 hours (${formattedDeadline}).`,
             path: `/workstream/${order.id}`
           });
         }

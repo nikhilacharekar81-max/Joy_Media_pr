@@ -28,12 +28,13 @@ import {
   TrendingUp,
   RotateCcw
 } from 'lucide-react';
-import { Project, User as UserType, Proposal, Order, ProjectClarification } from '../../types';
+import { Project, User as UserType, Proposal, Order, ProjectClarification, isStaffRole } from '../../types';
 import { calculateOrderFees } from '../../shared/fees';
 import { getAuthToken } from '../../utils/authToken';
 import { fetchWithRetry } from '../../utils/fetchRetry';
 import { initiateGatewayCheckout } from '../../utils/gatewayCheckout';
 import { DEFAULT_AVATAR } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface ProjectDetailViewProps {
   project: Project;
@@ -67,7 +68,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const [proposalDays, setProposalDays] = useState<number | string>(project.deadlineDays || 7);
   const [proposalDeposit, setProposalDeposit] = useState<number>(20); // 20% deposit default
   const [proposalCover, setProposalCover] = useState<string>('');
-  const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedProposal, setSubmittedProposal] = useState<Proposal | null>(null);
   const [busyProposalId, setBusyProposalId] = useState<string | null>(null);
@@ -83,7 +83,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const effectiveStatus = localProjectStatus || project.status;
   const isProjectCompleted = effectiveStatus === 'completed';
 
+  const isStaff = isStaffRole(currentUser?.role);
   const isProjectOwner = Boolean(currentUser && currentUser.id === project.buyerId);
+  const canSubmitProposal = !isProjectOwner && (!AGENCY_MODE || isStaff);
   const projectProposals = proposals.filter(p => p.projectId === project.id);
   const myProposalsOnProject = currentUser ? projectProposals.filter(p => p.freelancerId === currentUser.id) : [];
 
@@ -107,11 +109,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
       if (onRefresh) await onRefresh();
       if (nextStatus === 'completed') {
         setProposalActionSuccess({
-          message: 'Project marked as completed (Bidding Closed). Your project is now hidden from the public project listing page.'
+          message: AGENCY_MODE
+            ? 'Project request marked as completed.'
+            : 'Project marked as completed (Bidding Closed). Your project is now hidden from the public project listing page.'
         });
       } else {
         setProposalActionSuccess({
-          message: 'Project reopened for bidding and restored to the public project listing page.'
+          message: AGENCY_MODE
+            ? 'Project request reopened.'
+            : 'Project reopened for bidding and restored to the public project listing page.'
         });
       }
     } catch (err: any) {
@@ -166,12 +172,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
       if (onRefresh) await onRefresh();
       if (action === 'accept') {
         setProposalActionSuccess({
-          message: `Hired ${prop.freelancerName} ($${prop.bidAmount.toLocaleString()} USD funded in escrow). Their independent Workstream is now active!`,
+          message: AGENCY_MODE
+            ? `Quote accepted ($${prop.bidAmount.toLocaleString()} USD). Your dedicated order workspace is now active!`
+            : `Hired ${prop.freelancerName} ($${prop.bidAmount.toLocaleString()} USD funded in escrow). Their independent Workstream is now active!`,
           workstreamOrderId: data.workstreamOrderId || data.order?.id
         });
       } else {
         setProposalActionSuccess({
-          message: `Declined proposal from ${prop.freelancerName}.`
+          message: AGENCY_MODE ? 'Declined custom quote.' : `Declined proposal from ${prop.freelancerName}.`
         });
       }
     } catch (err: any) {
@@ -220,16 +228,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const netEarnings = bidFees.freelancerNet;
   const depositAmount = Math.round((numericBid * proposalDeposit) / 100);
 
-  // Auto-generate AI Cover Letter
-  const handleGenerateAIProposal = () => {
-    setIsGeneratingAI(true);
-    setTimeout(() => {
-      const generated = `Dear ${project.buyerName || 'Client'},\n\nI reviewed your project request for "${project.title}" and I am confident I can deliver exceptional results tailored to your requirements.\n\nWith extensive experience in ${project.skills?.slice(0, 3).join(', ') || 'this field'}, I specialize in providing precise, high-quality work delivered strictly on schedule. I understand the importance of ${project.description.slice(0, 80)}...\n\nWhy choose me:\n• Proven track record with 5-star ratings on similar assignments\n• Clear, regular communication throughout the project lifecycle\n• Thorough review and revisions included until you are 100% satisfied\n\nI am ready to start immediately and can deliver the completed project within ${proposalDays} days. Let us discuss the finer details via chat!\n\nBest regards,\n${currentUser ? currentUser.name : 'Professional Freelancer'}`;
-      setProposalCover(generated);
-      setIsGeneratingAI(false);
-    }, 700);
-  };
-
   // Handle proposal submission
   const handleSubmitProposalForm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +272,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
       freelancerId: currentUser?.id || 'user_1',
       freelancerName: currentUser?.name || 'You',
       freelancerAvatar: currentUser?.avatar || DEFAULT_AVATAR,
-      freelancerTitle: currentUser?.title || 'Senior Freelance Specialist',
+      freelancerTitle: currentUser?.title || (AGENCY_MODE ? `${SITE_CONFIG.brandName} Team` : 'Senior Freelance Specialist'),
       coverLetter: proposalCover,
       bidAmount: numericBid,
       deliveryDays: Number(proposalDays),
@@ -355,18 +353,18 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     }, 1200);
   };
 
-  // Similar projects filter (buyers only see their own projects)
+  // Similar projects filter (clients only see their own projects)
   const isBuyerNonOwner = Boolean(
     currentUser &&
-    currentUser.role === 'buyer' &&
-    !['admin', 'super_admin', 'support'].includes(currentUser.role) &&
-    currentUser.id !== project.buyerId
+    !isStaff &&
+    currentUser.id !== project.buyerId &&
+    (AGENCY_MODE || currentUser.role === 'buyer')
   );
 
   const relatedProjects = allProjects
     .filter(p => {
       if (p.id === project.id) return false;
-      if (currentUser && currentUser.role === 'buyer' && !['admin', 'super_admin', 'support'].includes(currentUser.role)) {
+      if (currentUser && !isStaff && (AGENCY_MODE || currentUser.role === 'buyer')) {
         return p.buyerId === currentUser.id;
       }
       return (p.status === 'open' || p.status === 'published') && (p.category === project.category || p.skills?.some(s => project.skills?.includes(s)));
@@ -382,7 +380,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Project Access Restricted</h1>
           <p className="text-sm text-slate-600 leading-relaxed">
-            As a buyer, you can only view and manage your own posted projects. Other buyers&apos; project requests are private.
+            {AGENCY_MODE
+              ? 'You can only view and manage your own custom project requests. Other clients\u2019 requests are private.'
+              : 'As a buyer, you can only view and manage your own posted projects. Other buyers\u2019 project requests are private.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
@@ -390,14 +390,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               onClick={(e) => navigate('/buyer-activity', e)}
               className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
             >
-              View My Projects
+              {AGENCY_MODE ? 'View My Requests' : 'View My Projects'}
             </button>
             <button
               type="button"
               onClick={(e) => navigate('/post-project', e)}
               className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
             >
-              Post a Project
+              {AGENCY_MODE ? 'Request Custom Quote' : 'Post a Project'}
             </button>
           </div>
         </div>
@@ -416,7 +416,13 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <nav className="flex items-center gap-2 text-xs text-slate-500 mb-4 overflow-x-auto whitespace-nowrap pb-1">
             <a href="/" onClick={(e) => navigate('/', e)} className="hover:text-emerald-600 transition-colors">Home</a>
             <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
-            <a href="/projects" onClick={(e) => navigate('/projects', e)} className="hover:text-emerald-600 transition-colors">Freelance Jobs</a>
+            <a
+              href={AGENCY_MODE ? '/buyer-activity' : '/projects'}
+              onClick={(e) => navigate(AGENCY_MODE ? '/buyer-activity' : '/projects', e)}
+              className="hover:text-emerald-600 transition-colors"
+            >
+              {AGENCY_MODE ? 'My Requests' : 'Freelance Jobs'}
+            </a>
             {project.category && (
               <>
                 <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />
@@ -446,11 +452,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </span>
                 {isProjectCompleted ? (
                   <span className="px-2.5 py-0.5 text-xs font-bold rounded-md bg-slate-900 text-white border border-slate-800 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Completed · Bidding Closed
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {AGENCY_MODE ? 'Completed' : 'Completed · Bidding Closed'}
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 text-xs font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Open for Proposals
+                    {AGENCY_MODE ? 'Open Request' : 'Open for Proposals'}
                   </span>
                 )}
                 {project.isUrgent && !isProjectCompleted && (
@@ -524,17 +530,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <span className="hidden sm:inline">{copiedLink ? 'Link Copied!' : 'Share'}</span>
               </button>
 
-              {isProjectOwner ? null : isProjectCompleted ? (
+              {!canSubmitProposal ? null : isProjectCompleted ? (
                 <span className="px-4 py-2.5 bg-slate-100 text-slate-600 border border-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-slate-500" />
-                  <span>Bidding Closed</span>
+                  <span>{AGENCY_MODE ? 'Completed' : 'Bidding Closed'}</span>
                 </span>
               ) : (
                 <a
                   href="#submit-proposal-section"
                   className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
                 >
-                  <span>Send Proposal</span>
+                  <span>{AGENCY_MODE ? 'Send Agency Quote' : 'Send Proposal'}</span>
                 </a>
               )}
             </div>
@@ -604,7 +610,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         <li>Thorough review and auditing of existing documentation and specifications.</li>
                         <li>Identify key risks, compliance gaps, and actionable recommendations.</li>
                         <li>Provide structured feedback and clear documentation upon completion.</li>
-                        <li>Participate in a 30-minute clarification call if required by the buyer.</li>
+                        <li>Participate in a 30-minute clarification call if required by the client.</li>
                       </ul>
                       <p className="text-slate-600 pt-1">
                         Please submit your proposed timeline, detailed methodology, and relevant work samples with your proposal.
@@ -674,7 +680,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-slate-900">Clarification Board</h2>
-                    <p className="text-xs text-slate-500">Public Q&A between freelancers and the buyer before submitting proposals.</p>
+                    <p className="text-xs text-slate-500">
+                      {AGENCY_MODE
+                        ? 'Questions and scope clarifications between you and our team.'
+                        : 'Public Q&A between freelancers and the buyer before submitting proposals.'}
+                    </p>
                   </div>
                 </div>
                 <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">
@@ -685,7 +695,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               {/* Ask Question Input */}
               <form onSubmit={handleAddQuestion} className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Ask the Buyer a Clarification Question
+                  {AGENCY_MODE ? 'Add a Clarification Note or Question' : 'Ask the Buyer a Clarification Question'}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -704,14 +714,20 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     <span>Post</span>
                   </button>
                 </div>
-                <p className="text-2xs text-slate-400">Questions are public and visible to all freelancers proposing on this job.</p>
+                <p className="text-2xs text-slate-400">
+                  {AGENCY_MODE
+                    ? 'Clarifications are shared with our team to ensure an accurate scope and quote.'
+                    : 'Questions are public and visible to all freelancers proposing on this job.'}
+                </p>
               </form>
 
               {/* List of Questions & Answers */}
               <div className="space-y-4 pt-2">
                 {clarifications.length === 0 ? (
                   <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-400 italic">
-                    No clarification questions yet. Freelancers can ask questions to clear doubts before bidding.
+                    {AGENCY_MODE
+                      ? 'No clarification questions yet.'
+                      : 'No clarification questions yet. Freelancers can ask questions to clear doubts before bidding.'}
                   </div>
                 ) : (
                   clarifications.map((item) => (
@@ -793,7 +809,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
                         {!isProjectOwner && (!item.replies || item.replies.length === 0) && (
                           <div className="text-2xs text-slate-400 italic">
-                            Pending answer from buyer...
+                            Pending client response...
                           </div>
                         )}
                       </div>
@@ -811,15 +827,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                     <div className="space-y-1 max-w-2xl">
                       <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                        Freelancer Proposals & Independent Workstreams ({projectProposals.length})
+                        {AGENCY_MODE
+                          ? `Agency Quotes & Active Orders (${projectProposals.length})`
+                          : `Freelancer Proposals & Independent Workstreams (${projectProposals.length})`}
                       </h2>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        You can accept multiple proposals to hire multiple freelancers for this project. Every accepted freelancer receives their own independent USD escrow Workstream.
+                        {AGENCY_MODE
+                          ? `Review custom quotes from ${SITE_CONFIG.brandName} below. Accepting a quote activates your dedicated order workspace.`
+                          : 'You can accept multiple proposals to hire multiple freelancers for this project. Every accepted freelancer receives their own independent USD escrow Workstream.'}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
                       <span className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs font-bold">
-                        {projectProposals.filter(p => p.status === 'accepted').length} Hired
+                        {projectProposals.filter(p => p.status === 'accepted').length} {AGENCY_MODE ? 'Accepted' : 'Hired'}
                       </span>
                       <span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
                         {projectProposals.filter(p => p.status === 'pending').length} Pending
@@ -829,7 +849,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
                   <div className="pt-1">
                     <div className="text-xs text-slate-500 font-medium">
-                      Manage hiring decisions, review candidate proposals, and track escrow Workstreams below.
+                      {AGENCY_MODE
+                        ? 'Review quotes, approve scope, and track active order workspaces below.'
+                        : 'Manage hiring decisions, review candidate proposals, and track escrow Workstreams below.'}
                     </div>
                   </div>
                 </div>
@@ -839,9 +861,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     <div className="flex items-center gap-2.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                       <div>
-                        <span className="font-bold block">Project Completed · Bidding Closed</span>
+                        <span className="font-bold block">{AGENCY_MODE ? 'Project Request Completed' : 'Project Completed · Bidding Closed'}</span>
                         <span className="text-slate-300 text-[11px]">
-                          This project is hidden from the public project listing page and closed to new proposals. Your active Workstreams continue normally.
+                          {AGENCY_MODE
+                            ? 'This custom request is closed to new quotes. Your active order workspaces continue normally.'
+                            : 'This project is hidden from the public project listing page and closed to new proposals. Your active Workstreams continue normally.'}
                         </span>
                       </div>
                     </div>
@@ -860,7 +884,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         onClick={() => navigate('/wallet')}
                         className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5"
                       >
-                        <span>Add Funds to Wallet</span>
+                        <span>{AGENCY_MODE ? 'Add Account Balance' : 'Add Funds to Wallet'}</span>
                         <span>→</span>
                       </button>
                     )}
@@ -924,15 +948,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                         ? 'bg-rose-50 text-rose-700 border-rose-200'
                                         : 'bg-amber-50 text-amber-800 border-amber-200'
                                   }`}>
-                                    {prop.status === 'accepted' ? 'Accepted · Hired' : prop.status}
+                                    {prop.status === 'accepted' ? (AGENCY_MODE ? 'Accepted' : 'Accepted · Hired') : prop.status}
                                   </span>
                                   {wsOrderId && (
                                     <span className="text-[11px] font-mono text-slate-500">
-                                      Workstream #{wsOrderId} {wsOrder ? `(${wsOrder.status.replace(/_/g, ' ')})` : ''}
+                                      {AGENCY_MODE ? 'Order' : 'Workstream'} #{wsOrderId} {wsOrder ? `(${wsOrder.status.replace(/_/g, ' ')})` : ''}
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-slate-500">{prop.freelancerTitle || 'Freelance Specialist'} • Submitted {prop.createdAt}</p>
+                                <p className="text-xs text-slate-500">
+                                  {prop.freelancerTitle || (AGENCY_MODE ? `${SITE_CONFIG.brandName} Team` : 'Freelance Specialist')} • Submitted {prop.createdAt}
+                                </p>
                               </div>
                             </div>
 
@@ -970,7 +996,13 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
                                 >
                                   <ShieldCheck className="w-3.5 h-3.5" />
-                                  <span>{isBusy ? 'Processing...' : `Accept & Hire ($${Number(prop.bidAmount).toLocaleString()} USD)`}</span>
+                                  <span>
+                                    {isBusy
+                                      ? 'Processing...'
+                                      : AGENCY_MODE
+                                        ? `Accept Quote ($${Number(prop.bidAmount).toLocaleString()} USD)`
+                                        : `Accept & Hire ($${Number(prop.bidAmount).toLocaleString()} USD)`}
+                                  </span>
                                 </button>
                                 <button
                                   type="button"
@@ -1035,24 +1067,26 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               </div>
             )}
 
-            {/* 4. PROPOSAL SUBMISSION SECTION */}
-            {!isProjectOwner && (
+            {/* 4. PROPOSAL / QUOTE SUBMISSION SECTION (staff-only in AGENCY_MODE) */}
+            {canSubmitProposal && (
             <div id="submit-proposal-section" className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
               
               <div className="pb-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-extrabold text-slate-900">
-                    {isProjectCompleted ? 'Project Completed — Bidding Closed' : 'Send Your Proposal'}
+                    {isProjectCompleted
+                      ? (AGENCY_MODE ? 'Project Completed' : 'Project Completed — Bidding Closed')
+                      : (AGENCY_MODE ? 'Send Agency Quote' : 'Send Your Proposal')}
                   </h2>
                   <p className="text-xs text-slate-500">
                     {isProjectCompleted
-                      ? 'The buyer has finished hiring for this project and closed bidding.'
-                      : 'Submit your pitch, delivery timeframe, and deposit requirements directly to the buyer.'}
+                      ? 'The client has marked this request as completed.'
+                      : 'Submit your custom quote, delivery timeframe, and deposit requirements directly to the client.'}
                   </p>
                 </div>
                 {isSubmitted && (
                   <span className="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-xs font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Proposal Submitted
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {AGENCY_MODE ? 'Quote Submitted' : 'Proposal Submitted'}
                   </span>
                 )}
               </div>
@@ -1060,9 +1094,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               {isProjectCompleted ? (
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-3">
                   <CheckCircle2 className="w-10 h-10 text-slate-400 mx-auto" />
-                  <h3 className="text-base font-extrabold text-slate-900">This Project Listing is Closed</h3>
+                  <h3 className="text-base font-extrabold text-slate-900">This Project Request is Closed</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    {project.buyerName} has marked this project as completed and is no longer accepting new proposals.
+                    {project.buyerName} has marked this project as completed and is no longer accepting new quotes.
                   </p>
                   <div className="pt-1">
                     <button
@@ -1070,7 +1104,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                       onClick={(e) => navigate('/projects', e)}
                       className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
                     >
-                      Browse Open Projects
+                      Browse Open Requests
                     </button>
                   </div>
                 </div>
@@ -1080,9 +1114,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     <Check className="w-6 h-6 stroke-[3]" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-extrabold text-emerald-950">Proposal Successfully Submitted!</h3>
+                    <h3 className="text-lg font-extrabold text-emerald-950">
+                      {AGENCY_MODE ? 'Quote Successfully Submitted!' : 'Proposal Successfully Submitted!'}
+                    </h3>
                     <p className="text-xs text-emerald-800 max-w-md mx-auto">
-                      Your proposal for <span className="font-bold text-emerald-950">${submittedProposal?.bidAmount}</span> ({submittedProposal?.deliveryDays} days delivery) has been sent to {project.buyerName}.
+                      Your quote for <span className="font-bold text-emerald-950">${submittedProposal?.bidAmount}</span> ({submittedProposal?.deliveryDays} days delivery) has been sent to {project.buyerName}.
                     </p>
                   </div>
 
@@ -1092,14 +1128,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                       onClick={() => setIsSubmitted(false)}
                       className="px-4 py-2 bg-white border border-emerald-300 text-emerald-900 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
                     >
-                      Edit Proposal
+                      {AGENCY_MODE ? 'Edit Quote' : 'Edit Proposal'}
                     </button>
                     <button
                       type="button"
                       onClick={(e) => navigate('/projects', e)}
                       className="px-5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
                     >
-                      Back to Buyer Requests
+                      Back to Client Requests
                     </button>
                   </div>
                 </div>
@@ -1109,10 +1145,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   {/* Financial inputs grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     
-                    {/* Your Bid */}
+                    {/* Your Bid / Quote */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                        Your Bid Amount ($)
+                        {AGENCY_MODE ? 'Quoted Amount ($)' : 'Your Bid Amount ($)'}
                       </label>
                       <div className="relative">
                         <span className="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">$</span>
@@ -1126,7 +1162,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                           className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>
-                      <span className="text-2xs text-slate-400 mt-1 block">Buyer Budget: ${project.budgetMax || project.budgetMin}</span>
+                      <span className="text-2xs text-slate-400 mt-1 block">Client Budget: ${project.budgetMax || project.budgetMin}</span>
                     </div>
 
                     {/* Delivery Days */}
@@ -1161,7 +1197,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                         <option value={50}>50% Deposit (${Math.round(numericBid * 0.5)})</option>
                         <option value={100}>100% Upfront (${numericBid})</option>
                       </select>
-                      <span className="text-2xs text-slate-400 mt-1 block">Escrow deposit before work begins</span>
+                      <span className="text-2xs text-slate-400 mt-1 block">Deposit before work begins</span>
                     </div>
 
                   </div>
@@ -1169,41 +1205,36 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   {/* Fee Breakdown Summary Box */}
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
                     <div className="flex justify-between text-slate-600">
-                      <span>Your Proposed Bid:</span>
+                      <span>{AGENCY_MODE ? 'Quoted Total:' : 'Your Proposed Bid:'}</span>
                       <span className="font-semibold text-slate-900">${numericBid.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
-                      <span>Platform Commission ({100 - bidFees.freelancerPercent}%):</span>
-                      <span className="text-rose-600">-${serviceFee.toLocaleString()}</span>
-                    </div>
-                    <div className="pt-2 border-t border-slate-200 flex justify-between font-extrabold text-sm text-slate-900">
-                      <span>You Will Receive:</span>
-                      <span className="text-emerald-600">${netEarnings.toLocaleString()}</span>
-                    </div>
+                    {!AGENCY_MODE && (
+                      <>
+                        <div className="flex justify-between text-slate-600">
+                          <span>Platform Commission ({100 - bidFees.freelancerPercent}%):</span>
+                          <span className="text-rose-600">-${serviceFee.toLocaleString()}</span>
+                        </div>
+                        <div className="pt-2 border-t border-slate-200 flex justify-between font-extrabold text-sm text-slate-900">
+                          <span>You Will Receive:</span>
+                          <span className="text-emerald-600">${netEarnings.toLocaleString()}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Cover Letter Pitch */}
+                  {/* Scope / Cover Letter */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Proposal Pitch / Cover Letter
+                        {AGENCY_MODE ? 'Scope Summary & Deliverables' : 'Proposal Pitch / Cover Letter'}
                       </label>
-                      <button
-                        type="button"
-                        onClick={handleGenerateAIProposal}
-                        disabled={isGeneratingAI}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold transition-colors border border-emerald-200 cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{isGeneratingAI ? 'Generating...' : 'Auto-Generate Cover Letter'}</span>
-                      </button>
                     </div>
 
                     <textarea
                       rows={7}
                       value={proposalCover}
                       onChange={(e) => setProposalCover(e.target.value)}
-                      placeholder="Explain why you are the best person for this project. Highlight relevant past experience, methodology, and questions..."
+                      placeholder="Outline the scope of work, deliverables, timeline, and any clarifying questions for the client..."
                       required
                       className="w-full p-4 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed font-sans"
                     />
@@ -1212,7 +1243,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   {/* Attachment Dropzone */}
                   <div className="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-1 hover:border-emerald-400 transition-colors cursor-pointer bg-slate-50/50">
                     <Paperclip className="w-5 h-5 text-slate-400 mx-auto" />
-                    <p className="text-xs font-bold text-slate-700">Attach Portfolio Work / Proposals (Optional)</p>
+                    <p className="text-xs font-bold text-slate-700">Attach Supporting Documents (Optional)</p>
                     <p className="text-2xs text-slate-400">Drag & drop files here, or click to browse (PDF, DOCX, PNG up to 25MB)</p>
                   </div>
 
@@ -1222,11 +1253,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold rounded-xl shadow-md transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Send Proposal to {project.buyerName}</span>
+                    <span>{AGENCY_MODE ? `Send Quote to ${project.buyerName}` : `Send Proposal to ${project.buyerName}`}</span>
                   </button>
 
                   <p className="text-2xs text-center text-slate-400">
-                    By submitting this proposal, you agree to WorkPerHour terms of service and client confidentiality rules.
+                    By submitting this {AGENCY_MODE ? 'quote' : 'proposal'}, you agree to {SITE_CONFIG.brandName} terms of service and client confidentiality rules.
                   </p>
 
                 </form>
@@ -1241,10 +1272,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           {/* RIGHT SIDEBAR COLUMN (4 COLS) */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* 1. ABOUT THE BUYER CARD */}
+            {/* 1. ABOUT THE CLIENT CARD */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-3">
-                About the Client / Buyer
+                About the Client
               </h3>
 
               <div className="flex items-center gap-3.5">
@@ -1264,7 +1295,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   <div className="flex items-center gap-1.5">
                     <h4 className="text-base font-bold text-slate-900 truncate">{project.buyerName}</h4>
                     {project.verifiedBuyer !== false && (
-                      <span title="Verified Buyer">
+                      <span title="Verified Client">
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-100 shrink-0" />
                       </span>
                     )}
@@ -1281,7 +1312,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </div>
               </div>
 
-              {/* Buyer Metadata List */}
+              {/* Client Metadata List */}
               <div className="space-y-3 pt-2 text-xs text-slate-600 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 flex items-center gap-1.5">
@@ -1308,7 +1339,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   <span className="text-slate-500 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" /> Member Since
                   </span>
-                  <span className="font-semibold text-slate-900">{project.buyerMemberSince || 'New buyer'}</span>
+                  <span className="font-semibold text-slate-900">{project.buyerMemberSince || 'New client'}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -1330,8 +1361,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </div>
               </div>
 
-              {/* Contact Buyer Button */}
-              {!isProjectOwner && (
+              {/* Contact Client Button */}
+              {canSubmitProposal && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1344,7 +1375,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer border border-slate-200"
                 >
                   <MessageSquare className="w-4 h-4 text-slate-600" />
-                  <span>Contact Buyer</span>
+                  <span>Contact Client</span>
                 </button>
               )}
 

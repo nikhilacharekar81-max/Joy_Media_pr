@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, DollarSign, Calendar, User, FileText } from 'lucide-react';
 import { UserAccount, Gig } from '../../types';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface StartWorkstreamModalProps {
   isOpen: boolean;
@@ -57,8 +58,14 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-fiverr-dark">Start New Workstream</h3>
-              <p className="text-[11px] text-slate-400">Initiate a secure escrow collaboration</p>
+              <h3 className="text-base font-bold text-agency-dark">
+                {AGENCY_MODE ? 'Start New Order Inquiry' : 'Start New Workstream'}
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                {AGENCY_MODE
+                  ? `Initiate a project workspace with ${SITE_CONFIG.brandName}`
+                  : 'Initiate a secure escrow collaboration'}
+              </p>
             </div>
           </div>
           <button
@@ -71,7 +78,7 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+            <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
               Workstream Scope / Project Title
             </label>
             <input
@@ -80,19 +87,19 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Full Stack MVP Development or Logo Identity Design"
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white"
             />
           </div>
 
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+            <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
               Select Collaborator / Partner
             </label>
             <select
               required
               value={partnerId}
               onChange={(e) => setPartnerId(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark focus:outline-none focus:border-emerald-500 focus:bg-white"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark focus:outline-none focus:border-emerald-500 focus:bg-white"
             >
               <option value="">Choose a participant...</option>
               {candidates.map((cand) => (
@@ -105,8 +112,8 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
-                Escrow Budget ($ USD)
+              <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+                {AGENCY_MODE ? 'Estimated Budget ($ USD)' : 'Escrow Budget ($ USD)'}
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">$</span>
@@ -116,13 +123,13 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark font-mono font-bold focus:outline-none focus:border-emerald-500 focus:bg-white"
+                  className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark font-mono font-bold focus:outline-none focus:border-emerald-500 focus:bg-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+              <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
                 Turnaround (Days)
               </label>
               <input
@@ -131,13 +138,13 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
                 required
                 value={turnaroundDays}
                 onChange={(e) => setTurnaroundDays(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark font-mono font-bold focus:outline-none focus:border-emerald-500 focus:bg-white"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark font-mono font-bold focus:outline-none focus:border-emerald-500 focus:bg-white"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+            <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
               Requirements & Agreed Milestones
             </label>
             <textarea
@@ -145,20 +152,24 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
               placeholder="Outline deliverables, deadlines, design formats, or repository links..."
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white resize-none"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white resize-none"
             />
           </div>
 
           <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-[11px] text-emerald-800">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Escrow funds will remain 100% protected until client approves completed work.</span>
+            <span>
+              {AGENCY_MODE
+                ? `Payments are securely processed by ${SITE_CONFIG.brandName} with transparent deliverable tracking.`
+                : 'Escrow funds will remain 100% protected until client approves completed work.'}
+            </span>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs transition cursor-pointer"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs transition cursor-pointer"
             >
               Cancel
             </button>
@@ -166,7 +177,7 @@ export const StartWorkstreamModal: React.FC<StartWorkstreamModalProps> = ({
               type="submit"
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer"
             >
-              Start Workstream
+              {AGENCY_MODE ? 'Start Order Inquiry' : 'Start Workstream'}
             </button>
           </div>
         </form>

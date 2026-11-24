@@ -9,7 +9,7 @@ import { useWorkstream } from './hooks/workstream/useWorkstream';
 import { Header } from './layout/Header';
 import { Footer } from './layout/Footer';
 import { ImpersonationBanner } from './layout/ImpersonationBanner';
-import { PPH_CATEGORIES } from './components/HeaderCategoriesNav';
+import { SERVICE_CATEGORIES } from './components/HeaderCategoriesNav';
 import { AgencyHomePage } from './components/marketplace/AgencyHomePage';
 import { slugify, getGigUrl } from './utils/slugify';
 import { getAuthToken, setAuthToken, clearAuthToken, requestDemoSession, isTokenStructurallyValid } from './utils/authToken';
@@ -17,7 +17,8 @@ import { getDeviceId } from './utils/deviceId';
 import { DEFAULT_GIG_IMAGE } from './constants';
 import { RESERVED_ROUTES } from './shared/routes';
 import { initiateGatewayCheckout } from './utils/gatewayCheckout';
-import type { UserAccount, Gig, Order, GigExtra } from './types';
+import { AGENCY_MODE, SITE_CONFIG } from './siteConfig';
+import { isStaffRole, type UserAccount, type Gig, type Order, type GigExtra } from './types';
 
 // Resilient lazy loader: recovers automatically when a container restart or rebuild invalidates old hashed chunk URLs
 function isChunkLoadError(err: unknown): boolean {
@@ -34,7 +35,7 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
     } catch (err) {
       if (typeof window !== 'undefined' && isChunkLoadError(err)) {
         try {
-          const key = 'fivepa_chunk_reload_ts';
+          const key = 'agency_chunk_reload_ts';
           const lastReload = Number(sessionStorage.getItem(key) || '0');
           if (Date.now() - lastReload > 10_000) {
             sessionStorage.setItem(key, String(Date.now()));
@@ -140,7 +141,7 @@ const CATEGORY_SLUGS: Record<string, string> = {
   'Mobile Apps': 'technology-programming'
 };
 
-PPH_CATEGORIES.forEach(cat => {
+SERVICE_CATEGORIES.forEach(cat => {
   CATEGORY_SLUGS[cat.name] = cat.slug;
   cat.subcategories?.forEach(sub => {
     CATEGORY_SLUGS[sub.name] = sub.slug;
@@ -851,7 +852,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       const normalizedExtraIds = Array.isArray(extraIds)
         ? Array.from(new Set(extraIds.map(String).filter(Boolean))).sort()
         : [];
-      const payloadKey = `fivepa_patt_${activeUser.id}_${sellerId}_${gigId || 'custom'}_${encodeURIComponent(orderTitle)}_${priceUSD}_${normalizedExtraIds.join(',')}`;
+      const payloadKey = `agency_patt_${activeUser.id}_${sellerId}_${gigId || 'custom'}_${encodeURIComponent(orderTitle)}_${priceUSD}_${normalizedExtraIds.join(',')}`;
       let clientRequestId = '';
       try {
         clientRequestId = sessionStorage.getItem(payloadKey) || '';
@@ -914,7 +915,9 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           workstream.fetchMessages(newOrder.id);
           setOrderFeedback({
             type: 'success',
-            message: `Order #${newOrder.id} placed successfully! Funds are secured in escrow.`,
+            message: AGENCY_MODE
+              ? `Order #${newOrder.id} placed successfully! Payment confirmed.`
+              : `Order #${newOrder.id} placed successfully! Funds are secured in escrow.`,
             orderId: newOrder.id
           });
           navigate(`/workstream/${newOrder.id}`);
@@ -1072,7 +1075,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
   useEffect(() => {
     if (cleanPath === '/login') setIsLoginModalOpen(true);
     if (cleanPath === '/signup') setIsSignupModalOpen(true);
-    if (cleanPath === '/switch-user') setIsUserSwitchModalOpen(true);
+    if (!AGENCY_MODE && cleanPath === '/switch-user') setIsUserSwitchModalOpen(true);
     if (cleanPath === '/support') setIsSupportModalOpen(true);
     if (cleanPath === '/wishlist') setIsWishlistModalOpen(true);
     if (cleanPath === '/notifications') setIsEmailNotificationsModalOpen(true);
@@ -1236,8 +1239,8 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         return true;
       }
 
-      // Check parent category relationship in PPH_CATEGORIES
-      const parentObj = PPH_CATEGORIES.find(
+      // Check parent category relationship in SERVICE_CATEGORIES
+      const parentObj = SERVICE_CATEGORIES.find(
         c =>
           c.slug === targetSlug ||
           c.name.toLowerCase() === lowerTarget ||
@@ -1390,42 +1393,75 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       />
     );
   } else if (cleanPath === '/create-gig' || cleanPath === '/post-gig') {
-    mainContent = (
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <CreateGigView
-          newGigTitle={newGigTitle}
-          setNewGigTitle={setNewGigTitle}
-          newGigCat={newGigCat}
-          setNewGigCat={setNewGigCat}
-          newGigDesc={newGigDesc}
-          setNewGigDesc={setNewGigDesc}
-          newGigPrice={newGigPrice}
-          setNewGigPrice={setNewGigPrice}
-          newGigDays={newGigDays}
-          setNewGigDays={setNewGigDays}
-          newGigImage={newGigImage}
-          setNewGigImage={setNewGigImage}
-          isOptimizingGig={isOptimizingGig}
-          handleOptimizeGigWithAI={handleOptimizeGigWithAI}
-          newGigExtras={newGigExtras}
-          extraTitleInput={extraTitleInput}
-          setExtraTitleInput={setExtraTitleInput}
-          extraPriceInput={extraPriceInput}
-          setExtraPriceInput={setExtraPriceInput}
-          handleAddGigExtra={handleAddGigExtra}
-          handleRemoveGigExtra={handleRemoveGigExtra}
-          handlePublishGig={handlePublishGig}
-        />
-      </div>
-    );
+    if (AGENCY_MODE && (!activeUser || !isStaffRole(activeUser.role))) {
+      mainContent = (
+        <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
+            <h1 className="text-2xl font-bold text-slate-900">Agency Staff Only</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Only authorized Joy Media PR team members can publish or edit agency services.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={(e) => navigate('/gigs', e)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
+              >
+                Explore Services
+              </button>
+              <button
+                type="button"
+                onClick={(e) => navigate('/post-project', e)}
+                className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                Request a Custom Quote
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      mainContent = (
+        <div className="max-w-4xl mx-auto py-8 px-4">
+          <CreateGigView
+            newGigTitle={newGigTitle}
+            setNewGigTitle={setNewGigTitle}
+            newGigCat={newGigCat}
+            setNewGigCat={setNewGigCat}
+            newGigDesc={newGigDesc}
+            setNewGigDesc={setNewGigDesc}
+            newGigPrice={newGigPrice}
+            setNewGigPrice={setNewGigPrice}
+            newGigDays={newGigDays}
+            setNewGigDays={setNewGigDays}
+            newGigImage={newGigImage}
+            setNewGigImage={setNewGigImage}
+            isOptimizingGig={isOptimizingGig}
+            handleOptimizeGigWithAI={handleOptimizeGigWithAI}
+            newGigExtras={newGigExtras}
+            extraTitleInput={extraTitleInput}
+            setExtraTitleInput={setExtraTitleInput}
+            extraPriceInput={extraPriceInput}
+            setExtraPriceInput={setExtraPriceInput}
+            handleAddGigExtra={handleAddGigExtra}
+            handleRemoveGigExtra={handleRemoveGigExtra}
+            handlePublishGig={handlePublishGig}
+          />
+        </div>
+      );
+    }
   } else if (cleanPath === '/post-project') {
     mainContent = (
       <div className="max-w-3xl mx-auto py-8 px-4">
         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Post a Custom Project Request</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              {AGENCY_MODE ? 'Request a Custom Quote' : 'Post a Custom Project Request'}
+            </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Describe your project requirements and budget to receive proposals from vetted freelancers.
+              {AGENCY_MODE
+                ? `Describe your project requirements and budget to receive a custom quote from ${SITE_CONFIG.brandName}.`
+                : 'Describe your project requirements and budget to receive proposals from vetted freelancers.'}
             </p>
           </div>
           {postProjectError && (
@@ -1440,7 +1476,11 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Build a responsive SaaS analytics dashboard..."
+                placeholder={
+                  AGENCY_MODE
+                    ? 'e.g. Digital PR campaign, guest posting package, or Shopify storefront...'
+                    : 'e.g. Build a responsive SaaS analytics dashboard...'
+                }
                 value={newProjectTitle}
                 onChange={(e) => setNewProjectTitle(e.target.value)}
                 required
@@ -1467,7 +1507,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 ${AGENCY_MODE ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-4`}>
               <div>
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
                   Min Budget ($ USD)
@@ -1496,20 +1536,22 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                  Freelancers Needed
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={newProjectMaxHires}
-                  onChange={(e) => setNewProjectMaxHires(Number(e.target.value))}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
+              {!AGENCY_MODE && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                    Freelancers Needed
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={newProjectMaxHires}
+                    onChange={(e) => setNewProjectMaxHires(Number(e.target.value))}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -1529,7 +1571,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={(e) => navigate('/projects', e)}
+                onClick={(e) => navigate(AGENCY_MODE ? '/gigs' : '/projects', e)}
                 className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer"
               >
                 Cancel
@@ -1539,7 +1581,9 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 disabled={isSubmittingProject}
                 className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
               >
-                {isSubmittingProject ? 'Posting Project...' : 'Post Project'}
+                {isSubmittingProject
+                  ? (AGENCY_MODE ? 'Submitting Request...' : 'Posting Project...')
+                  : (AGENCY_MODE ? 'Submit Custom Request' : 'Post Project')}
               </button>
             </div>
           </form>
@@ -1564,19 +1608,48 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       />
     );
   } else if (cleanPath === '/freelance-activity' || cleanPath === '/freelancer') {
-    mainContent = (
-      <FreelancerActivityView
-        currentUser={activeUser}
-        orders={orders}
-        allGigs={gigs}
-        categories={categories}
-        projects={projects}
-        proposals={proposals}
-        users={users}
-        navigate={navigate}
-        onRefresh={refresh}
-      />
-    );
+    if (AGENCY_MODE && (!activeUser || !isStaffRole(activeUser.role))) {
+      mainContent = (
+        <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
+            <h1 className="text-2xl font-bold text-slate-900">Agency Staff Area</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              This dashboard is reserved for the Joy Media PR team. View and track your orders from your client dashboard.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={(e) => navigate('/orders', e)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
+              >
+                View My Orders
+              </button>
+              <button
+                type="button"
+                onClick={(e) => navigate('/gigs', e)}
+                className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                Browse Services
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      mainContent = (
+        <FreelancerActivityView
+          currentUser={activeUser}
+          orders={orders}
+          allGigs={gigs}
+          categories={categories}
+          projects={projects}
+          proposals={proposals}
+          users={users}
+          navigate={navigate}
+          onRefresh={refresh}
+        />
+      );
+    }
   } else if (
     cleanPath === '/orders' ||
     cleanPath === '/messages' ||
@@ -1600,7 +1673,9 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
             <h1 className="text-2xl font-bold text-slate-900">Sign In Required</h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Workstreams, messages, and escrow orders are private to signed-in accounts. Please sign in to access your workstreams.
+              {AGENCY_MODE
+                ? 'Order workspaces, messages, and invoices are private to signed-in accounts. Please sign in to access your orders.'
+                : 'Workstreams, messages, and escrow orders are private to signed-in accounts. Please sign in to access your workstreams.'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1622,7 +1697,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 onClick={(e) => navigate('/', e)}
                 className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer"
               >
-                Back to Marketplace
+                {AGENCY_MODE ? 'Back to Home' : 'Back to Marketplace'}
               </button>
             </div>
           </div>
@@ -1757,26 +1832,84 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       }
     }
   } else if (isProjectsList) {
-    mainContent = (
-      <ProjectSearchView
-        projects={visibleProjects}
-        navigate={navigate}
-        currentUser={activeUser}
-        query={currentSearchQuery}
-      />
-    );
+    if (AGENCY_MODE && (!activeUser || !isStaffRole(activeUser.role))) {
+      mainContent = (
+        <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
+            <h1 className="text-2xl font-bold text-slate-900">Custom Project Quotes</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Every project request at Joy Media PR is handled privately by our in-house team. Submit a brief or view your existing requests.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={(e) => navigate('/post-project', e)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
+              >
+                Request a Custom Quote
+              </button>
+              <button
+                type="button"
+                onClick={(e) => navigate('/buyer-activity', e)}
+                className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                View My Requests
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      mainContent = (
+        <ProjectSearchView
+          projects={visibleProjects}
+          navigate={navigate}
+          currentUser={activeUser}
+          query={currentSearchQuery}
+        />
+      );
+    }
   } else if (isFreelancersList) {
-    mainContent = (
-      <FreelancerSearchView
-        usersList={users}
-        gigs={gigs}
-        navigate={navigate}
-        currentUser={activeUser}
-        setIsSignupModalOpen={setIsSignupModalOpen}
-        slugify={slugify}
-        query={currentSearchQuery}
-      />
-    );
+    if (AGENCY_MODE && (!activeUser || !isStaffRole(activeUser.role))) {
+      mainContent = (
+        <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
+            <h1 className="text-2xl font-bold text-slate-900">Work Directly With Our Team</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Joy Media PR is a dedicated digital PR and growth agency. All services are delivered directly by our in-house specialists.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={(e) => navigate('/gigs', e)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
+              >
+                Explore Our Services
+              </button>
+              <button
+                type="button"
+                onClick={(e) => navigate('/post-project', e)}
+                className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                Get a Custom Quote
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      mainContent = (
+        <FreelancerSearchView
+          usersList={users}
+          gigs={gigs}
+          navigate={navigate}
+          currentUser={activeUser}
+          setIsSignupModalOpen={setIsSignupModalOpen}
+          slugify={slugify}
+          query={currentSearchQuery}
+        />
+      );
+    }
   } else if (isProjectDetail) {
     const projId = pathParts[1];
     const project = projects.find(
@@ -1798,9 +1931,13 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
       mainContent = (
         <div className="max-w-xl mx-auto py-16 px-4 text-center font-sans">
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-xs space-y-5">
-            <h1 className="text-2xl font-bold text-slate-900">Project Access Restricted</h1>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {AGENCY_MODE ? 'Request Access Restricted' : 'Project Access Restricted'}
+            </h1>
             <p className="text-sm text-slate-600 leading-relaxed">
-              As a buyer, you can only view and manage your own posted projects.
+              {AGENCY_MODE
+                ? 'As a client, you can only view and manage your own custom requests.'
+                : 'As a buyer, you can only view and manage your own posted projects.'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
@@ -1808,14 +1945,14 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
                 onClick={(e) => navigate('/buyer-activity', e)}
                 className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
               >
-                View My Projects
+                {AGENCY_MODE ? 'View My Requests' : 'View My Projects'}
               </button>
               <button
                 type="button"
                 onClick={(e) => navigate('/post-project', e)}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
               >
-                Post a Project
+                {AGENCY_MODE ? 'Request Custom Quote' : 'Post a Project'}
               </button>
             </div>
           </div>
@@ -1997,7 +2134,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         fetchMessages={workstream.fetchMessages}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenSignup={() => setIsSignupModalOpen(true)}
-        onOpenSwitchUser={() => setIsUserSwitchModalOpen(true)}
+        onOpenSwitchUser={AGENCY_MODE ? undefined : () => setIsUserSwitchModalOpen(true)}
       />
 
       {/* Order Purchase Status Banner */}
@@ -2117,7 +2254,7 @@ export default function App({ initialPath = '/', initialData }: AppProps) {
         </Suspense>
       )}
 
-      {isUserSwitchModalOpen && (
+      {!AGENCY_MODE && isUserSwitchModalOpen && (
         <Suspense fallback={null}>
           <UserSwitchModal
             isOpen={isUserSwitchModalOpen}

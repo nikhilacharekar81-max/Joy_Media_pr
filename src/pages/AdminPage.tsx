@@ -173,8 +173,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl mx-auto shadow-md">
               W
             </div>
-            <h2 className="text-2xl font-bold text-fiverr-dark tracking-tight">Admin Portal Login</h2>
-            <p className="text-xs text-fiverr-muted">Enter your Administrator credentials to access the WorkPerHour Super Admin Suite.</p>
+            <h2 className="text-2xl font-bold text-agency-dark tracking-tight">Admin Portal Login</h2>
+            <p className="text-xs text-agency-muted">Enter your Administrator credentials to access the WorkPerHour Super Admin Suite.</p>
           </div>
 
           <form onSubmit={async (e) => {
@@ -253,7 +253,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 )}
 
                 <div>
-                  <label className="block text-fiverr-dark font-bold uppercase mb-1">Enter 6-Digit Email Code</label>
+                  <label className="block text-agency-dark font-bold uppercase mb-1">Enter 6-Digit Email Code</label>
                   <input 
                     type="text" 
                     maxLength={6} 
@@ -262,7 +262,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                     onChange={(e) => setAdminLoginCode(e.target.value)} 
                     required 
                     autoFocus
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-fiverr-dark focus:outline-none focus:border-emerald-500" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-agency-dark focus:outline-none focus:border-emerald-500" 
                   />
                 </div>
 
@@ -301,7 +301,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   <button 
                     type="button" 
                     onClick={() => { setAdminLoginRequiresCode(false); setAdminLoginCode(''); }} 
-                    className="text-fiverr-muted hover:text-slate-800 cursor-pointer"
+                    className="text-agency-muted hover:text-slate-800 cursor-pointer"
                   >
                     Back to Password
                   </button>
@@ -310,26 +310,26 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             ) : (
               <>
                 <div>
-                  <label className="block text-fiverr-dark font-bold uppercase mb-1">Admin Email ID</label>
+                  <label className="block text-agency-dark font-bold uppercase mb-1">Admin Email ID</label>
                   <input 
                     type="email" 
                     placeholder="Enter Admin Email"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:border-emerald-500 font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-fiverr-dark font-bold uppercase mb-1">Admin Password</label>
+                  <label className="block text-agency-dark font-bold uppercase mb-1">Admin Password</label>
                   <input 
                     type="password" 
                     placeholder="••••••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-fiverr-dark focus:outline-none focus:border-emerald-500"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-agency-dark focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -346,7 +346,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
               <a 
                 href="/gigs" 
                 onClick={(e) => navigate('/gigs', e)}
-                className="text-xs text-fiverr-muted hover:text-slate-800 font-medium"
+                className="text-xs text-agency-muted hover:text-slate-800 font-medium"
               >
                 ← Return to Marketplace Home
               </a>
@@ -360,7 +360,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const effectiveAdminUser = impersonatedUser || currentUser || usersList.find(u => u.role === 'admin' || u.role === 'super_admin') || usersList[0];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-fiverr-dark flex font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-agency-dark flex font-sans selection:bg-emerald-500 selection:text-white">
       {/* ADMIN SIDEBAR */}
       <aside className="w-72 bg-white border-r border-slate-200 flex flex-col justify-between p-5 shrink-0 sticky top-0 h-screen overflow-y-auto shadow-xs">
         <div>
@@ -371,7 +371,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 W
               </div>
               <div>
-                <span className="text-sm font-bold text-fiverr-dark block leading-none">WorkPerHour</span>
+                <span className="text-sm font-bold text-agency-dark block leading-none">WorkPerHour</span>
                 <span className="text-[10px] text-emerald-600 font-semibold tracking-wider uppercase">Super Admin Suite</span>
               </div>
             </a>
@@ -411,7 +411,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   key={item.id}
                   onClick={() => setAdminTab(item.id as any)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    isActive ? 'bg-emerald-600 text-white shadow-xs font-bold' : 'text-fiverr-dark hover:text-fiverr-dark hover:bg-slate-100'
+                    isActive ? 'bg-emerald-600 text-white shadow-xs font-bold' : 'text-agency-dark hover:text-agency-dark hover:bg-slate-100'
                   }`}
                 >
                   <IconComp className="w-4 h-4 shrink-0" />
@@ -426,16 +426,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div className="space-y-4 pt-6 border-t border-slate-200 mt-6">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] uppercase font-bold text-fiverr-muted tracking-wider">Gateway Telemetry</span>
+              <span className="text-[10px] uppercase font-bold text-agency-muted tracking-wider">Gateway Telemetry</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
-            <p className="text-[11px] text-fiverr-dark font-medium">RBAC Active · 14-Day Escrow Locked</p>
+            <p className="text-[11px] text-agency-dark font-medium">RBAC Active · 14-Day Escrow Locked</p>
           </div>
 
           <a 
             href="/gigs" 
             onClick={(e) => navigate('/gigs', e)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-fiverr-dark bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-agency-dark bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200 cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-emerald-600" />
             <span>Exit Admin Portal</span>
@@ -449,7 +449,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-200">
           <div>
             <span className="text-xs font-semibold text-emerald-600 block mb-1">Super Administrator Console</span>
-            <h1 className="text-2xl font-bold text-fiverr-dark">
+            <h1 className="text-2xl font-bold text-agency-dark">
               {adminTab === 'overview' && '1. Admin Dashboard & Metrics'}
               {adminTab === 'users' && '2. User Management & Impersonation'}
               {adminTab === 'projects' && '3. Projects & RFP Moderation'}
@@ -475,7 +475,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-fiverr-dark bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono shadow-xs">
+            <span className="text-xs text-agency-dark bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono shadow-xs">
               RBAC Level: Super Admin
             </span>
           </div>
@@ -903,8 +903,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         {!['overview', 'users', 'projects', 'gigs', 'categories', 'orders', 'proposals', 'contracts', 'payments', 'wallet', 'escrow', 'payouts', 'disputes', 'refunds', 'reviews', 'messages', 'reports', 'support', 'cms', 'settings', 'memberships', 'paymentGateways', 'security', 'activity'].includes(adminTab) && (
           <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-3 shadow-xs">
             <ShieldCheck className="w-8 h-8 text-emerald-600 mx-auto" />
-            <h3 className="text-base font-bold text-fiverr-dark uppercase">{adminTab} Module Active</h3>
-            <p className="text-xs text-fiverr-muted">All data records and audit logs for this module are synchronized with PostgreSQL storage.</p>
+            <h3 className="text-base font-bold text-agency-dark uppercase">{adminTab} Module Active</h3>
+            <p className="text-xs text-agency-muted">All data records and audit logs for this module are synchronized with PostgreSQL storage.</p>
           </div>
         )}
       </main>

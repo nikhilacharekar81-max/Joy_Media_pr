@@ -1015,7 +1015,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
         </div>
       )}
 
-      {/* Main 2-Column Layout with Fiverr-aligned site styling */}
+      {/* Main 2-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Main Content Area */}
         <div className="lg:col-span-8 bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs">
@@ -1067,7 +1067,7 @@ export const FreelancerActivityView: React.FC<FreelancerActivityViewProps> = ({
             </button>
           </div>
 
-          {/* Sub-filter Navigation Bar (Fiverr Tab Bar Style) */}
+          {/* Sub-filter Navigation Bar */}
           {activeSection === 'projects' ? (
             <div className="border-b border-slate-200 px-1 flex flex-wrap items-center gap-6 mb-2">
               {projectSubTabs.map(tab => {

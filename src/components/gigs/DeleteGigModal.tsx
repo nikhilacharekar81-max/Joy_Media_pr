@@ -28,7 +28,7 @@ export const DeleteGigModal: React.FC<DeleteGigModalProps> = ({
             <Trash2 className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-fiverr-muted leading-relaxed">
+            <p className="text-xs text-agency-muted leading-relaxed">
               This action is permanent and cannot be undone. This service listing will be immediately removed from your profile and marketplace.
             </p>
             {gigToDelete.title && (
@@ -43,7 +43,7 @@ export const DeleteGigModal: React.FC<DeleteGigModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs transition-colors cursor-pointer"
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs transition-colors cursor-pointer"
           >
             Cancel
           </button>

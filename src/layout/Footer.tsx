@@ -1,5 +1,6 @@
 import React from 'react';
-import { HelpCircle, Settings, ShieldCheck, Users } from 'lucide-react';
+import { HelpCircle, ShieldCheck } from 'lucide-react';
+import { SITE_CONFIG } from '../siteConfig';
 
 interface FooterProps {
   navigate: (to: string, e?: React.MouseEvent) => void;
@@ -17,16 +18,16 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
             onClick={(e) => navigate('/', e)}
             className="inline-block text-xl font-extrabold tracking-tight text-slate-900 hover:text-emerald-700 transition-colors mb-4"
           >
-            Fivepa
+            {SITE_CONFIG.brandWordmark}
           </a>
           <p className="text-sm text-slate-600 leading-relaxed mb-6 max-w-sm">
-            Fivepa is a digital PR agency and escrow-protected service marketplace specializing in guest posting, press release distribution, custom website development, and Shopify solutions.
+            {SITE_CONFIG.brandName} is a digital PR and growth agency specializing in guest posting, press release distribution, UGC AI videos, custom website development, Shopify solutions, and digital products.
           </p>
           <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>100% USD Escrow Protection</span>
+            <span>Secure Online Payments</span>
             <span aria-hidden="true" className="text-slate-300">·</span>
-            <span>Real-Time Workstreams</span>
+            <span>Live Order Updates</span>
           </div>
         </div>
 
@@ -144,7 +145,7 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
                 onClick={(e) => navigate('/orders', e)}
                 className="hover:text-slate-900 transition-colors"
               >
-                My Escrow Orders
+                My Orders
               </a>
             </li>
             <li>
@@ -153,7 +154,7 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
                 onClick={(e) => navigate('/messages', e)}
                 className="hover:text-slate-900 transition-colors"
               >
-                Active Workstreams
+                Order Updates
               </a>
             </li>
             <li>
@@ -166,23 +167,13 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
                 <span>Contact Support</span>
               </button>
             </li>
-            <li>
-              <a
-                href="/admin"
-                onClick={(e) => navigate('/admin', e)}
-                className="inline-flex items-center gap-1.5 font-semibold text-slate-800 hover:text-emerald-700 transition-colors"
-              >
-                <Settings className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Admin Console</span>
-              </a>
-            </li>
           </ul>
         </div>
       </div>
 
       {/* Bottom Legal & Utility Bar */}
       <div className="max-w-7xl mx-auto pt-8 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-        <p className="mb-0">© 2026 Fivepa Digital PR &amp; Marketplace. All rights reserved.</p>
+        <p className="mb-0">{SITE_CONFIG.copyright}</p>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
           <button
             type="button"
@@ -192,23 +183,6 @@ export const Footer = React.memo(function Footer({ navigate }: FooterProps) {
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Contact</span>
           </button>
-          <span aria-hidden="true">·</span>
-          <button
-            type="button"
-            onClick={(e) => navigate('/switch-user', e)}
-            className="font-semibold text-slate-700 hover:text-emerald-700 inline-flex items-center gap-1 cursor-pointer"
-          >
-            <Users className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Switch User</span>
-          </button>
-          <span aria-hidden="true">·</span>
-          <a
-            href="/admin"
-            onClick={(e) => navigate('/admin', e)}
-            className="font-semibold text-slate-700 hover:text-emerald-700"
-          >
-            Admin Portal
-          </a>
           <span aria-hidden="true">·</span>
           <a
             href="/terms"

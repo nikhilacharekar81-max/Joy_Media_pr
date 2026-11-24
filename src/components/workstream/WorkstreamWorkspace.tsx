@@ -22,6 +22,7 @@ import { classifyFileUrl, openWebLink } from '../../utils/safeFileLink';
 import { useWorkstreamOffers } from '../../hooks/workstream/useWorkstreamOffers';
 import { initiateGatewayCheckout } from '../../utils/gatewayCheckout';
 import { RATINGS_ENABLED } from '../../constants';
+import { AGENCY_MODE, SITE_CONFIG } from '../../siteConfig';
 
 interface WorkstreamWorkspaceProps {
   order: WorkstreamItem;
@@ -244,7 +245,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
   const isCustomOrderWorkstream = isInquiryWorkstream(order);
   const isInquiryOrder = isCustomOrderWorkstream && !escrowFunded;
 
-  // PeoplePerHour Gig vs Project Proposal rules:
+  // Service Order vs Project Proposal rules:
   // - For Paid Gigs: Seller CANNOT send a new proposal initially because the Gig is already pre-funded.
   //   Once the first invoice is paid, or if the thread is an unfunded Pre-Purchase Inquiry, Seller CAN send proposals in the same WorkStream!
   // - For Projects: Seller can send a proposal when no active escrow/invoice is blocking, or after an invoice is paid.
@@ -261,22 +262,40 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
     && !pendingInvoice;
 
   const proposalHint = !isSeller
-    ? (isCustomOrderWorkstream ? 'Only the seller can send a Custom Order Proposal' : 'Only the seller can send a proposal')
+    ? (AGENCY_MODE
+        ? (isCustomOrderWorkstream ? 'Only our team can send a Custom Quote' : 'Only our team can send a quote')
+        : (isCustomOrderWorkstream ? 'Only the seller can send a Custom Order Proposal' : 'Only the seller can send a proposal'))
     : isGigInitiallyLocked
-      ? 'This Gig is already funded in Escrow. Deliver the work and raise your first invoice — once it is paid, you can send follow-on proposals.'
+      ? (AGENCY_MODE
+          ? 'This order is already paid. Deliver the work and raise your first invoice — once it is paid, you can send follow-on quotes.'
+          : 'This Gig is already funded in Escrow. Deliver the work and raise your first invoice — once it is paid, you can send follow-on proposals.')
       : pendingInvoice
-        ? (isCustomOrderWorkstream ? 'Cannot send a Custom Order Proposal while a Custom Order Invoice is awaiting payment.' : 'Cannot send a proposal while an invoice is awaiting payment.')
+        ? (AGENCY_MODE
+            ? (isCustomOrderWorkstream ? 'Cannot send a Custom Quote while a Custom Order Invoice is awaiting payment.' : 'Cannot send a quote while an invoice is awaiting payment.')
+            : (isCustomOrderWorkstream ? 'Cannot send a Custom Order Proposal while a Custom Order Invoice is awaiting payment.' : 'Cannot send a proposal while an invoice is awaiting payment.'))
         : pendingProposal
-          ? (isCustomOrderWorkstream ? 'A Custom Order Proposal is already awaiting the buyer\'s response.' : 'A proposal is already awaiting the buyer\'s response.')
+          ? (AGENCY_MODE
+              ? (isCustomOrderWorkstream ? 'A Custom Quote is already awaiting the client\'s response.' : 'A quote is already awaiting the client\'s response.')
+              : (isCustomOrderWorkstream ? 'A Custom Order Proposal is already awaiting the buyer\'s response.' : 'A proposal is already awaiting the buyer\'s response.'))
           : escrowFunded && !invoiceAlreadyPaid
-            ? (isCustomOrderWorkstream ? 'Escrow is already funded for this Custom Order. Raise a Custom Order Invoice to complete the current work first.' : 'Escrow is already funded for this stage. Raise an invoice to complete the current work first.')
-            : (isCustomOrderWorkstream ? 'Send a Custom Order Proposal for this inquiry or additional scope.' : 'Send a custom proposal for this inquiry or additional scope.');
+            ? (AGENCY_MODE
+                ? 'Payment is already confirmed for this stage. Raise an invoice to complete the current work first.'
+                : (isCustomOrderWorkstream ? 'Escrow is already funded for this Custom Order. Raise a Custom Order Invoice to complete the current work first.' : 'Escrow is already funded for this stage. Raise an invoice to complete the current work first.'))
+            : (AGENCY_MODE
+                ? 'Send a custom quote for this inquiry or additional scope.'
+                : (isCustomOrderWorkstream ? 'Send a Custom Order Proposal for this inquiry or additional scope.' : 'Send a custom proposal for this inquiry or additional scope.'));
 
   const invoiceHint = !isSeller
-    ? (isCustomOrderWorkstream ? 'Only the seller can raise a Custom Order Invoice' : 'Only the seller can raise an invoice')
+    ? (AGENCY_MODE
+        ? 'Only our team can raise an invoice'
+        : (isCustomOrderWorkstream ? 'Only the seller can raise a Custom Order Invoice' : 'Only the seller can raise an invoice'))
     : pendingInvoice
-      ? (isCustomOrderWorkstream ? 'A Custom Order Invoice is already awaiting buyer payment.' : 'An invoice is already awaiting buyer payment.')
-      : (isCustomOrderWorkstream ? 'Invoices require an active funded Custom Order. Send a Custom Order Proposal first so the buyer can fund Escrow.' : 'Invoices require an active funded Escrow deposit. Send a Proposal first so the buyer can fund Escrow.');
+      ? (AGENCY_MODE
+          ? 'An invoice is already awaiting client payment.'
+          : (isCustomOrderWorkstream ? 'A Custom Order Invoice is already awaiting buyer payment.' : 'An invoice is already awaiting buyer payment.'))
+      : (AGENCY_MODE
+          ? 'Invoices require a confirmed order. Send a quote first so the client can complete payment.'
+          : (isCustomOrderWorkstream ? 'Invoices require an active funded Custom Order. Send a Custom Order Proposal first so the buyer can fund Escrow.' : 'Invoices require an active funded Escrow deposit. Send a Proposal first so the buyer can fund Escrow.'));
 
   // Refresh parent order state when an offer or review or escrow action occurs in the stream
   const lastMessage = messages.length ? messages[messages.length - 1] : undefined;
@@ -367,12 +386,20 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
         await fetchWithRetry('/api/support-tickets', {
           method: 'POST',
           body: JSON.stringify({
-            subject: `Workstream Support: ${order.title} (#${order.id})`,
+            subject: AGENCY_MODE ? `Order Support: ${order.title} (#${order.id})` : `Workstream Support: ${order.title} (#${order.id})`,
             text: disputeReasonInput.trim(),
             priority: 'high'
           })
         });
-        sendEvent(order.id, `🚨 Support & Dispute Desk notified: "${disputeReasonInput.trim()}"`, 'system', { action: 'dispute_opened', reason: disputeReasonInput.trim() }, () => {});
+        sendEvent(
+          order.id,
+          AGENCY_MODE
+            ? `Support Desk notified: "${disputeReasonInput.trim()}"`
+            : `🚨 Support & Dispute Desk notified: "${disputeReasonInput.trim()}"`,
+          'system',
+          { action: 'dispute_opened', reason: disputeReasonInput.trim() },
+          () => {}
+        );
       }
       setDisputeReasonInput('');
       setIsDisputeModalOpen(false);
@@ -447,7 +474,11 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
       return (
         <span className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          <span>{isCustomOrderWorkstream ? 'Custom Order Completed' : 'Invoice Paid • WorkStream Open'}</span>
+          <span>
+            {AGENCY_MODE
+              ? (isCustomOrderWorkstream ? 'Custom Order Completed' : 'Order Completed • Chat Open')
+              : (isCustomOrderWorkstream ? 'Custom Order Completed' : 'Invoice Paid • WorkStream Open')}
+          </span>
         </span>
       );
     }
@@ -455,7 +486,11 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
       return (
         <span className="px-3 py-1 bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5">
           <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-          <span>{isCustomOrderWorkstream ? 'Custom Order Cancelled • WorkStream Open' : 'Order Cancelled • WorkStream Open'}</span>
+          <span>
+            {AGENCY_MODE
+              ? (isCustomOrderWorkstream ? 'Custom Order Cancelled • Chat Open' : 'Order Cancelled • Chat Open')
+              : (isCustomOrderWorkstream ? 'Custom Order Cancelled • WorkStream Open' : 'Order Cancelled • WorkStream Open')}
+          </span>
         </span>
       );
     }
@@ -463,7 +498,11 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
       return (
         <span className="px-3 py-1 bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5">
           <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-          <span>{isCustomOrderWorkstream ? 'Custom Order Proposal • Pre-Purchase' : 'Inquiry • Pre-Purchase'}</span>
+          <span>
+            {AGENCY_MODE
+              ? (isCustomOrderWorkstream ? 'Custom Quote • Pre-Purchase' : 'Inquiry • Pre-Purchase')
+              : (isCustomOrderWorkstream ? 'Custom Order Proposal • Pre-Purchase' : 'Inquiry • Pre-Purchase')}
+          </span>
         </span>
       );
     }
@@ -471,7 +510,11 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
       return (
         <span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-amber-600" />
-          <span>{isCustomOrderWorkstream ? 'Custom Order Invoice Raised • Awaiting Buyer Payment' : 'Invoice Raised • Awaiting Buyer Payment'}</span>
+          <span>
+            {AGENCY_MODE
+              ? 'Invoice Ready • Awaiting Client Payment'
+              : (isCustomOrderWorkstream ? 'Custom Order Invoice Raised • Awaiting Buyer Payment' : 'Invoice Raised • Awaiting Buyer Payment')}
+          </span>
         </span>
       );
     }
@@ -486,7 +529,11 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
     return (
       <span className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1.5">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-        <span>{isCustomOrderWorkstream ? 'Custom Order • In Escrow' : 'In Escrow'} ({currencySymbol}{Number(activeEscrow || order.amount || 0).toLocaleString()})</span>
+        <span>
+          {AGENCY_MODE
+            ? (isCustomOrderWorkstream ? 'Custom Order • Active' : 'Active Order')
+            : (isCustomOrderWorkstream ? 'Custom Order • In Escrow' : 'In Escrow')} ({currencySymbol}{Number(activeEscrow || order.amount || 0).toLocaleString()})
+        </span>
       </span>
     );
   };
@@ -551,13 +598,13 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
             <button
               onClick={onBack}
               className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors cursor-pointer"
-              title="Back to All Workstreams"
+              title={AGENCY_MODE ? 'Back to All Orders' : 'Back to All Workstreams'}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-fiverr-dark tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-agency-dark tracking-tight">
                   {order.title}
                 </h1>
                 {getStatusBadge()}
@@ -567,14 +614,17 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                   return (
                     <span suppressHydrationWarning className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold uppercase rounded-full flex items-center gap-1.5 shadow-2xs">
                       <Clock className="w-3.5 h-3.5 text-amber-600" />
-                      <span>{isBuyer ? 'Buyer Review: ' : 'Review Window: '}</span>
+                      <span>{isBuyer ? (AGENCY_MODE ? 'Client Review: ' : 'Buyer Review: ') : 'Review Window: '}</span>
                       <strong className="font-mono text-amber-900">{remaining}</strong>
                     </span>
                   );
                 })()}
               </div>
               <p className="text-sm text-slate-500 mt-1">
-                WorkStream #{order.id} • Partner: <strong className="text-fiverr-dark font-medium">{partner?.name || 'Collaborator'}</strong>
+                {AGENCY_MODE ? 'Order' : 'WorkStream'} #{order.id} • {AGENCY_MODE ? 'With:' : 'Partner:'}{' '}
+                <strong className="text-agency-dark font-medium">
+                  {AGENCY_MODE && isBuyer ? SITE_CONFIG.brandName : (partner?.name || 'Collaborator')}
+                </strong>
                 {totalReleased > 0 && (
                   <span className="ml-2 text-emerald-600 font-semibold">
                     • Paid: {currencySymbol}{totalReleased.toLocaleString()}
@@ -591,7 +641,13 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{isCustomOrderWorkstream ? (pendingInvoice ? `Pay Custom Order Invoice (${pendingInvoice.number})` : 'Release Custom Order Escrow') : (pendingInvoice ? `Pay Invoice (${pendingInvoice.number})` : 'Release Escrow')}</span>
+                <span>
+                  {pendingInvoice
+                    ? (isCustomOrderWorkstream ? `Pay Custom Order Invoice (${pendingInvoice.number})` : `Pay Invoice (${pendingInvoice.number})`)
+                    : AGENCY_MODE
+                      ? 'Approve & Complete Order'
+                      : (isCustomOrderWorkstream ? 'Release Custom Order Escrow' : 'Release Escrow')}
+                </span>
               </button>
             )}
 
@@ -601,7 +657,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer"
               >
                 <Star className="w-4 h-4 fill-white" />
-                <span>Review Seller</span>
+                <span>{AGENCY_MODE ? `Review ${SITE_CONFIG.brandName}` : 'Review Seller'}</span>
               </button>
             )}
 
@@ -611,7 +667,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer"
               >
                 <Star className="w-4 h-4 fill-white" />
-                <span>Review Buyer</span>
+                <span>{AGENCY_MODE ? 'Review Client' : 'Review Buyer'}</span>
               </button>
             )}
 
@@ -831,9 +887,9 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-fiverr-dark flex items-center gap-2">
+              <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-rose-600" />
-                <span>Request Gig Cancellation</span>
+                <span>{AGENCY_MODE ? 'Request Order Cancellation' : 'Request Gig Cancellation'}</span>
               </h3>
               <button
                 type="button"
@@ -845,13 +901,13 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
             </div>
             <form onSubmit={handleRequestCancellation} className="space-y-4 text-xs">
               <div>
-                <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+                <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
                   Cancellation Reason (Required)
                 </label>
                 <select
                   value={cancelModalReason}
                   onChange={(e) => setCancelModalReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-fiverr-dark focus:outline-none focus:border-rose-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-agency-dark focus:outline-none focus:border-rose-500"
                 >
                   <option value="Project scope changed">Project scope changed</option>
                   <option value="Mutual agreement">Mutual agreement</option>
@@ -861,7 +917,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 </select>
               </div>
               <div>
-                <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+                <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
                   Additional Details (Optional)
                 </label>
                 <textarea
@@ -869,7 +925,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                   value={cancelModalDetails}
                   onChange={(e) => setCancelModalDetails(e.target.value)}
                   placeholder="Provide context for the cancellation request..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-rose-500 resize-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-rose-500 resize-none"
                 />
               </div>
               {cancelModalError && (
@@ -879,7 +935,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsCancelRequestModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -900,7 +956,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-fiverr-dark flex items-center gap-2">
+              <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-amber-600" />
                 <span>Reject Cancellation Request</span>
               </h3>
@@ -914,7 +970,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
             </div>
             <form onSubmit={(e) => { e.preventDefault(); if (rejectModalReason.trim()) handleRespondCancellation('reject', rejectModalReason.trim()); }} className="space-y-4 text-xs">
               <div>
-                <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+                <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
                   Rejection Reason (Required)
                 </label>
                 <textarea
@@ -923,7 +979,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                   value={rejectModalReason}
                   onChange={(e) => setRejectModalReason(e.target.value)}
                   placeholder="Explain why you are rejecting the cancellation request..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
               {cancelModalError && (
@@ -933,7 +989,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsRejectCancelModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -954,7 +1010,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-fiverr-dark flex items-center gap-2">
+              <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-rose-600" />
                 <span>Very Late Cancellation & Full Refund</span>
               </h3>
@@ -967,11 +1023,13 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Since this order is more than 24 hours past the agreed delivery due date, you may cancel without seller approval and receive a 100% full escrow refund.
+              {AGENCY_MODE
+                ? 'Since this order is more than 24 hours past the agreed delivery due date, you may cancel and receive a 100% full refund.'
+                : 'Since this order is more than 24 hours past the agreed delivery due date, you may cancel without seller approval and receive a 100% full escrow refund.'}
             </p>
             <form onSubmit={handleVeryLateCancellation} className="space-y-4 text-xs">
               <div>
-                <label className="block text-fiverr-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
+                <label className="block text-agency-dark font-bold uppercase tracking-wider text-[10px] mb-1.5">
                   Cancellation Reason (Required)
                 </label>
                 <textarea
@@ -980,7 +1038,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                   value={veryLateReason}
                   onChange={(e) => setVeryLateReason(e.target.value)}
                   placeholder="State reason for very late cancellation..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-fiverr-dark placeholder-slate-400 focus:outline-none focus:border-rose-500 resize-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-agency-dark placeholder-slate-400 focus:outline-none focus:border-rose-500 resize-none"
                 />
               </div>
               {cancelModalError && (
@@ -990,7 +1048,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsVeryLateModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs cursor-pointer"
                 >
                   Back
                 </button>
@@ -1094,9 +1152,9 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-fiverr-dark flex items-center gap-2">
+              <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-rose-600" />
-                <span>Escrow Dispute & Support Assistance</span>
+                <span>{AGENCY_MODE ? 'Order Support & Assistance' : 'Escrow Dispute & Support Assistance'}</span>
               </h3>
               <button
                 type="button"
@@ -1107,7 +1165,9 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Describe the issue with WorkStream #{order.id}. Our arbitration team will review your workstream history and assist both parties fairly.
+              {AGENCY_MODE
+                ? `Describe the issue with Order #${order.id}. Our support team at ${SITE_CONFIG.brandName} will review your order history and assist you.`
+                : `Describe the issue with WorkStream #${order.id}. Our arbitration team will review your workstream history and assist both parties fairly.`}
             </p>
             <form onSubmit={handleSubmitDisputeModal} className="space-y-4">
               <textarea
@@ -1115,7 +1175,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                 required
                 value={disputeReasonInput}
                 onChange={(e) => setDisputeReasonInput(e.target.value)}
-                placeholder="Explain the issue or reason for requesting arbitration..."
+                placeholder={AGENCY_MODE ? 'Explain how our support team can assist you...' : 'Explain the issue or reason for requesting arbitration...'}
                 className="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
               />
               {disputeModalError && (
@@ -1134,7 +1194,7 @@ export const WorkstreamWorkspace: React.FC<WorkstreamWorkspaceProps> = ({
                   disabled={isSubmittingDispute || !disputeReasonInput.trim()}
                   className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-bold cursor-pointer"
                 >
-                  {isSubmittingDispute ? 'Submitting...' : 'Submit to Arbitration Desk'}
+                  {isSubmittingDispute ? 'Submitting...' : (AGENCY_MODE ? 'Submit Support Request' : 'Submit to Arbitration Desk')}
                 </button>
               </div>
             </form>

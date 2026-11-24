@@ -47,8 +47,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 relative">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-fiverr-dark">Forgot Password</h2>
-            <p className="text-xs text-fiverr-muted">Reset password via Email or SMS</p>
+            <h2 className="text-xl font-bold text-agency-dark">Forgot Password</h2>
+            <p className="text-xs text-agency-muted">Reset password via Email or SMS</p>
           </div>
           <button 
             onClick={() => {
@@ -58,7 +58,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               setNewPassword('');
               setConfirmNewPassword('');
             }} 
-            className="text-slate-400 hover:text-fiverr-dark p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer text-xs font-bold"
+            className="text-slate-400 hover:text-agency-dark p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer text-xs font-bold"
           >
             ✕ Close
           </button>
@@ -66,7 +66,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {forgotStep === 'request' && (
           <form onSubmit={handleForgotRequest} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-fiverr-dark block mb-1">Registered Email or Mobile Number</label>
+              <label className="text-xs font-bold text-agency-dark block mb-1">Registered Email or Mobile Number</label>
               <input 
                 type="text" 
                 placeholder="user@example.com or +1234567890" 
@@ -102,7 +102,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               )}
             </div>
             <div>
-              <label className="text-xs font-bold text-fiverr-dark block mb-1">6-Digit Recovery OTP</label>
+              <label className="text-xs font-bold text-agency-dark block mb-1">6-Digit Recovery OTP</label>
               <input 
                 type="text" 
                 maxLength={6} 
@@ -110,7 +110,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 value={forgotCode} 
                 onChange={(e) => setForgotCode(e.target.value)} 
                 required 
-                className="w-full px-4 py-3 border rounded-xl text-center text-lg font-mono font-bold tracking-widest text-fiverr-dark" 
+                className="w-full px-4 py-3 border rounded-xl text-center text-lg font-mono font-bold tracking-widest text-agency-dark" 
               />
             </div>
             <button type="submit" className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition cursor-pointer">
@@ -121,7 +121,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {forgotStep === 'reset' && (
           <form onSubmit={handleForgotReset} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-fiverr-dark block mb-1">New Password (min 6 characters)</label>
+              <label className="text-xs font-bold text-agency-dark block mb-1">New Password (min 6 characters)</label>
               <input 
                 type="password" 
                 minLength={6}
@@ -133,7 +133,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-fiverr-dark block mb-1">Confirm New Password</label>
+              <label className="text-xs font-bold text-agency-dark block mb-1">Confirm New Password</label>
               <input 
                 type="password" 
                 minLength={6}

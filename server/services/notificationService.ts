@@ -9,6 +9,7 @@ import { postgresStore } from '../db/postgresStore.js';
 import { broadcastNotificationToUser, clients } from '../websocket.js';
 import { WebSocket } from 'ws';
 import { IS_PRODUCTION } from '../middleware/auth.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 export const EMAIL_DELIVERY_ENABLED = Boolean(process.env.RESEND_API_KEY);
 const APP_URL = (process.env.APP_URL || '').replace(/\/$/, '');
@@ -16,7 +17,7 @@ const APP_URL = (process.env.APP_URL || '').replace(/\/$/, '');
 export function getEmailSender(): string {
   const envFrom = (process.env.EMAIL_FROM || '').trim();
   if (envFrom) return envFrom;
-  return 'WorkPerHour <onboarding@resend.dev>';
+  return `${SITE_CONFIG.brandName} <onboarding@resend.dev>`;
 }
 
 import { shouldExposeMockCodes } from './mockCodeHelper.js';
@@ -31,7 +32,7 @@ export function deliverSecurityCode(target: string, type: string, code: string) 
       body: JSON.stringify({
         from: fromAddress,
         to: [target],
-        subject: 'Your WorkPerHour verification code',
+        subject: `Your ${SITE_CONFIG.brandName} verification code`,
         text: `Your verification code is ${code}. It expires in 30 minutes. If you did not request it, ignore this email.`
       })
     }).catch(err => console.error('[email] send failed:', err?.message || err));
@@ -67,7 +68,7 @@ export async function sendOrderEmail(userId: string, subject: string, body: stri
   if (!user || !user.email) return;
   const link = path && APP_URL ? `\n\nOpen the order: ${APP_URL}${path}` : '';
   const targetEmail = user.email;
-  const fullText = `${body}${link}\n\n- WorkPerHour`;
+  const fullText = `${body}${link}\n\n- ${SITE_CONFIG.brandName}`;
   if (client || postgresStore.isActiveTransaction()) {
     postgresStore.onCommit(() => sendEmail(targetEmail, subject, fullText));
   } else {
@@ -82,7 +83,7 @@ export async function notifyUserEmail(params: { userId?: string; user?: any; sub
     if (!targetEmail || !targetEmail.includes('@')) return;
     const bodyText = params.body || params.text || (params.html ? params.html.replace(/<[^>]*>/g, '') : '');
     const link = params.path && APP_URL ? `\n\nOpen link: ${APP_URL}${params.path}` : '';
-    const fullText = `${bodyText}${link}\n\n- FivePA`;
+    const fullText = `${bodyText}${link}\n\n- ${SITE_CONFIG.brandName}`;
     if (client || postgresStore.isActiveTransaction()) {
       postgresStore.onCommit(() => sendEmail(targetEmail, params.subject, fullText));
     } else {
@@ -216,17 +217,17 @@ export function notifyUserOnAdminAction(user: User, action: 'suspended' | 'restr
   let chatText = '';
 
   if (action === 'suspended') {
-    emailSubject = `[URGENT] WorkSphere Account Suspended - Action Required`;
-    emailBody = `Dear ${user.name},\n\nYour WorkSphere account (${user.email}) has been SUSPENDED by Platform Administration.\n\nReason/Notes: ${notes || 'Violation of Marketplace Policies / Security Investigation'}.\n\nWhile suspended, your active listings, gigs, and bidding capabilities are temporarily paused. \n\nAPPEAL PROCESS:\nIf you believe this is an error, please submit an appeal via the Support Tickets section in your dashboard. Our safety team will review your request within 24-48 business hours.`;
-    chatText = `🚨 ACCOUNT ALERT: Your WorkSphere account has been SUSPENDED by Platform Administration for: ${notes || 'Policy Violation'}. Please submit an appeal via the Support Tickets section in your dashboard to request a review.`;
+    emailSubject = `[URGENT] ${SITE_CONFIG.brandName} Account Suspended - Action Required`;
+    emailBody = `Dear ${user.name},\n\nYour ${SITE_CONFIG.brandName} account (${user.email}) has been SUSPENDED by Administration.\n\nReason/Notes: ${notes || 'Violation of Terms of Service / Security Investigation'}.\n\nWhile suspended, account actions are temporarily paused.\n\nAPPEAL PROCESS:\nIf you believe this is an error, please submit a support request via our Support page. Our team will review your request within 24-48 business hours.`;
+    chatText = `ACCOUNT ALERT: Your ${SITE_CONFIG.brandName} account has been SUSPENDED for: ${notes || 'Policy Violation'}. Please contact Support to request a review.`;
   } else if (action === 'restricted') {
-    emailSubject = `[NOTICE] WorkSphere Account Privileges Restricted`;
-    emailBody = `Dear ${user.name},\n\nYour WorkSphere account (${user.email}) privileges have been RESTRICTED by Platform Administration.\n\nReason/Notes: ${notes || 'Account compliance review / policy warning'}.\n\nCertain actions (such as creating new gigs or submitting bids) are currently limited. \n\nWHAT TO DO:\nYou can still access your existing orders and messages. If you believe this restriction is in error, please submit an appeal via the Support Tickets section in your dashboard.`;
-    chatText = `⚠️ ACCOUNT NOTICE: Your WorkSphere account privileges have been RESTRICTED for: ${notes || 'Compliance Review'}. Please submit an appeal via the Support Tickets section in your dashboard to request a review.`;
+    emailSubject = `[NOTICE] ${SITE_CONFIG.brandName} Account Privileges Restricted`;
+    emailBody = `Dear ${user.name},\n\nYour ${SITE_CONFIG.brandName} account (${user.email}) privileges have been RESTRICTED by Administration.\n\nReason/Notes: ${notes || 'Account compliance review / policy warning'}.\n\nWHAT TO DO:\nYou can still access your existing orders and messages. If you believe this restriction is in error, please contact Support.`;
+    chatText = `ACCOUNT NOTICE: Your ${SITE_CONFIG.brandName} account privileges have been RESTRICTED for: ${notes || 'Compliance Review'}. Please contact Support to request a review.`;
   } else if (action === 'deactivated') {
-    emailSubject = `[NOTICE] WorkSphere Account Deactivated`;
-    emailBody = `Dear ${user.name},\n\nYour WorkSphere account (${user.email}) has been DEACTIVATED by Platform Administration.\n\nReason/Notes: ${notes || 'Account deactivated'}.`;
-    chatText = `🚨 ACCOUNT ALERT: Your WorkSphere account has been DEACTIVATED.`;
+    emailSubject = `[NOTICE] ${SITE_CONFIG.brandName} Account Deactivated`;
+    emailBody = `Dear ${user.name},\n\nYour ${SITE_CONFIG.brandName} account (${user.email}) has been DEACTIVATED by Administration.\n\nReason/Notes: ${notes || 'Account deactivated'}.`;
+    chatText = `ACCOUNT ALERT: Your ${SITE_CONFIG.brandName} account has been DEACTIVATED.`;
   } else if (action === 'impersonated') {
     return;
   }

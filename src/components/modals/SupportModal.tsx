@@ -1,5 +1,6 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -31,15 +32,15 @@ export const SupportModal: React.FC<SupportModalProps> = ({
       <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl border border-slate-200">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div>
-            <h3 className="text-base font-bold text-fiverr-dark flex items-center gap-2">
+            <h3 className="text-base font-bold text-agency-dark flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-emerald-600" />
-              <span>Contact WorkSphere Support Desk</span>
+              <span>Contact {SITE_CONFIG.brandName} Support</span>
             </h3>
-            <p className="text-xs text-fiverr-muted mt-0.5">Submit an appeal, ask questions about restrictions, or request support assistance.</p>
+            <p className="text-xs text-agency-muted mt-0.5">Submit an appeal, ask questions about restrictions, or request support assistance.</p>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-fiverr-dark hover:bg-slate-100 rounded-xl transition-colors text-xs font-bold cursor-pointer"
+            className="p-2 text-slate-400 hover:text-agency-dark hover:bg-slate-100 rounded-xl transition-colors text-xs font-bold cursor-pointer"
           >
             ✕ Close
           </button>
@@ -47,7 +48,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
 
         <form onSubmit={(e) => onSubmitTicket(e, isAppealContext)} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Inquiry Subject / Topic</label>
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Inquiry Subject / Topic</label>
             <input 
               type="text" 
               placeholder="e.g. Account Status Review / Appeal Request" 
@@ -59,7 +60,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-fiverr-dark uppercase tracking-wider mb-2">Detailed Message / Explanation</label>
+            <label className="block text-xs font-bold text-agency-dark uppercase tracking-wider mb-2">Detailed Message / Explanation</label>
             <textarea 
               rows={5}
               placeholder="Please describe your inquiry or appeal details..."
@@ -74,7 +75,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             <button 
               type="button" 
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-fiverr-dark hover:text-fiverr-dark bg-slate-100 rounded-xl cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-agency-dark hover:text-agency-dark bg-slate-100 rounded-xl cursor-pointer"
             >
               Cancel
             </button>

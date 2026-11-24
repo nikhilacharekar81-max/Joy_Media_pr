@@ -36,16 +36,16 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
         <div className="flex items-start justify-between pb-4 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold leading-tight text-slate-900 text-fiverr-dark">{cleanGigTitle(viewingGig.title)}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold leading-tight text-slate-900 text-agency-dark">{cleanGigTitle(viewingGig.title)}</h1>
               {viewingGig.featured && (
                 <span className="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-xs font-bold">★ Featured</span>
               )}
             </div>
-            <p className="text-xs font-normal text-fiverr-muted mt-1">Gig ID: #{viewingGig.id} · Category: <span className="text-emerald-600 font-semibold">{viewingGig.category} ({viewingGig.subcategory || 'General'})</span></p>
+            <p className="text-xs font-normal text-agency-muted mt-1">Gig ID: #{viewingGig.id} · Category: <span className="text-emerald-600 font-semibold">{viewingGig.category} ({viewingGig.subcategory || 'General'})</span></p>
           </div>
           <button 
             onClick={onClose}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-fiverr-dark text-xs font-bold rounded-xl cursor-pointer"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-agency-dark text-xs font-bold rounded-xl cursor-pointer"
           >
             Close
           </button>
@@ -61,16 +61,16 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
             />
             <div className={`grid ${RATINGS_ENABLED ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                <span className="text-[11px] text-fiverr-muted uppercase font-normal block">Starting Price</span>
-                <span className="text-xl font-bold text-fiverr-dark">${viewingGig.price}</span>
+                <span className="text-[11px] text-agency-muted uppercase font-normal block">Starting Price</span>
+                <span className="text-xl font-bold text-agency-dark">${viewingGig.price}</span>
               </div>
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                <span className="text-[9px] text-fiverr-muted uppercase font-bold block">Delivery Time</span>
-                <span className="text-sm font-bold text-fiverr-dark">{viewingGig.deliveryDays} Days</span>
+                <span className="text-[9px] text-agency-muted uppercase font-bold block">Delivery Time</span>
+                <span className="text-sm font-bold text-agency-dark">{viewingGig.deliveryDays} Days</span>
               </div>
               {RATINGS_ENABLED && (
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                  <span className="text-[9px] text-fiverr-muted uppercase font-bold block">Rating</span>
+                  <span className="text-[9px] text-agency-muted uppercase font-bold block">Rating</span>
                   <span className="text-sm font-bold text-amber-500">★ {viewingGig.rating || 5.0}</span>
                 </div>
               )}
@@ -79,13 +79,13 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
 
           <div className="space-y-4">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
-              <h2 className="text-xl font-bold text-slate-900 text-fiverr-dark uppercase mb-2">Gig Description</h2>
-              <p className="text-base text-slate-800 text-fiverr-dark leading-body whitespace-pre-wrap">{viewingGig.description}</p>
+              <h2 className="text-xl font-bold text-slate-900 text-agency-dark uppercase mb-2">Gig Description</h2>
+              <p className="text-base text-slate-800 text-agency-dark leading-body whitespace-pre-wrap">{viewingGig.description}</p>
             </div>
 
             {viewingGig.extras && viewingGig.extras.length > 0 && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <h2 className="text-xl font-bold text-slate-900 text-fiverr-dark uppercase mb-2">Gig Upgrades & Extras</h2>
+                <h2 className="text-xl font-bold text-slate-900 text-agency-dark uppercase mb-2">Gig Upgrades & Extras</h2>
                 <div className="space-y-2">
                   {viewingGig.extras.map(e => (
                     <div key={e.id} className="flex justify-between items-center text-xs bg-white px-3 py-2 rounded-lg border border-slate-200">
@@ -102,7 +102,7 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
         {/* GIG PROGRESS & PERFORMANCE METRICS */}
         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-fiverr-dark">Live Gig Progress & Analytics</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-agency-dark">Live Gig Progress & Analytics</span>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
               viewingGig.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
               viewingGig.status === 'paused' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
@@ -118,11 +118,11 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               <span className="text-[10px] text-slate-400 font-bold block uppercase">Total Views</span>
-              <span className="text-base font-bold text-fiverr-dark font-mono">1,482</span>
+              <span className="text-base font-bold text-agency-dark font-mono">1,482</span>
             </div>
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               <span className="text-[10px] text-slate-400 font-bold block uppercase">Client Inquiries</span>
-              <span className="text-base font-bold text-fiverr-dark font-mono">46</span>
+              <span className="text-base font-bold text-agency-dark font-mono">46</span>
             </div>
             <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               <span className="text-[10px] text-slate-400 font-bold block uppercase">Orders Completed</span>
@@ -134,7 +134,7 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
             </div>
           </div>
           <div className="space-y-1 pt-1">
-            <div className="flex justify-between text-[11px] font-bold text-fiverr-dark">
+            <div className="flex justify-between text-[11px] font-bold text-agency-dark">
               <span>Gig Quality & Health Score</span>
               <span className="text-emerald-600 font-mono">98 / 100 (Optimal)</span>
             </div>
@@ -148,11 +148,11 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
           <div className="flex items-center gap-3">
             <img src={viewingGig.freelancerAvatar} className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500/20" alt={viewingGig.freelancerName} referrerPolicy="no-referrer" />
             <div>
-              <span className="text-xs font-bold text-fiverr-dark block">{viewingGig.freelancerName}</span>
-              <span className="text-[11px] text-fiverr-muted">Freelancer ID: {viewingGig.freelancerId} · Level: {viewingGig.freelancerLevel || 'Pro'}</span>
+              <span className="text-xs font-bold text-agency-dark block">{viewingGig.freelancerName}</span>
+              <span className="text-[11px] text-agency-muted">Freelancer ID: {viewingGig.freelancerId} · Level: {viewingGig.freelancerLevel || 'Pro'}</span>
             </div>
           </div>
-          <span className="text-xs text-fiverr-muted">Moderation: {viewingGig.moderationStatus || 'Pending review'}</span>
+          <span className="text-xs text-agency-muted">Moderation: {viewingGig.moderationStatus || 'Pending review'}</span>
         </div>
 
         {viewingGig.moderationNotes && (
@@ -191,7 +191,7 @@ export const ViewingGigModal: React.FC<ViewingGigModalProps> = ({
             </button>
             <button 
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-fiverr-dark font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-agency-dark font-bold rounded-xl text-xs transition-colors cursor-pointer"
             >
               Close
             </button>

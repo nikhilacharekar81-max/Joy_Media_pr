@@ -151,7 +151,7 @@ export function useWorkstreamRealtime({
                 : o
             ));
           } else if ((data.type === 'NOTIFICATION' || data.type === 'NOTIFICATION_CREATED') && data.notification) {
-            window.dispatchEvent(new CustomEvent('fivepa:notification', { detail: data.notification }));
+            window.dispatchEvent(new CustomEvent('agency:notification', { detail: data.notification }));
             if (onOrderStateChangedRef.current) {
               if (stateRefreshTimerRef.current) clearTimeout(stateRefreshTimerRef.current);
               stateRefreshTimerRef.current = setTimeout(() => onOrderStateChangedRef.current?.(), 400);

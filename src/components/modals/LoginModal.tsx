@@ -3,6 +3,7 @@ import { ShieldCheck, AlertCircle, RefreshCw, Sparkles, CheckCircle2 } from 'luc
 import { UserAccount, getAccountIdentityLabel } from '../../types';
 import { setAuthToken, requestDemoSession } from '../../utils/authToken';
 import { DEFAULT_AVATAR } from '../../constants';
+import { SITE_CONFIG } from '../../siteConfig';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -60,8 +61,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 leading-tight">Login to WorkPerHour</h2>
-            <p className="text-xs text-slate-500">Access your client or freelancer dashboard</p>
+            <h2 className="text-xl font-bold text-slate-900 leading-tight">Sign In to {SITE_CONFIG.brandName}</h2>
+            <p className="text-xs text-slate-500">Access your client dashboard</p>
           </div>
           <button 
             onClick={onClose} 

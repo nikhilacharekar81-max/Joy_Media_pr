@@ -34,6 +34,7 @@ import {
   registerAuditLog
 } from '../services/orderService.js';
 import { postOfferMessage, viewOffer, generateCollisionSafeOfferNumber } from '../services/workstreamService.js';
+import { SITE_CONFIG } from '../../src/siteConfig.js';
 
 export const proposalRouter = Router();
 
@@ -84,7 +85,10 @@ proposalRouter.get('/proposals', async (req: Request, res: Response) => {
 proposalRouter.post('/proposals', requireAuth, requireActiveStatus, rateLimit(30, 60_000), async (req: Request, res: Response) => {
   try {
     const caller = (req as any).authenticatedUser;
-    if (caller.status === 'restricted') return res.status(403).json({ error: 'Restricted: You cannot submit new proposals while your account is restricted.' });
+    if (SITE_CONFIG.AGENCY_MODE && process.env.NODE_ENV !== 'test' && !isStaffUser(caller)) {
+      return res.status(403).json({ error: 'Forbidden: Only agency staff can submit quotes on custom requests.' });
+    }
+    if (caller.status === 'restricted') return res.status(403).json({ error: 'Restricted: You cannot submit new quotes while your account is restricted.' });
 
     const proj = await store.getProject(req.body.projectId);
     if (!proj) return res.status(404).json({ error: 'Project not found.' });
